@@ -23,31 +23,33 @@ class Panel {
 
 public:
 
+	typedef std::function<void(SDL_Rect &r)> DrawFn;
+
 	enum class Type {
 		Container, SplitH, SplitV
 	};
 
-	Panel(const char *title, std::function<void()> fn);
+	Panel(const char *title, size_t size, DrawFn fn);
 	Panel(Type type);
 	void add(Panel *p);
 	void update_kid(Panel *pk, int dx, int dy, int dw, int dh);
-	int draw(int x, int y, int w, int h);
+	int draw(SDL_Renderer *rend, int x, int y, int w, int h);
 
 private:
 
 	const char *m_title;
 	Type m_type;
 	int m_size;
-	std::function<void()> m_fn_draw;
+	DrawFn m_fn_draw;
 	std::vector<Panel *> m_kids;
 	Panel *m_parent;
 };
 
 
-Panel::Panel(const char *title, std::function<void()> fn)
+Panel::Panel(const char *title, size_t size, DrawFn fn)
 	: m_title(title)
 	, m_type(Type::Container)
-	, m_size(100)
+	, m_size(size)
 	, m_fn_draw(fn)
 	, m_kids{}
 {
@@ -100,7 +102,7 @@ void Panel::update_kid(Panel *pk, int dx, int dy, int dw, int dh)
 }
 
 
-int Panel::draw(int x, int y, int w, int h)
+int Panel::draw(SDL_Renderer *rend, int x, int y, int w, int h)
 {
 
 	if(m_type == Type::Container) {
@@ -116,7 +118,19 @@ int Panel::draw(int x, int y, int w, int h)
 		}
 		
 		if(m_fn_draw) {
-			m_fn_draw();
+			ImVec2 cursor = ImGui::GetCursorScreenPos();
+			ImVec2 avail = ImGui::GetContentRegionAvail();
+
+			SDL_Rect r = {
+				(int)cursor.x,
+				(int)cursor.y,
+				(int)avail.x,
+				(int)avail.y
+			};
+
+			SDL_SetRenderClipRect(rend, &r);
+			m_fn_draw(r);
+			SDL_SetRenderClipRect(rend, nullptr);
 		}
 		ImGui::End();
 
@@ -126,7 +140,7 @@ int Panel::draw(int x, int y, int w, int h)
 		for(auto &pk : m_kids) {
 			bool last = (&pk == &m_kids.back());
 			int kw = last ? (w - (kx - x)) : pk->m_size;
-			pk->draw(kx, y, kw, h);
+			pk->draw(rend, kx, y, kw, h);
 			kx += kw;
 		}
 
@@ -137,7 +151,7 @@ int Panel::draw(int x, int y, int w, int h)
 		for(auto &pk : m_kids) {
 			bool last = (&pk == &m_kids.back());
 			int kh = last ? (h - (ky - y)) : pk->m_size;
-			pk->draw(x, ky, w, kh);
+			pk->draw(rend, x, ky, w, kh);
 			ky += kh;
 		}
 
@@ -157,8 +171,8 @@ public:
     int m_size;
 	Window m_window;
     double *m_in[2];
-	std::vector<double> m_cur;
-	std::vector<double> m_peak;
+	std::vector<double> m_cur[2];
+	std::vector<double> m_peak[2];
     fftw_plan m_plan[2];
     fftw_complex *m_out[2];
 };
@@ -171,8 +185,8 @@ FFT::FFT(int size)
 {
 	m_window.configure(Window::Type::Gauss, size, 0.4);
     for(int i=0; i<2; i++) {
-		m_cur.resize(size/2+1);
-		m_peak.resize(size/2+1);
+		m_cur[i].resize(size/2+1);
+		m_peak[i].resize(size/2+1);
 
 		if(m_in[i]) fftw_free(m_in[i]);
 		if(m_out[i]) fftw_free(m_out[i]);
@@ -190,13 +204,15 @@ void FFT::run(double *in)
         m_in[0][i] = in[i*2+0] * w;
         m_in[1][i] = in[i*2+1] * w;
     }
-    fftw_execute(m_plan[0]);
-    for(int i=0; i<m_size/2+1; i++) {
-        double real = m_out[0][i][0];
-        double imag = m_out[0][i][1];
-        m_cur[i] = 20 * log10(hypot(real, imag)) + 50;
-        m_peak[i] = m_cur[i] > m_peak[i] ? m_cur[i] : m_peak[i] * 0.99;
-    }
+	for(int j=0; j<2; j++) {
+		fftw_execute(m_plan[j]);
+		for(int i=0; i<m_size/2+1; i++) {
+			double real = m_out[0][i][0];
+			double imag = m_out[0][i][1];
+			m_cur[j][i] = 20 * log10(hypot(real, imag)) + 50;
+			m_peak[j][i] = m_cur[j][i] > m_peak[j][i] ? m_cur[j][i] : m_peak[j][i] * 0.99;
+		}
+	}
 }
 
 
@@ -215,18 +231,28 @@ void FFT::draw(SDL_Renderer *rend, SDL_Rect &r)
     SDL_SetRenderDrawColor(rend, 0, 0, 0, 0);
     SDL_RenderFillRect(rend, &fr);
 
-    for (int i = 1; i < m_size / 2; i++) {
-        float x = r.x + (float)i * (r.w / (m_size / 2.0f));
-        p_cur[i].x = x;
-        p_cur[i].y = r.y + r.h - (m_cur[i] / 60.0f) * r.h;
-        p_peak[i].x = x;
-        p_peak[i].y = r.y + r.h - (m_peak[i] / 60.0f) * r.h;
-    }
+	for(int c=0; c<2; c++) {
+		for(int i=1; i<m_size/2; i++) {
+			float x = r.x + (float)i * (r.w / (m_size / 2.0f));
+			p_cur[i].x = x;
+			p_cur[i].y = r.y + r.h - (m_cur[c][i] / 60.0f) * r.h;
+			p_peak[i].x = x;
+			p_peak[i].y = r.y + r.h - (m_peak[c][i] / 60.0f) * r.h;
+		}
 
-    SDL_SetRenderDrawColor(rend, 76/2, 229/2, 0, 255);
-    SDL_RenderLines(rend, p_cur, m_size / 2);
-    SDL_SetRenderDrawColor(rend, 76, 229, 0, 255);
-    SDL_RenderLines(rend, p_peak, m_size / 2);
+		if(c == 0) {
+			SDL_SetRenderDrawColor(rend, 76/2, 229/2, 0, 255);
+		} else {
+			SDL_SetRenderDrawColor(rend, 178/2, 0, 229/2, 255);
+		}
+		SDL_RenderLines(rend, p_cur, m_size / 2);
+		if(c == 0) {
+			SDL_SetRenderDrawColor(rend, 76, 229, 0, 255);
+		} else {
+			SDL_SetRenderDrawColor(rend, 178, 0, 229, 255);
+		}
+		SDL_RenderLines(rend, p_peak, m_size / 2);
+	}
 }
 
 
@@ -237,7 +263,7 @@ public:
     Uint32 audio_init();
     void handle_audio(void *data, int len);
     void draw();
-    void draw_fft();
+    void draw_fft(SDL_Rect &r);
     void set_size(int w, int h);
 
 	Panel *m_root_panel;
@@ -286,39 +312,22 @@ void Corrie::set_size(int w, int h)
 
 void Corrie::draw()
 {
-	if(m_root_panel) {
-		m_root_panel->draw(0, 0, m_w, m_h);
-	}
-}
-
-void Corrie::draw_fft()
-{
-
     SDL_SetRenderTarget(m_rend, m_tex);
-
 	SDL_SetRenderDrawColor(m_rend, 0, 0, 0, 0);
 	SDL_RenderClear(m_rend);
-	//SDL_SetRenderDrawBlendMode(m_rend, SDL_BLENDMODE_BLEND);
 
-    ImVec2 cursor = ImGui::GetCursorScreenPos();
-    ImVec2 avail = ImGui::GetContentRegionAvail();
+	if(m_root_panel) {
+		m_root_panel->draw(m_rend, 0, 0, m_w, m_h);
+	}
+	SDL_SetRenderTarget(m_rend, nullptr);
+}
 
-    SDL_Rect r = {
-        (int)cursor.x,
-        (int)cursor.y,
-        (int)avail.x,
-        (int)avail.y
-    };
 
-    SDL_SetRenderClipRect(m_rend, &r);
-
+void Corrie::draw_fft(SDL_Rect &r)
+{
 	for(auto &fft : m_fft_list) {
         fft.draw(m_rend, r);
 	}
-
-    SDL_SetRenderTarget(m_rend, nullptr);
-    SDL_SetRenderClipRect(m_rend, nullptr);
-
 }
 
 
@@ -418,16 +427,19 @@ int main(int, char**)
     cor->m_fft_list.push_back(FFT(1024));
 
 	cor->m_root_panel = new Panel(Panel::Type::SplitH);
-	cor->m_root_panel->add(new Panel("one", []() { ImGui::Text("Window one"); }));
+	cor->m_root_panel->add(new Panel("one", 300, [](SDL_Rect &r) {
+		ImGui::Text("Window one");
+	}));
+
 	Panel *p2 = new Panel(Panel::Type::SplitV);
 	cor->m_root_panel->add(p2);
-	p2->add(new Panel("two", []() { 
+	p2->add(new Panel("two", 300, [](SDL_Rect &r) { 
 		ImGui::Text("Window two"); 
 
 	}));
-	p2->add(new Panel("three", [cor]() { 
+	p2->add(new Panel("three", 300, [cor](SDL_Rect &r) { 
 		//ImGui::Text("Window three");
-		cor->draw_fft();
+		cor->draw_fft(r);
 		//ImGui::ShowDemoWindow(nullptr);
 	}));
 
