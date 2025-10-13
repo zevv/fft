@@ -94,6 +94,9 @@ void Panel::update_kid(Panel *pk, int dx, int dy, int dw, int dh)
 			}
 		}
 	}
+	if(pk->m_parent) {
+		pk->m_parent->update_kid(this, dx, dy, dw, dh);
+	}
 }
 
 
