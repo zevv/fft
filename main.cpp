@@ -3,30 +3,104 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include "imgui.h"
-#include "imgui_impl_sdl3.h"
-#include "imgui_impl_sdlrenderer3.h"
+#include <memory>
 #include <stdio.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_audio.h>
+#include <vector>
+#include <functional>
+#include <memory>
+
 #include <fftw3.h>
 
-#ifdef __EMSCRIPTEN__
-#include "../libs/emscripten/emscripten_mainloop_stub.h"
-#endif
+#include "imgui.h"
+#include "imgui_impl_sdl3.h"
+#include "imgui_impl_sdlrenderer3.h"
+
+#include "window.hpp"
+
+class Panel {
+
+public:
+
+	enum class SplitDirection {
+		Horizontal, Vertical
+	};
+
+	struct Kid {
+		Panel *panel;
+	};
+
+	Panel(const char *title, SplitDirection dir, std::function<void()> fn);
+	void add(Panel *p);
+	void draw(int x, int y, int w, int h);
+
+private:
+
+	const char *m_title;
+	SplitDirection m_split_direction;
+	std::function<void()> m_fn_draw;
+	std::vector<Kid> m_kids;
+};
+
+
+Panel::Panel(const char *title, SplitDirection dir, std::function<void()> fn = nullptr)
+	: m_title(title)
+	, m_split_direction(dir)
+	, m_fn_draw(fn)
+	, m_kids{}
+{
+}
+
+
+void Panel::add(Panel *p)
+{
+	m_kids.push_back({p});
+}
+
+
+void Panel::draw(int x, int y, int w, int h)
+{
+	if(m_fn_draw) {
+		ImGui::SetNextWindowPos(ImVec2((float)x, (float)y));
+		ImGui::SetNextWindowSize(ImVec2((float)w, (float)h));
+		ImGui::Begin(m_title);
+		ImVec2 pos = ImGui::GetWindowPos();
+		ImVec2 size = ImGui::GetWindowSize();
+		printf("%.0f,%.0f %.0fx%.0f\n", pos.x, pos.y, size.x, size.y);
+		m_fn_draw();
+		ImGui::End();
+		return;
+	}
+
+	int nkids = m_kids.size();
+		
+	if(m_split_direction == SplitDirection::Horizontal) {
+		int hh = h / nkids;
+		for(int i=0; i<nkids; i++) {
+			m_kids[i].panel->draw(x, y + i * hh, w, hh);
+		}
+	} else {
+		int ww = w / nkids;
+		for(int i=0; i<nkids; i++) {
+			m_kids[i].panel->draw(x + i * ww, y, ww, h);
+		}
+	}
+}
+
+
 
 class FFT {
 public:
     FFT(int size);
-    void run(float *in);
+    void run(double *in);
     void draw(SDL_Renderer *rend, SDL_Rect &r);
 
-    SDL_Renderer *m_rend;
     int m_size;
-    double *m_window;
+	Window m_window;
     double *m_in[2];
-    double *m_cur;
-    double *m_peak;
+	std::vector<double> m_cur;
+	std::vector<double> m_peak;
     fftw_plan m_plan[2];
     fftw_complex *m_out[2];
 };
@@ -34,26 +108,29 @@ public:
 
 FFT::FFT(int size)
     : m_size(size)
+	, m_in{}
+	, m_out{}
 {
-    m_window = (double *)malloc(sizeof(double) * size);
-    for(int i=0; i<size; i++) {
-        m_window[i] = 0.5 * (1 - cos(2 * M_PI * i / (size - 1)));
-    }
+	m_window.configure(Window::Type::Gauss, size, 0.4);
     for(int i=0; i<2; i++) {
+		m_cur.resize(size/2+1);
+		m_peak.resize(size/2+1);
+
+		if(m_in[i]) fftw_free(m_in[i]);
+		if(m_out[i]) fftw_free(m_out[i]);
         m_in[i] = (double *)fftw_malloc(sizeof(double) * size * 2);
         m_out[i] = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * (size/2+1));
-        m_cur = (double *)calloc(sizeof(double), (size/2+1));
-        m_peak = (double *)calloc(sizeof(double), (size/2+1));
         m_plan[i] = fftw_plan_dft_r2c_1d(m_size, m_in[i], m_out[i], FFTW_ESTIMATE);
     }
 }
 
 
-void FFT::run(float *in)
+void FFT::run(double *in)
 {
     for(int i=0; i<m_size; i++) {
-        m_in[0][i] = in[i*2+0] * m_window[i];
-        m_in[1][i] = in[i*2+1] * m_window[i];
+		double w = m_window.get_data(i);
+        m_in[0][i] = in[i*2+0] * w;
+        m_in[1][i] = in[i*2+1] * w;
     }
     fftw_execute(m_plan[0]);
     for(int i=0; i<m_size/2+1; i++) {
@@ -63,6 +140,7 @@ void FFT::run(float *in)
         m_peak[i] = m_cur[i] > m_peak[i] ? m_cur[i] : m_peak[i] * 0.99;
     }
 }
+
 
 void FFT::draw(SDL_Renderer *rend, SDL_Rect &r)
 {
@@ -81,11 +159,12 @@ void FFT::draw(SDL_Renderer *rend, SDL_Rect &r)
 
     for (int i = 1; i < m_size / 2; i++) {
         float x = r.x + (float)i * (r.w / (m_size / 2.0f));
-        p_cur[i].x = (int)x;
-        p_cur[i].y = (int)(r.y + r.h - (m_cur[i] / 60.0f) * r.h);
-        p_peak[i].x = (int)x;
-        p_peak[i].y = (int)(r.y + r.h - (m_peak[i] / 60.0f) * r.h);
+        p_cur[i].x = x;
+        p_cur[i].y = r.y + r.h - (m_cur[i] / 60.0f) * r.h;
+        p_peak[i].x = x;
+        p_peak[i].y = r.y + r.h - (m_peak[i] / 60.0f) * r.h;
     }
+
     SDL_SetRenderDrawColor(rend, 76/2, 229/2, 0, 255);
     SDL_RenderLines(rend, p_cur, m_size / 2);
     SDL_SetRenderDrawColor(rend, 76, 229, 0, 255);
@@ -100,35 +179,45 @@ public:
     Uint32 audio_init();
     void handle_audio(void *data, int len);
     void draw();
-    void resize(int w, int h);
+    void set_size(int w, int h);
+
+	Panel *m_root_panel;
 
     SDL_Window *m_win;
     SDL_Texture *m_tex;
     SDL_Renderer *m_rend;
+	bool m_resize;
+	int m_w, m_h;
 
     int m_srate;
-    FFT *m_fft;
+	std::vector<FFT> m_fft_list;
 
     size_t m_buf_size;
     size_t m_buf_pos;
-    float m_buf[2][1024];
+    double m_buf[2][1024];
 };
 
 
 Corrie::Corrie(SDL_Window *window, SDL_Renderer *renderer)
     : m_win(window)
     , m_rend(renderer)
+	, m_resize(true)
+	, m_w(800)
+	, m_h(600)
     , m_srate(48000)
     , m_buf_size(1024)
     , m_buf_pos(0)
 {
-    resize(800, 600);
+    set_size(800, 600);
 }
 
 
-void Corrie::resize(int w, int h)
+void Corrie::set_size(int w, int h)
 {
     if(m_tex) SDL_DestroyTexture(m_tex);
+	m_w = w;
+	m_h = h;
+	m_resize = true;
     m_tex = SDL_CreateTexture(SDL_GetRenderer(m_win), SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h);
     SDL_SetTextureBlendMode(m_tex, SDL_BLENDMODE_BLEND);
 }
@@ -136,6 +225,12 @@ void Corrie::resize(int w, int h)
 
 void Corrie::draw()
 {
+	if(m_root_panel) {
+		m_root_panel->draw(0, 0, m_w, m_h);
+	}
+
+	return;
+
     SDL_SetRenderTarget(m_rend, m_tex);
 
 	SDL_SetRenderDrawColor(m_rend, 0, 0, 0, 0);
@@ -152,11 +247,11 @@ void Corrie::draw()
         (int)avail.y
     };
 
-    // Clip
     SDL_SetRenderClipRect(m_rend, &r);
 
-    if(m_fft)
-        m_fft->draw(m_rend, r);
+	for(auto &fft : m_fft_list) {
+        fft.draw(m_rend, r);
+	}
 
     SDL_SetRenderTarget(m_rend, nullptr);
     SDL_SetRenderClipRect(m_rend, nullptr);
@@ -211,7 +306,10 @@ void Corrie::handle_audio(void *data, int bytes)
         m_buf_pos++;
         if(m_buf_pos >= m_buf_size) {
             m_buf_pos = 0;
-            m_fft->run(m_buf[0]);
+
+			for(auto &fft : m_fft_list) {
+				fft.run(m_buf[0]);
+			}
         }
     }
     free(data);
@@ -245,7 +343,7 @@ int main(int, char**)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer3_Init(renderer);
@@ -256,7 +354,21 @@ int main(int, char**)
 
     Corrie *cor = new Corrie(window, renderer);
     Uint32 ev_audio = cor->audio_init();
-    cor->m_fft = new FFT(512);
+    cor->m_fft_list.push_back(FFT(1024));
+
+	cor->m_root_panel = new Panel("root", Panel::SplitDirection::Vertical);
+	cor->m_root_panel->add(new Panel("one", Panel::SplitDirection::Vertical, []() {
+            ImGui::Text("Hello from first window!");
+		}));
+	Panel *panel2 = new Panel("two", Panel::SplitDirection::Horizontal);
+	cor->m_root_panel->add(panel2);
+
+	panel2->add(new Panel("three", Panel::SplitDirection::Vertical, []() {
+            ImGui::Text("Hello from another window!");
+		}));
+	panel2->add(new Panel("four", Panel::SplitDirection::Vertical, []() {
+            ImGui::Text("Hello from another window!");
+		}));
 
 
     // Main loop
@@ -276,7 +388,7 @@ int main(int, char**)
             if(event.type == ev_audio)
                 cor->handle_audio(event.user.data1, event.user.code);
             if(event.type == SDL_EVENT_WINDOW_RESIZED && event.window.windowID == SDL_GetWindowID(window))
-                cor->resize(event.window.data1, event.window.data2);
+                cor->set_size(event.window.data1, event.window.data2);
         }
 
         if (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED)
@@ -292,15 +404,14 @@ int main(int, char**)
         if (show_demo_window)
             ImGui::ShowDemoWindow(&show_demo_window);
 
-        {
+        if(0) {
             static float f = 0.0f;
             static int counter = 0;
 
-            static bool first = true;
-            if(first) {
+            if(cor->m_resize) {
                 ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
                 ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
-                first = false;
+                cor->m_resize = false;
             }
 
             ImGui::Begin("Hello, world!");
@@ -318,7 +429,6 @@ int main(int, char**)
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 
-            cor->draw();
 
             ImGui::End();
         }
@@ -331,6 +441,8 @@ int main(int, char**)
                 show_another_window = false;
             ImGui::End();
         }
+
+		cor->draw();
 
         ImGui::Render();
         SDL_SetRenderScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);

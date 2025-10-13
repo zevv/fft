@@ -3,7 +3,8 @@ EXE = fft
 
 IMGUI_DIR = /home/ico/external/imgui
 
-SRC = main.cpp
+SRC += main.cpp
+SRC += window.cpp
 SRC += $(IMGUI_DIR)/imgui.cpp 
 SRC += $(IMGUI_DIR)/imgui_demo.cpp
 SRC += $(IMGUI_DIR)/imgui_draw.cpp 
@@ -15,7 +16,7 @@ OBJS = $(addsuffix .o, $(basename $(notdir $(SRC))))
 
 UNAME_S := $(shell uname -s)
 
-CXXFLAGS += -std=c++11 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
+CXXFLAGS += -std=c++14 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 CXXFLAGS += -g -Wall -Wformat -Werror
 
 CXXFLAGS += `pkg-config sdl3 fftw3 --cflags`
