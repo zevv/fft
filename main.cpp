@@ -23,31 +23,41 @@ class Panel {
 
 public:
 
-	enum class SplitDirection {
-		Horizontal, Vertical
+	enum class Type {
+		Container, SplitH, SplitV
 	};
 
-	struct Kid {
-		Panel *panel;
-	};
-
-	Panel(const char *title, SplitDirection dir, std::function<void()> fn);
+	Panel(const char *title, std::function<void()> fn);
+	Panel(Type type);
 	void add(Panel *p);
-	void draw(int x, int y, int w, int h);
+	void update_kid(Panel *pk, int dx, int dy, int dw, int dh);
+	int draw(int x, int y, int w, int h);
 
 private:
 
 	const char *m_title;
-	SplitDirection m_split_direction;
+	Type m_type;
+	int m_size;
 	std::function<void()> m_fn_draw;
-	std::vector<Kid> m_kids;
+	std::vector<Panel *> m_kids;
+	Panel *m_parent;
 };
 
 
-Panel::Panel(const char *title, SplitDirection dir, std::function<void()> fn = nullptr)
+Panel::Panel(const char *title, std::function<void()> fn)
 	: m_title(title)
-	, m_split_direction(dir)
+	, m_type(Type::Container)
+	, m_size(100)
 	, m_fn_draw(fn)
+	, m_kids{}
+{
+}
+
+
+Panel::Panel(Type type)
+	: m_type(type)
+	, m_size(100)
+	, m_fn_draw(nullptr)
 	, m_kids{}
 {
 }
@@ -55,37 +65,82 @@ Panel::Panel(const char *title, SplitDirection dir, std::function<void()> fn = n
 
 void Panel::add(Panel *p)
 {
-	m_kids.push_back({p});
+	m_kids.push_back(p);
+	p->m_parent = this;
 }
 
 
-void Panel::draw(int x, int y, int w, int h)
+void Panel::update_kid(Panel *pk, int dx, int dy, int dw, int dh)
 {
-	if(m_fn_draw) {
+	if(m_type == Type::SplitH) {
+		for(size_t i=0; i<m_kids.size(); i++) {
+			if(m_kids[i] == pk) {
+				pk->m_size += dw;
+				if(i > 0) {
+					Panel *pp = m_kids[i-1];
+					pp->m_size -= dw;
+				}
+			}
+		}
+	}
+	if(m_type == Type::SplitV) {
+		for(size_t i=0; i<m_kids.size(); i++) {
+			if(m_kids[i] == pk) {
+				pk->m_size += dh;
+				if(i > 0) {
+					Panel *pp = m_kids[i-1];
+					pp->m_size -= dh;
+				}
+			}
+		}
+	}
+}
+
+
+int Panel::draw(int x, int y, int w, int h)
+{
+
+	if(m_type == Type::Container) {
+
 		ImGui::SetNextWindowPos(ImVec2((float)x, (float)y));
 		ImGui::SetNextWindowSize(ImVec2((float)w, (float)h));
 		ImGui::Begin(m_title);
 		ImVec2 pos = ImGui::GetWindowPos();
 		ImVec2 size = ImGui::GetWindowSize();
-		printf("%.0f,%.0f %.0fx%.0f\n", pos.x, pos.y, size.x, size.y);
-		m_fn_draw();
+
+		if(pos.x != x || pos.y != y || size.x != w || size.y != h) {
+			m_parent->update_kid(this, pos.x - x, pos.y - y, size.x - w, size.y - h);
+		}
+		
+		if(m_fn_draw) {
+			m_fn_draw();
+		}
 		ImGui::End();
-		return;
+
+	} else if(m_type == Type::SplitH) {
+
+		int kx = x;
+		for(auto &pk : m_kids) {
+			bool last = (&pk == &m_kids.back());
+			int kw = last ? (w - (kx - x)) : pk->m_size;
+			pk->draw(kx, y, kw, h);
+			kx += kw;
+		}
+
+
+	} else if(m_type == Type::SplitV) {
+
+		int ky = y;
+		for(auto &pk : m_kids) {
+			bool last = (&pk == &m_kids.back());
+			int kh = last ? (h - (ky - y)) : pk->m_size;
+			pk->draw(x, ky, w, kh);
+			ky += kh;
+		}
+
 	}
 
-	int nkids = m_kids.size();
-		
-	if(m_split_direction == SplitDirection::Horizontal) {
-		int hh = h / nkids;
-		for(int i=0; i<nkids; i++) {
-			m_kids[i].panel->draw(x, y + i * hh, w, hh);
-		}
-	} else {
-		int ww = w / nkids;
-		for(int i=0; i<nkids; i++) {
-			m_kids[i].panel->draw(x + i * ww, y, ww, h);
-		}
-	}
+	return m_size;
 }
 
 
@@ -179,6 +234,7 @@ public:
     Uint32 audio_init();
     void handle_audio(void *data, int len);
     void draw();
+    void draw_fft();
     void set_size(int w, int h);
 
 	Panel *m_root_panel;
@@ -223,13 +279,17 @@ void Corrie::set_size(int w, int h)
 }
 
 
+
+
 void Corrie::draw()
 {
 	if(m_root_panel) {
 		m_root_panel->draw(0, 0, m_w, m_h);
 	}
+}
 
-	return;
+void Corrie::draw_fft()
+{
 
     SDL_SetRenderTarget(m_rend, m_tex);
 
@@ -348,30 +408,27 @@ int main(int, char**)
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer3_Init(renderer);
 
-    bool show_demo_window = false;
-    bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     Corrie *cor = new Corrie(window, renderer);
     Uint32 ev_audio = cor->audio_init();
     cor->m_fft_list.push_back(FFT(1024));
 
-	cor->m_root_panel = new Panel("root", Panel::SplitDirection::Vertical);
-	cor->m_root_panel->add(new Panel("one", Panel::SplitDirection::Vertical, []() {
-            ImGui::Text("Hello from first window!");
-		}));
-	Panel *panel2 = new Panel("two", Panel::SplitDirection::Horizontal);
-	cor->m_root_panel->add(panel2);
+	cor->m_root_panel = new Panel(Panel::Type::SplitH);
+	cor->m_root_panel->add(new Panel("one", []() { ImGui::Text("Window one"); }));
+	Panel *p2 = new Panel(Panel::Type::SplitV);
+	cor->m_root_panel->add(p2);
+	p2->add(new Panel("two", []() { 
+		ImGui::Text("Window two"); 
 
-	panel2->add(new Panel("three", Panel::SplitDirection::Vertical, []() {
-            ImGui::Text("Hello from another window!");
-		}));
-	panel2->add(new Panel("four", Panel::SplitDirection::Vertical, []() {
-            ImGui::Text("Hello from another window!");
-		}));
+	}));
+	p2->add(new Panel("three", [cor]() { 
+		//ImGui::Text("Window three");
+		cor->draw_fft();
+		//ImGui::ShowDemoWindow(nullptr);
+	}));
 
 
-    // Main loop
     bool done = false;
     while (!done)
     {
@@ -400,47 +457,6 @@ int main(int, char**)
         ImGui_ImplSDLRenderer3_NewFrame();
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
-
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
-
-        if(0) {
-            static float f = 0.0f;
-            static int counter = 0;
-
-            if(cor->m_resize) {
-                ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
-                ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
-                cor->m_resize = false;
-            }
-
-            ImGui::Begin("Hello, world!");
-
-            //ImGui::Text("This is some useful text.");
-            ImGui::Checkbox("Demo Window", &show_demo_window);
-            ImGui::Checkbox("Another Window", &show_another_window);
-
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
-            ImGui::ColorEdit3("clear color", (float*)&clear_color);
-
-            if (ImGui::Button("Button")) counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-
-
-            ImGui::End();
-        }
-
-        if (show_another_window)
-        {
-            ImGui::Begin("Another Window", &show_another_window);
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
-            ImGui::End();
-        }
 
 		cor->draw();
 
