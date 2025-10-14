@@ -18,147 +18,10 @@
 #include "imgui_impl_sdlrenderer3.h"
 
 #include "window.hpp"
-
-class Panel {
-
-public:
-
-	typedef std::function<void(SDL_Rect &r)> DrawFn;
-
-	enum class Type {
-		Container, SplitH, SplitV
-	};
-
-	Panel(const char *title, size_t size, DrawFn fn);
-	Panel(Type type);
-	void add(Panel *p);
-	void update_kid(Panel *pk, int dx, int dy, int dw, int dh);
-	int draw(SDL_Renderer *rend, int x, int y, int w, int h);
-
-private:
-
-	const char *m_title;
-	Type m_type;
-	int m_size;
-	DrawFn m_fn_draw;
-	std::vector<Panel *> m_kids;
-	Panel *m_parent;
-};
+#include "panel.hpp"
 
 
-Panel::Panel(const char *title, size_t size, DrawFn fn)
-	: m_title(title)
-	, m_type(Type::Container)
-	, m_size(size)
-	, m_fn_draw(fn)
-	, m_kids{}
-{
-}
 
-
-Panel::Panel(Type type)
-	: m_type(type)
-	, m_size(100)
-	, m_fn_draw(nullptr)
-	, m_kids{}
-{
-}
-
-
-void Panel::add(Panel *p)
-{
-	m_kids.push_back(p);
-	p->m_parent = this;
-}
-
-
-void Panel::update_kid(Panel *pk, int dx, int dy, int dw, int dh)
-{
-	if(m_type == Type::SplitH) {
-		for(size_t i=0; i<m_kids.size(); i++) {
-			if(m_kids[i] == pk) {
-				pk->m_size += dw;
-				if(i > 0) {
-					Panel *pp = m_kids[i-1];
-					pp->m_size -= dw;
-				}
-			}
-		}
-	}
-	if(m_type == Type::SplitV) {
-		for(size_t i=0; i<m_kids.size(); i++) {
-			if(m_kids[i] == pk) {
-				pk->m_size += dh;
-				if(i > 0) {
-					Panel *pp = m_kids[i-1];
-					pp->m_size -= dh;
-				}
-			}
-		}
-	}
-	if(pk->m_parent) {
-		pk->m_parent->update_kid(this, dx, dy, dw, dh);
-	}
-}
-
-
-int Panel::draw(SDL_Renderer *rend, int x, int y, int w, int h)
-{
-
-	if(m_type == Type::Container) {
-
-		ImGui::SetNextWindowPos(ImVec2((float)x, (float)y));
-		ImGui::SetNextWindowSize(ImVec2((float)w, (float)h));
-		ImGui::Begin(m_title);
-		ImVec2 pos = ImGui::GetWindowPos();
-		ImVec2 size = ImGui::GetWindowSize();
-
-		if(pos.x != x || pos.y != y || size.x != w || size.y != h) {
-			m_parent->update_kid(this, pos.x - x, pos.y - y, size.x - w, size.y - h);
-		}
-		
-		if(m_fn_draw) {
-			ImVec2 cursor = ImGui::GetCursorScreenPos();
-			ImVec2 avail = ImGui::GetContentRegionAvail();
-
-			SDL_Rect r = {
-				(int)cursor.x,
-				(int)cursor.y,
-				(int)avail.x,
-				(int)avail.y
-			};
-
-			SDL_SetRenderClipRect(rend, &r);
-			m_fn_draw(r);
-			SDL_SetRenderClipRect(rend, nullptr);
-		}
-		ImGui::End();
-
-	} else if(m_type == Type::SplitH) {
-
-		int kx = x;
-		for(auto &pk : m_kids) {
-			bool last = (&pk == &m_kids.back());
-			int kw = last ? (w - (kx - x)) : pk->m_size;
-			pk->draw(rend, kx, y, kw, h);
-			kx += kw;
-		}
-
-
-	} else if(m_type == Type::SplitV) {
-
-		int ky = y;
-		for(auto &pk : m_kids) {
-			bool last = (&pk == &m_kids.back());
-			int kh = last ? (h - (ky - y)) : pk->m_size;
-			pk->draw(rend, x, ky, w, kh);
-			ky += kh;
-		}
-
-	}
-
-	return m_size;
-}
 
 
 
@@ -420,7 +283,6 @@ int main(int, char**)
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer3_Init(renderer);
 
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     Corrie *cor = new Corrie(window, renderer);
     Uint32 ev_audio = cor->audio_init();
@@ -440,7 +302,6 @@ int main(int, char**)
 	p2->add(new Panel("three", 300, [cor](SDL_Rect &r) { 
 		//ImGui::Text("Window three");
 		cor->draw_fft(r);
-		//ImGui::ShowDemoWindow(nullptr);
 	}));
 
 
@@ -474,10 +335,11 @@ int main(int, char**)
         ImGui::NewFrame();
 
 		cor->draw();
+		//ImGui::ShowDemoWindow(nullptr);
 
         ImGui::Render();
         SDL_SetRenderScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
-        SDL_SetRenderDrawColorFloat(renderer, clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
         SDL_RenderTexture(renderer, cor->m_tex, nullptr, nullptr);

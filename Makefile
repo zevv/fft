@@ -5,6 +5,7 @@ IMGUI_DIR = /home/ico/external/imgui
 
 SRC += main.cpp
 SRC += window.cpp
+SRC += panel.cpp
 SRC += $(IMGUI_DIR)/imgui.cpp 
 SRC += $(IMGUI_DIR)/imgui_demo.cpp
 SRC += $(IMGUI_DIR)/imgui_draw.cpp 
