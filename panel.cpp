@@ -5,11 +5,11 @@
 #include "panel.hpp"
 	
 
-Panel::Panel(Widget *widget)
+Panel::Panel(Widget *widget, int size)
 	: m_parent(nullptr)
 	, m_widget(widget)
 	, m_type(Type::Widget)
-	, m_size(250)
+	, m_size(size)
 {
 	char buf[16] = "";
 	for(int i=0; i<15; i++) {
@@ -37,9 +37,9 @@ void Panel::add(Panel *p)
 }
 
 
-void Panel::add(Widget *w)
+void Panel::add(Widget *w, int size)
 {
-	Panel *p = new Panel(w);
+	Panel *p = new Panel(w, size);
 	add(p);
 }
 

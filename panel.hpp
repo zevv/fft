@@ -16,10 +16,10 @@ public:
 		Widget, SplitH, SplitV
 	};
 
-	Panel(Widget *widget);
+	Panel(Widget *widget, int size);
 	Panel(Type type);
 	void add(Panel *p);
-	void add(Widget *widget);
+	void add(Widget *widget, int size);
 	void update_kid(Panel *pk, int dx, int dy, int dw, int dh);
 	int draw(Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h);
 

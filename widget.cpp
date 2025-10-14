@@ -82,8 +82,8 @@ void Widget::draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &_r)
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, col);
 		char label[2] = { (char)('0' + i), 0 };
 		bool clicked = ImGui::SmallButton(label);
-		ImGui::PopStyleColor(3);
 		if(clicked) m_channel_map[i] = !m_channel_map[i];
+		ImGui::PopStyleColor(3);
 	}
 
 

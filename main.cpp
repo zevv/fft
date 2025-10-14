@@ -170,12 +170,12 @@ int main(int, char**)
     Uint32 ev_audio = cor->audio_init();
 
 	cor->m_root_panel = new Panel(Panel::Type::SplitH);
-	cor->m_root_panel->add(new Widget(Widget::Type::Waveform));
+	cor->m_root_panel->add(new Widget(Widget::Type::None), 500);
 	Panel *p2 = new Panel(Panel::Type::SplitV);
 	cor->m_root_panel->add(p2);
-	p2->add(new Widget(Widget::Type::Waterfall));
-	p2->add(new Widget(Widget::Type::Spectrum));
-	p2->add(new Widget(Widget::Type::Waveform));
+	p2->add(new Widget(Widget::Type::Waterfall), 500);
+	p2->add(new Widget(Widget::Type::Spectrum), 200);
+	p2->add(new Widget(Widget::Type::Waveform), 200);
 
 
     bool done = false;
