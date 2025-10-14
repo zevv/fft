@@ -138,6 +138,7 @@ void Widget::draw_waveform(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	int nsamples = m_waveform.count;
 	SDL_FPoint p_min[npoints];
 	SDL_FPoint p_max[npoints];
+	SDL_FRect rect[npoints];
 
 	for(int ch=0; ch<8; ch++) {
 		if(!m_channel_map[ch]) continue;
@@ -152,15 +153,20 @@ void Widget::draw_waveform(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 				vmin = (idx == idx_start || v < vmin) ? v : vmin;
 				vmax = (idx == idx_start || v > vmax) ? v : vmax;
 			}
-			p_min[i].x = (float)(r.x + i * step);
-			p_min[i].y = (float)(midy - (int)(vmin * scale * (r.h / 2)));
-			p_max[i].x = (float)(r.x + i * step);
-			p_max[i].y = (float)(midy - (int)(vmax * scale * (r.h / 2)));
+			p_min[i].x = r.x + (npoints - i) * step;
+			p_min[i].y = midy - (int)(vmin * scale * (r.h / 2));
+			p_max[i].x = r.x + (npoints - i) * step;
+			p_max[i].y = midy - (int)(vmax * scale * (r.h / 2));
+			rect[i].x = p_min[i].x;
+			rect[i].y = p_max[i].y;
+			rect[i].w = step;
+			rect[i].h = p_min[i].y - p_max[i].y;
 		}
 		ImVec4 col = channel_color(ch);
-		SDL_SetRenderDrawColor(rend, col.x * 255, col.y * 255, col.z * 255, col.w * 255);
+		SDL_SetRenderDrawColor(rend, col.x * 255, col.y * 255, col.z * 255, col.w * 200);
 		SDL_RenderLines(rend, p_min, npoints);
 		SDL_RenderLines(rend, p_max, npoints);
+		SDL_RenderFillRects(rend, rect, npoints);
 	}
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);

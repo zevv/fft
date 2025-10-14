@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <stddef.h>
+#include <mutex>
 
 class Stream {
 

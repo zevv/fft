@@ -2,6 +2,8 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <math.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <array>
 #include <string.h>
 #include <memory>
@@ -28,8 +30,8 @@ class Corrie {
 public:
     Corrie(SDL_Window *window, SDL_Renderer *renderer);
 
-    Uint32 audio_init();
-    void handle_audio(int channels, void *data, int len);
+    void audio_init();
+    void poll_audio();
     void draw();
     void resize_window(int w, int h);
 
@@ -42,6 +44,7 @@ public:
 	int m_w, m_h;
 
     int m_srate;
+	SDL_AudioStream *m_sdl_audiostream;
 
 	Streams m_streams;
 };
@@ -85,53 +88,56 @@ void Corrie::draw()
 
 
 
-void on_audio_capture_callback(void *userdata, SDL_AudioStream *stream, int len1, int len)
-{
-	void *data = malloc(len);
-	SDL_GetAudioStreamData(stream, data, len);
-
-	SDL_Event ev;
-	ev.type = (long)userdata;
-	ev.user.code = len;
-	ev.user.data1 = data;
-
-	SDL_PushEvent(&ev);
-}
-
-
-Uint32 Corrie::audio_init(void)
+void Corrie::audio_init(void)
 {
     SDL_AudioSpec want;
-
-    long evnr = SDL_RegisterEvents(1);
 
     SDL_memset(&want, 0, sizeof(want));
     want.freq = m_srate;
     want.format = SDL_AUDIO_F32;
     want.channels = 2;
 
-    SDL_AudioStream *stream = SDL_OpenAudioDeviceStream(
+    m_sdl_audiostream = SDL_OpenAudioDeviceStream(
             SDL_AUDIO_DEVICE_DEFAULT_RECORDING,
             &want,
-            on_audio_capture_callback,
-            (void *)evnr);
+            nullptr,
+            (void *)this);
 
-    SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(stream));
-
-    return evnr;
+    SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audiostream));
 }
 
 
-void Corrie::handle_audio(int channels, void *data, int bytes)
+
+
+void Corrie::poll_audio()
 {
-	float *p = (float *)data;
-	size_t frames = bytes / (channels * sizeof(float));
-	for(size_t i=0; i<frames; i++) {
-		for(int c=0; c<channels; c++) {
-			m_streams.push(c, *p++);
+	float buf[600];
+
+	for(;;) {
+		int bytes = SDL_GetAudioStreamData(m_sdl_audiostream, buf, sizeof(buf));
+		if(bytes <= 0) break;
+		int channels = 2;
+		size_t frames = bytes / (channels * sizeof(float));
+		float *p = buf;
+		for(size_t i=0; i<frames; i++) {
+			for(int c=0; c<channels; c++) {
+				m_streams.push(c, *p++);
+			}
 		}
 	}
-    free(data);
+	
+	for(;;) {
+		int bytes = read(0, buf, sizeof(buf));
+		if(bytes <= 0) break;
+		int channels = 6;
+		size_t frames = bytes / (channels * sizeof(float));
+		float *p = buf;
+		for(size_t i=0; i<frames; i++) {
+			for(int c=0; c<channels; c++) {
+				m_streams.push(c+2, *p++);
+			}
+		}
+	}
 }
 
 
@@ -167,7 +173,7 @@ int main(int, char**)
     ImGui_ImplSDLRenderer3_Init(renderer);
 
     Corrie *cor = new Corrie(window, renderer);
-    Uint32 ev_audio = cor->audio_init();
+    cor->audio_init();
 
 	cor->m_root_panel = new Panel(Panel::Type::SplitH);
 	cor->m_root_panel->add(new Widget(Widget::Type::None), 500);
@@ -177,10 +183,13 @@ int main(int, char**)
 	p2->add(new Widget(Widget::Type::Spectrum), 200);
 	p2->add(new Widget(Widget::Type::Waveform), 200);
 
+	fcntl(0, F_SETFL, O_NONBLOCK);
 
     bool done = false;
     while (!done)
     {
+		cor->poll_audio();
+
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
@@ -191,8 +200,6 @@ int main(int, char**)
                 done = true;
             if(event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_Q)
                 done = true;
-            if(event.type == ev_audio)
-                cor->handle_audio(2, event.user.data1, event.user.code);
             if(event.type == SDL_EVENT_WINDOW_RESIZED && event.window.windowID == SDL_GetWindowID(window))
                 cor->resize_window(event.window.data1, event.window.data2);
         }
