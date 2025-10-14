@@ -44,15 +44,21 @@ void Panel::add(Widget *w, int size)
 }
 
 
-void Panel::update_kid(Panel *pk, int dx, int dy, int dw, int dh)
+void Panel::update_kid(Panel *pk, int dx1, int dy1, int dx2, int dy2)
 {
+	size_t nkids = m_kids.size();
 	if(m_type == Type::SplitH) {
 		for(size_t i=0; i<m_kids.size(); i++) {
 			if(m_kids[i] == pk) {
-				pk->m_size += dw;
-				if(i > 0) {
+				if(dx1 != 0 && i > 0) {
+					pk->m_size -= dx1;
 					Panel *pp = m_kids[i-1];
-					pp->m_size -= dw;
+					pp->m_size += dx1;
+				}
+				if(i < (nkids - 1)) {
+					pk->m_size += dx2;
+					Panel *pn = m_kids[i+1];
+					pn->m_size -= dx2;
 				}
 			}
 		}
@@ -60,16 +66,21 @@ void Panel::update_kid(Panel *pk, int dx, int dy, int dw, int dh)
 	if(m_type == Type::SplitV) {
 		for(size_t i=0; i<m_kids.size(); i++) {
 			if(m_kids[i] == pk) {
-				pk->m_size += dh;
-				if(i > 0) {
+				if(dy1 != 0 && i > 0) {
+					pk->m_size -= dy1;
 					Panel *pp = m_kids[i-1];
-					pp->m_size -= dh;
+					pp->m_size += dy1;
+				}
+				if(i < (nkids - 1)) {
+					pk->m_size += dy2;
+					Panel *pn = m_kids[i+1];
+					pn->m_size -= dy2;
 				}
 			}
 		}
 	}
 	if(pk->m_parent) {
-		pk->m_parent->update_kid(this, dx, dy, dw, dh);
+		pk->m_parent->update_kid(this, dx1, dy1, dx2, dy2);
 	}
 }
 
@@ -85,7 +96,6 @@ int Panel::draw(Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h
 		flags |= ImGuiWindowFlags_NoTitleBar;
 		flags |= ImGuiWindowFlags_NoSavedSettings;
 
-		//ImGui::SetNextWindowBgAlpha(0.0f);
 		ImGui::SetNextWindowPos(ImVec2((float)x, (float)y));
 		ImGui::SetNextWindowSize(ImVec2((float)w, (float)h));
 
@@ -96,7 +106,8 @@ int Panel::draw(Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h
 		ImVec2 size = ImGui::GetWindowSize();
 
 		if(pos.x != x || pos.y != y || size.x != w || size.y != h) {
-			m_parent->update_kid(this, pos.x - x, pos.y - y, size.x - w, size.y - h);
+			m_parent->update_kid(this, pos.x - x, pos.y - y, 
+					size.x - w - x + pos.x, size.y - h - y + pos.y);
 		}
 		
 		ImVec2 cursor = ImGui::GetCursorScreenPos();
@@ -140,4 +151,3 @@ int Panel::draw(Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h
 
 	return m_size;
 }
-
