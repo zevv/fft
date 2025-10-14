@@ -13,13 +13,13 @@
 
 #include <fftw3.h>
 
-#include "imgui.h"
-#include "imgui_impl_sdl3.h"
-#include "imgui_impl_sdlrenderer3.h"
+#include <imgui.h>
+#include <imgui_impl_sdl3.h>
+#include <imgui_impl_sdlrenderer3.h>
 
 #include "window.hpp"
 #include "panel.hpp"
-
+#include "widget.hpp"
 
 
 
@@ -126,7 +126,6 @@ public:
     Uint32 audio_init();
     void handle_audio(void *data, int len);
     void draw();
-    void draw_fft(SDL_Rect &r);
     void set_size(int w, int h);
 
 	Panel *m_root_panel;
@@ -138,7 +137,7 @@ public:
 	int m_w, m_h;
 
     int m_srate;
-	std::vector<FFT> m_fft_list;
+	FFT m_fft;
 
     size_t m_buf_size;
     size_t m_buf_pos;
@@ -153,6 +152,7 @@ Corrie::Corrie(SDL_Window *window, SDL_Renderer *renderer)
 	, m_w(800)
 	, m_h(600)
     , m_srate(48000)
+	, m_fft(1024)
     , m_buf_size(1024)
     , m_buf_pos(0)
 {
@@ -185,13 +185,6 @@ void Corrie::draw()
 	SDL_SetRenderTarget(m_rend, nullptr);
 }
 
-
-void Corrie::draw_fft(SDL_Rect &r)
-{
-	for(auto &fft : m_fft_list) {
-        fft.draw(m_rend, r);
-	}
-}
 
 
 void on_audio_capture_callback(void *userdata, SDL_AudioStream *stream, int len1, int len)
@@ -241,10 +234,7 @@ void Corrie::handle_audio(void *data, int bytes)
         m_buf_pos++;
         if(m_buf_pos >= m_buf_size) {
             m_buf_pos = 0;
-
-			for(auto &fft : m_fft_list) {
-				fft.run(m_buf[0]);
-			}
+			m_fft.run(m_buf[0]);
         }
     }
     free(data);
@@ -278,31 +268,20 @@ int main(int, char**)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer3_Init(renderer);
 
-
     Corrie *cor = new Corrie(window, renderer);
     Uint32 ev_audio = cor->audio_init();
-    cor->m_fft_list.push_back(FFT(1024));
 
 	cor->m_root_panel = new Panel(Panel::Type::SplitH);
-	cor->m_root_panel->add(new Panel("one", 300, [](SDL_Rect &r) {
-		ImGui::Text("Window one");
-	}));
+	cor->m_root_panel->add(new Widget(Widget::Type::Waveform));
 
 	Panel *p2 = new Panel(Panel::Type::SplitV);
 	cor->m_root_panel->add(p2);
-	p2->add(new Panel("two", 300, [](SDL_Rect &r) { 
-		ImGui::Text("Window two"); 
-
-	}));
-	p2->add(new Panel("three", 300, [cor](SDL_Rect &r) { 
-		//ImGui::Text("Window three");
-		cor->draw_fft(r);
-	}));
+	p2->add(new Widget(Widget::Type::Waterfall));
+	p2->add(new Widget(Widget::Type::Spectogram));
 
 
     bool done = false;
