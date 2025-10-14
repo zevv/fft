@@ -22,8 +22,8 @@ UNAME_S := $(shell uname -s)
 CXXFLAGS += -std=c++14 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 CXXFLAGS += -g -Wall -Wformat -Werror
 
-CXXFLAGS += `pkg-config sdl3 fftw3 --cflags`
-LIBS += -ldl `pkg-config sdl3 fftw3 --libs`
+CXXFLAGS += `pkg-config sdl3 fftw3 fftw3f --cflags`
+LIBS += -ldl `pkg-config sdl3 fftw3 fftw3f --libs`
 
 CFLAGS = $(CXXFLAGS)
 

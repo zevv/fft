@@ -44,10 +44,6 @@ public:
     int m_srate;
 
 	Streams m_streams;
-
-    size_t m_buf_size;
-    size_t m_buf_pos;
-    double m_buf[2][1024];
 };
 
 
@@ -58,8 +54,6 @@ Corrie::Corrie(SDL_Window *window, SDL_Renderer *renderer)
 	, m_w(800)
 	, m_h(600)
     , m_srate(48000)
-    , m_buf_size(1024)
-    , m_buf_pos(0)
 {
     resize_window(800, 600);
 }
@@ -180,7 +174,7 @@ int main(int, char**)
 	Panel *p2 = new Panel(Panel::Type::SplitV);
 	cor->m_root_panel->add(p2);
 	p2->add(new Widget(Widget::Type::Waterfall));
-	p2->add(new Widget(Widget::Type::Spectogram));
+	p2->add(new Widget(Widget::Type::Spectrum));
 	p2->add(new Widget(Widget::Type::Waveform));
 
 

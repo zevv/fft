@@ -1,10 +1,11 @@
+#pragma once
 
 #include <vector>
 
 class Window {
 
 public:
-	enum class Type {
+	enum class Type : int {
 		Hamming, Hanning, Blackman, Gauss, Rectangular,
 	};
 

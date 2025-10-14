@@ -1,6 +1,8 @@
 #pragma once
 
+#include <fftw3.h>
 #include "stream.hpp"
+#include "window.hpp"
 
 
 class Widget {
@@ -8,13 +10,15 @@ class Widget {
 
 public:
 	enum Type : int {
-		None, Spectogram, Waterfall, Waveform
+		None, Spectrum, Waterfall, Waveform
 	};
 
 	Widget(Type type = None);
+	void configure_fft(size_t size, Window::Type window_type);
 
 	void draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 	void draw_waveform(Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
+	void draw_spectrum(Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 
 private:
 	Type m_type;
@@ -27,7 +31,12 @@ private:
 	} m_waveform;
 
 	struct {
-
+		size_t size;
+		Window::Type window_type;
+		std::vector<float> in;
+		std::vector<float> out;
+		fftwf_plan plan;
+		Window window;
 	} m_spectrum;
 };
 
