@@ -102,6 +102,10 @@ int Panel::draw(Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h
 		ImGui::SetNextWindowBgAlpha(0.0f);
 		ImGui::Begin(m_title, nullptr, flags);
 
+		if(ImGui::IsWindowHovered()) {
+			ImGui::SetWindowFocus();
+		}
+
 		ImVec2 pos = ImGui::GetWindowPos();
 		ImVec2 size = ImGui::GetWindowSize();
 

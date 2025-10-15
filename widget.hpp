@@ -26,6 +26,7 @@ private:
 
 	struct {
 		int count;
+		int step;
 		bool agc;
 		float peak;
 	} m_waveform;

@@ -33,6 +33,7 @@ Widget::Widget(Type type)
 	, m_channel_map{}
 	, m_waveform{
 		.count = 1024,
+		.step = 2,
 		.agc = true,
 		.peak = 0.0f,
 	},
@@ -87,6 +88,12 @@ void Widget::draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &_r)
 	}
 
 
+	if(ImGui::IsWindowFocused()) {
+		if(ImGui::IsKeyPressed(ImGuiKey_Space)) {
+			m_channel_map[0] ^= 1;
+		}
+	}
+
 	ImVec2 cursor = ImGui::GetCursorScreenPos();
 	ImVec2 avail = ImGui::GetContentRegionAvail();
 
@@ -119,6 +126,10 @@ void Widget::draw_waveform(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	ImGui::SliderInt("samples", &m_waveform.count, 100, 1024 * 1024, "%d", ImGuiSliderFlags_Logarithmic);
 	
 	ImGui::SameLine();
+	ImGui::SetNextItemWidth(50);
+	ImGui::SliderInt("step", &m_waveform.step, 1, 8, "%d");
+	
+	ImGui::SameLine();
 	ImGui::Checkbox("AGC", &m_waveform.agc);
 
 	int midy = r.y + r.h / 2;
@@ -133,7 +144,7 @@ void Widget::draw_waveform(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
-	int step = 2;
+	int step = m_waveform.step;
 	int npoints = r.w / step;
 	int nsamples = m_waveform.count;
 	SDL_FPoint p_min[npoints];
@@ -163,9 +174,10 @@ void Widget::draw_waveform(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 			rect[i].h = p_min[i].y - p_max[i].y;
 		}
 		ImVec4 col = channel_color(ch);
-		SDL_SetRenderDrawColor(rend, col.x * 255, col.y * 255, col.z * 255, col.w * 200);
+		SDL_SetRenderDrawColor(rend, col.x * 255, col.y * 255, col.z * 255, col.w * 255);
 		SDL_RenderLines(rend, p_min, npoints);
 		SDL_RenderLines(rend, p_max, npoints);
+		SDL_SetRenderDrawColor(rend, col.x * 128, col.y * 128, col.z * 128, col.w * 255);
 		SDL_RenderFillRects(rend, rect, npoints);
 	}
 	
