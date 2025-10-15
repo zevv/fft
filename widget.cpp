@@ -145,7 +145,7 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 			float dx = ImGui::GetIO().MouseDelta.x;
 			float dy = ImGui::GetIO().MouseDelta.y;
 
-			view.count *= (1.0f + dy * 0.01f);
+			view.count *= (1.0f - dy * 0.01f);
 			view.offset += dx * view.count / r.w;
 		}
 		if(ImGui::IsKeyPressed(ImGuiKey_LeftBracket)) view.count *= 1.25f;
@@ -201,7 +201,7 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		SDL_SetRenderDrawColor(rend, col.x * 255, col.y * 255, col.z * 255, col.w * 255);
 		SDL_RenderLines(rend, p_min, npoints);
 		SDL_RenderLines(rend, p_max, npoints);
-		SDL_SetRenderDrawColor(rend, col.x * 64, col.y * 64, col.z * 64, col.w * 255);
+		SDL_SetRenderDrawColor(rend, col.x * 32, col.y * 32, col.z * 32, col.w * 255);
 		SDL_RenderFillRects(rend, rect, npoints);
 	}
 	
@@ -212,7 +212,7 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		const float *wdata = view.window->data();
 		SDL_FPoint p[r.w];
 		for(size_t x=0; x<(size_t)r.w; x++) {
-			size_t idx = view.cursor + view.window->size()/2 - ((x * view.count) / r.w);
+			size_t idx = view.cursor + view.window->size() - ((x * view.count) / r.w);
 			idx = std::clamp(idx, (size_t)0, view.window->size() - 1);
 			float v = wdata[idx];
 			p[x].x = r.x + r.w - x;
@@ -274,7 +274,9 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		if(!m_channel_map[ch]) continue;
 		Stream stream = streams.get(ch);
 
-		stream.read(0, &m_spectrum.in[0], m_spectrum.size);
+		if(view.cursor < 0) view.cursor = 0;
+		if(view.cursor > 1000000) view.cursor = 0;
+		stream.read(view.cursor, &m_spectrum.in[0], m_spectrum.size);
 
 		const float *w = m_spectrum.window.data();
 		assert(m_spectrum.window.size() == m_spectrum.size);
