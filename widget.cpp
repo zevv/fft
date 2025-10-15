@@ -1,6 +1,7 @@
 
 #include <string>
 #include <math.h>
+#include <assert.h>
 
 #include <SDL3/SDL.h>
 #include <imgui.h>
@@ -175,8 +176,9 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 
 		for(int i=0; i<npoints; i++) {
 			int idx_start = ((i+0) * nsamples) / npoints;
-			int idx_end   = ((i+1) * nsamples) / npoints + 1;
-			float vmin = 0.0, vmax = 0.0;
+			int idx_end   = ((i+1) * nsamples) / npoints;
+			float vmin = stream.read(idx_start + view.offset);
+			float vmax = vmin;
 			for(int idx=idx_start; idx<idx_end; idx++) {
 				float v = stream.read(idx + view.offset);
 				vmin = (idx == idx_start || v < vmin) ? v : vmin;
@@ -184,9 +186,9 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 			}
 			m_waveform.peak = (vmax > m_waveform.peak) ? vmax : m_waveform.peak;
 			p_min[i].x = r.x + (npoints - i) * step;
-			p_min[i].y = midy - (int)(vmin * scale * (r.h / 2));
 			p_max[i].x = r.x + (npoints - i) * step;
-			p_max[i].y = midy - (int)(vmax * scale * (r.h / 2));
+			p_min[i].y = midy - vmin * scale * (r.h / 2);
+			p_max[i].y = midy - vmax * scale * (r.h / 2);
 			rect[i].x = p_min[i].x;
 			rect[i].y = p_max[i].y;
 			rect[i].w = step;
