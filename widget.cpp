@@ -32,8 +32,6 @@ Widget::Widget(Type type)
 	: m_type(type)
 	, m_channel_map{}
 	, m_waveform{
-		.count = 1024,
-		.offset = 0,
 		.step = 2,
 		.agc = true,
 		.peak = 0.0f,
@@ -66,7 +64,7 @@ void Widget::configure_fft(size_t size, Window::Type window_type)
 }
 
 
-void Widget::draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &_r)
+void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r)
 {
 	// Type selection combo box
 	static const char *k_type_str[] = {
@@ -91,6 +89,10 @@ void Widget::draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &_r)
 		ImGui::PopStyleColor(3);
 	}
 
+	if(ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey_0)) {
+		for(int i=0; i<8; i++) m_channel_map[i] ^= 1;
+	}
+
 
 	ImVec2 cursor = ImGui::GetCursorScreenPos();
 	ImVec2 avail = ImGui::GetContentRegionAvail();
@@ -106,26 +108,26 @@ void Widget::draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &_r)
 	if(m_type == Type::None) {
 
 	} else if(m_type == Type::Spectrum) {
-		 draw_spectrum(streams, rend, r);
+		 draw_spectrum(view, streams, rend, r);
 	} else if(m_type == Type::Waterfall) {
 	
 	} else if(m_type == Type::Waveform) {
-		draw_waveform(streams, rend, r);
+		draw_waveform(view, streams, rend, r);
 	}
 
 	SDL_SetRenderClipRect(rend, nullptr);
 }
 
 
-void Widget::draw_waveform(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(100);
-	ImGui::SliderInt("off", &m_waveform.offset, 0, 10 * 1024, "%d");
+	ImGui::SliderInt("off", &view.offset, 0, 10 * 1024, "%d");
 
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(100);
-	ImGui::SliderInt("#", &m_waveform.count, 100, 1024 * 1024, "%d", ImGuiSliderFlags_Logarithmic);
+	ImGui::SliderInt("#", &view.count, 100, 1024 * 1024, "%d", ImGuiSliderFlags_Logarithmic);
 	
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(50);
@@ -139,19 +141,14 @@ void Widget::draw_waveform(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 			float dx = ImGui::GetIO().MouseDelta.x;
 			float dy = ImGui::GetIO().MouseDelta.y;
 
-			m_waveform.count -= dy * m_waveform.count / r.h;
-			m_waveform.offset += dx * m_waveform.count / r.w;
+			view.count *= (1.0f + dy * 0.01f);
+			view.offset += dx * view.count / r.w;
 		}
-		if(ImGui::IsKeyPressed(ImGuiKey_LeftBracket)) m_waveform.count *= 1.25f;
-		if(ImGui::IsKeyPressed(ImGuiKey_RightBracket)) m_waveform.count /= 1.25f;
-		if(ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) m_waveform.offset -= m_waveform.count / 4;
-		if(ImGui::IsKeyPressed(ImGuiKey_RightArrow)) m_waveform.offset += m_waveform.count / 4;
+		if(ImGui::IsKeyPressed(ImGuiKey_LeftBracket)) view.count *= 1.25f;
+		if(ImGui::IsKeyPressed(ImGuiKey_RightBracket)) view.count /= 1.25f;
+		if(ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) view.offset -= view.count / 4;
+		if(ImGui::IsKeyPressed(ImGuiKey_RightArrow)) view.offset += view.count / 4;
 	}
-
-	if(m_waveform.count < 100) m_waveform.count = 100;
-	if(m_waveform.count > 10 * 1024 * 1024) m_waveform.count = 10 * 1024 * 1024;
-	if(m_waveform.offset < 0) m_waveform.offset = 0;
-	if(m_waveform.offset > 1024 * 1024) m_waveform.offset = 1024 * 1024;
 
 	int midy = r.y + r.h / 2;
 	float scale = 1.0;
@@ -167,7 +164,7 @@ void Widget::draw_waveform(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 	int step = m_waveform.step;
 	int npoints = r.w / step;
-	int nsamples = m_waveform.count;
+	int nsamples = view.count;
 	SDL_FPoint p_min[npoints];
 	SDL_FPoint p_max[npoints];
 	SDL_FRect rect[npoints];
@@ -178,10 +175,10 @@ void Widget::draw_waveform(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 		for(int i=0; i<npoints; i++) {
 			int idx_start = ((i+0) * nsamples) / npoints;
-			int idx_end   = ((i+1) * nsamples) / npoints;
-			float vmin, vmax;
+			int idx_end   = ((i+1) * nsamples) / npoints + 1;
+			float vmin = 0.0, vmax = 0.0;
 			for(int idx=idx_start; idx<idx_end; idx++) {
-				float v = stream.read(idx + m_waveform.offset);
+				float v = stream.read(idx + view.offset);
 				vmin = (idx == idx_start || v < vmin) ? v : vmin;
 				vmax = (idx == idx_start || v > vmax) ? v : vmax;
 			}
@@ -209,7 +206,7 @@ void Widget::draw_waveform(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 }
 
 
-void Widget::draw_spectrum(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 
 	ImGui::SameLine();

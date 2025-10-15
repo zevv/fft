@@ -26,6 +26,16 @@ void Stream::write(float v)
 }
 
 
+float Stream::read(size_t idx)
+{
+	float rv = 0.0;
+	if(idx < m_size) {
+		size_t i = (m_head + m_size - idx - 1) % m_size;
+		rv = m_data[i];
+	}
+	return rv;
+}
+
 
 void Stream::read(size_t idx, float *out, size_t count)
 {
@@ -63,3 +73,13 @@ Stream &Streams::get(size_t channel)
 	}
 }
 
+StreamsReader::StreamsReader(Streams &streams, int channel_map)
+	: m_streams(streams)
+	, m_channel_map(channel_map)
+{
+}
+
+
+void StreamsReader::handle_data(void *data, size_t nbytes)
+{
+}

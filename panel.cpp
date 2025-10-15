@@ -21,10 +21,10 @@ Panel::Panel(Widget *widget, int size)
 }
 
 
-Panel::Panel(Type type)
+Panel::Panel(Type type, int size)
 	: m_parent(nullptr)
 	, m_type(type)
-	, m_size(100)
+	, m_size(size)
 	, m_kids{}
 {
 }
@@ -85,7 +85,7 @@ void Panel::update_kid(Panel *pk, int dx1, int dy1, int dx2, int dy2)
 }
 
 
-int Panel::draw(Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h)
+int Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h)
 {
 	
 	if(m_type == Type::Widget) {
@@ -95,6 +95,7 @@ int Panel::draw(Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h
 		flags |= ImGuiWindowFlags_NoMove;
 		flags |= ImGuiWindowFlags_NoTitleBar;
 		flags |= ImGuiWindowFlags_NoSavedSettings;
+		flags |= ImGuiWindowFlags_NoNavInputs;
 
 		ImGui::SetNextWindowPos(ImVec2((float)x, (float)y));
 		ImGui::SetNextWindowSize(ImVec2((float)w, (float)h));
@@ -127,7 +128,7 @@ int Panel::draw(Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h
 		};
 
 		SDL_SetRenderClipRect(rend, &r);
-		m_widget->draw(streams, rend, r);
+		m_widget->draw(view, streams, rend, r);
 		SDL_SetRenderClipRect(rend, nullptr);
 
 		ImGui::End();
@@ -138,7 +139,7 @@ int Panel::draw(Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h
 		for(auto &pk : m_kids) {
 			bool last = (&pk == &m_kids.back());
 			int kw = last ? (w - (kx - x)) : pk->m_size;
-			pk->draw(streams, rend, kx, y, kw, h);
+			pk->draw(view, streams, rend, kx, y, kw, h);
 			kx += kw + 1;
 		}
 
@@ -149,7 +150,7 @@ int Panel::draw(Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h
 		for(auto &pk : m_kids) {
 			bool last = (&pk == &m_kids.back());
 			int kh = last ? (h - (ky - y)) : pk->m_size;
-			pk->draw(streams, rend, x, ky, w, kh);
+			pk->draw(view, streams, rend, x, ky, w, kh);
 			ky += kh + 1;
 		}
 

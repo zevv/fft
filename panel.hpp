@@ -6,6 +6,7 @@
 
 #include "widget.hpp"
 #include "stream.hpp"
+#include "view.hpp"
 
 
 class Panel {
@@ -17,11 +18,11 @@ public:
 	};
 
 	Panel(Widget *widget, int size);
-	Panel(Type type);
+	Panel(Type type, int size = 100);
 	void add(Panel *p);
 	void add(Widget *widget, int size);
 	void update_kid(Panel *pk, int dx, int dy, int dw, int dh);
-	int draw(Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h);
+	int draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h);
 
 private:
 

@@ -3,6 +3,7 @@
 #include <fftw3.h>
 #include "stream.hpp"
 #include "window.hpp"
+#include "view.hpp"
 
 
 class Widget {
@@ -16,17 +17,15 @@ public:
 	Widget(Type type = None);
 	void configure_fft(size_t size, Window::Type window_type);
 
-	void draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
-	void draw_waveform(Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
-	void draw_spectrum(Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
+	void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
+	void draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
+	void draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 
 private:
 	Type m_type;
 	bool m_channel_map[8];
 
 	struct {
-		int count;
-		int offset;
 		int step;
 		bool agc;
 		float peak;

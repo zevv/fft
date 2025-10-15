@@ -24,6 +24,7 @@
 #include "panel.hpp"
 #include "widget.hpp"
 #include "stream.hpp"
+#include "view.hpp"
 
 
 class Corrie {
@@ -48,6 +49,7 @@ public:
 	SDL_AudioStream *m_sdl_audiostream;
 
 	Streams m_streams;
+	View m_view;
 };
 
 
@@ -57,8 +59,9 @@ Corrie::Corrie(SDL_Window *window, SDL_Renderer *renderer)
 	, m_resize(true)
 	, m_w(800)
 	, m_h(600)
-    , m_srate(48000)
+    , m_srate(8000)
 	, m_capture(true)
+	, m_view()
 {
     resize_window(800, 600);
 }
@@ -79,11 +82,12 @@ void Corrie::resize_window(int w, int h)
 
 void Corrie::draw()
 {
+	m_view.clamp();
     SDL_SetRenderTarget(m_rend, m_tex);
 	SDL_SetRenderDrawColor(m_rend, 10, 10, 10, 255);
 	SDL_RenderClear(m_rend);
 	if(m_root_panel) {
-		m_root_panel->draw(m_streams, m_rend, 0, 0, m_w, m_h);
+		m_root_panel->draw(m_view, m_streams, m_rend, 0, 0, m_w, m_h);
 	}
 	SDL_SetRenderTarget(m_rend, nullptr);
 }
@@ -178,11 +182,11 @@ int main(int, char**)
     cor->audio_init();
 
 	cor->m_root_panel = new Panel(Panel::Type::SplitV);
-	cor->m_root_panel->add(new Widget(Widget::Type::Waveform), 200);
-	Panel *p2 = new Panel(Panel::Type::SplitH);
+	Panel *p2 = new Panel(Panel::Type::SplitH, 500);
 	cor->m_root_panel->add(p2);
 	p2->add(new Widget(Widget::Type::Waterfall), 400);
 	p2->add(new Widget(Widget::Type::Spectrum), 150);
+	cor->m_root_panel->add(new Widget(Widget::Type::Waveform), 200);
 
 	fcntl(0, F_SETFL, O_NONBLOCK);
 
