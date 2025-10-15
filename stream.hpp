@@ -9,9 +9,17 @@ class Stream {
 public:
 	Stream();
 	void set_size(size_t size);
-	void push(float v);
-	float get(size_t idx);
-	void get(size_t idx, float *out, size_t count);
+	void write(float v);
+	inline float read(size_t idx) {
+		float rv = 0.0;
+		if(idx < m_size) {
+			size_t i = (m_head + m_size - idx - 1) % m_size;
+			rv = m_data[i];
+		}
+		return rv;
+	};
+
+	void read(size_t idx, float *out, size_t count);
 
 private:
 
@@ -25,8 +33,6 @@ private:
 class Streams {
 public:
 	Streams();
-	void push(size_t channel, float v);
-	float get(size_t channel, size_t idx);
-	void get(size_t channel, size_t idx, float *out, size_t count);
+	Stream &get(size_t channel);
 	std::vector<Stream> m_streams;
 };

@@ -44,6 +44,7 @@ public:
 	int m_w, m_h;
 
     int m_srate;
+	bool m_capture;
 	SDL_AudioStream *m_sdl_audiostream;
 
 	Streams m_streams;
@@ -57,6 +58,7 @@ Corrie::Corrie(SDL_Window *window, SDL_Renderer *renderer)
 	, m_w(800)
 	, m_h(600)
     , m_srate(48000)
+	, m_capture(true)
 {
     resize_window(800, 600);
 }
@@ -121,7 +123,7 @@ void Corrie::poll_audio()
 		float *p = buf;
 		for(size_t i=0; i<frames; i++) {
 			for(int c=0; c<channels; c++) {
-				m_streams.push(c, *p++);
+				m_streams.get(c).write(*p++);
 			}
 		}
 	}
@@ -134,7 +136,7 @@ void Corrie::poll_audio()
 		float *p = buf;
 		for(size_t i=0; i<frames; i++) {
 			for(int c=0; c<channels; c++) {
-				m_streams.push(c+2, *p++);
+				m_streams.get(c+2).write(*p++);
 			}
 		}
 	}
@@ -175,20 +177,24 @@ int main(int, char**)
     Corrie *cor = new Corrie(window, renderer);
     cor->audio_init();
 
-	cor->m_root_panel = new Panel(Panel::Type::SplitH);
-	cor->m_root_panel->add(new Widget(Widget::Type::None), 500);
-	Panel *p2 = new Panel(Panel::Type::SplitV);
+	cor->m_root_panel = new Panel(Panel::Type::SplitV);
+	cor->m_root_panel->add(new Widget(Widget::Type::Waveform), 200);
+	Panel *p2 = new Panel(Panel::Type::SplitH);
 	cor->m_root_panel->add(p2);
-	p2->add(new Widget(Widget::Type::Waterfall), 500);
-	p2->add(new Widget(Widget::Type::Spectrum), 200);
-	p2->add(new Widget(Widget::Type::Waveform), 200);
+	p2->add(new Widget(Widget::Type::Waterfall), 400);
+	p2->add(new Widget(Widget::Type::Spectrum), 150);
 
 	fcntl(0, F_SETFL, O_NONBLOCK);
 
     bool done = false;
     while (!done)
     {
-		cor->poll_audio();
+		if(ImGui::IsKeyPressed(ImGuiKey_Space)) {
+			cor->m_capture ^= 1;
+		}
+		if(cor->m_capture) {
+			cor->poll_audio();
+		}
 
         SDL_Event event;
         while (SDL_PollEvent(&event))

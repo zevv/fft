@@ -26,6 +26,7 @@ private:
 
 	struct {
 		int count;
+		int offset;
 		int step;
 		bool agc;
 		float peak;
@@ -34,6 +35,7 @@ private:
 	struct {
 		size_t size;
 		Window::Type window_type;
+		float window_sigma;
 		std::vector<float> in;
 		std::vector<float> out;
 		fftwf_plan plan;

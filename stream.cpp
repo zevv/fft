@@ -16,7 +16,7 @@ void Stream::set_size(size_t size)
 }
 
 
-void Stream::push(float v)
+void Stream::write(float v)
 {
 	m_data[m_head] = v;
 	m_head = (m_head + 1) % m_size;
@@ -26,18 +26,8 @@ void Stream::push(float v)
 }
 
 
-float Stream::get(size_t idx)
-{
-	if(idx >= m_size) {
-		return 0.0f;
-	}
-	size_t i = m_head + m_size - idx - 1;
-	if(i >= m_size) i -= m_size;
-	return m_data[i];
-}
 
-
-void Stream::get(size_t idx, float *out, size_t count)
+void Stream::read(size_t idx, float *out, size_t count)
 {
 	// fast impl, no calls
 	if(idx + count > m_size) {
@@ -64,29 +54,12 @@ Streams::Streams()
 }
 
 
-void Streams::push(size_t channel, float v)
+Stream &Streams::get(size_t channel)
 {
 	if(channel < m_streams.size()) {
-		m_streams[channel].push(v);
-	}
-}
-	
-
-float Streams::get(size_t channel, size_t idx)
-{
-	if(channel < m_streams.size()) {
-		return m_streams[channel].get(idx);
-	}
-	return 0.0f;
-}
-
-
-void Streams::get(size_t channel, size_t idx, float *out, size_t count)
-{
-	if(channel < m_streams.size()) {
-		m_streams[channel].get(idx, out, count);
+		return m_streams[channel];
 	} else {
-		memset(out, 0, count * sizeof(float));
+		return m_streams[0];
 	}
 }
 

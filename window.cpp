@@ -1,14 +1,14 @@
 #include <math.h>
 #include "window.hpp"
 
-void Window::configure(Window::Type type, size_t size, float alpha)
+void Window::configure(Window::Type type, size_t size, float sigma)
 {
-	if(m_type == type && m_size == size && m_alpha == alpha) {
+	if(m_type == type && m_size == size && m_sigma == sigma) {
 		return;
 	}
 
 	m_type = type;
-	m_alpha = alpha;
+	m_sigma = sigma;
 	m_data.resize(size);
 	m_size = size;
 
@@ -24,10 +24,10 @@ void Window::configure(Window::Type type, size_t size, float alpha)
 			y = 0.5f * (1.0f - cosf(2.0f * M_PI * x));
 			break;
 		case Type::Blackman:
-			y = (1.0f - alpha) / 2.0f - 0.5f * cosf(2.0f * M_PI * x) + alpha / 2.0f * cosf(4.0f * M_PI * x);
+			y = (1.0f - sigma) / 2.0f - 0.5f * cosf(2.0f * M_PI * x) + sigma / 2.0f * cosf(4.0f * M_PI * x);
 			break;
 		case Type::Gauss:
-			y = expf(-0.5f * powf((x - 0.5f) / (alpha * 0.5f), 2.0f));
+			y = expf(-0.5f * powf((x - 0.5f) / (sigma * 0.5f), 2.0f));
 			break;
 		case Type::Rectangular:
 			y = 1.0f;

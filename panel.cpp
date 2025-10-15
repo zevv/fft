@@ -102,7 +102,9 @@ int Panel::draw(Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h
 		ImGui::SetNextWindowBgAlpha(0.0f);
 		ImGui::Begin(m_title, nullptr, flags);
 
-		if(ImGui::IsWindowHovered()) {
+		if(ImGui::IsWindowHovered() && 
+		   !ImGui::IsMouseDragging(ImGuiMouseButton_Left) && 
+		   !ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
 			ImGui::SetWindowFocus();
 		}
 
