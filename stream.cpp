@@ -72,14 +72,49 @@ Stream &Streams::get(size_t channel)
 		return m_streams[0];
 	}
 }
-
-StreamsReader::StreamsReader(Streams &streams, int channel_map)
+	
+StreamsReader::StreamsReader(Streams &streams, int channel_base, int channel_count)
 	: m_streams(streams)
-	, m_channel_map(channel_map)
+	, m_channel_base(channel_base)
+	, m_channel_count(channel_count)
+	, m_frame_bytes(sizeof(float) * channel_count)
+	, m_pos(0)
+{}
+
+
+void StreamsReader::handle_data(uint8_t *data, size_t nbytes)
 {
+	// try to complete incomplete frame
+	if(m_pos > 0) {
+		size_t n = std::min(nbytes, m_frame_bytes - m_pos);
+		memcpy(buf + m_pos, data, n);
+		m_pos += n;
+		nbytes -= n;
+		data += n;
+		if(m_pos == m_frame_bytes) {
+			float *f = (float *)buf;
+			for(int i=0; i<m_channel_count; i++) {
+				m_streams.get(m_channel_base + i).write(*f++);
+			}
+			m_pos = 0;
+		}
+	}
+
+	// handle full frames
+	while(nbytes >= m_frame_bytes) {
+		float *f = (float *)data;
+		for(int i=0; i<m_channel_count; i++) {
+			m_streams.get(m_channel_base + i).write(*f++);
+		}
+		nbytes -= m_frame_bytes;
+		data += m_frame_bytes;
+	}
+
+	// store remainder
+	if(nbytes > 0) {
+		memcpy(buf, data, nbytes);
+		m_pos = nbytes;
+	}
 }
 
 
-void StreamsReader::handle_data(void *data, size_t nbytes)
-{
-}

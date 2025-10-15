@@ -144,7 +144,6 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
 			float dx = ImGui::GetIO().MouseDelta.x;
 			float dy = ImGui::GetIO().MouseDelta.y;
-
 			view.count *= (1.0f - dy * 0.01f);
 			view.offset += dx * view.count / r.w;
 		}

@@ -49,6 +49,8 @@ public:
 	SDL_AudioStream *m_sdl_audiostream;
 
 	Streams m_streams;
+	StreamsReader m_audio_reader;
+	StreamsReader m_stdin_reader;
 	View m_view;
 };
 
@@ -61,6 +63,8 @@ Corrie::Corrie(SDL_Window *window, SDL_Renderer *renderer)
 	, m_h(600)
     , m_srate(8000)
 	, m_capture(true)
+	, m_audio_reader(m_streams, 0, 2)
+	, m_stdin_reader(m_streams, 2, 6)
 	, m_view()
 {
     resize_window(800, 600);
@@ -117,32 +121,18 @@ void Corrie::audio_init(void)
 
 void Corrie::poll_audio()
 {
-	float buf[600];
+	uint8_t buf[2048];
 
 	for(;;) {
-		int bytes = SDL_GetAudioStreamData(m_sdl_audiostream, buf, sizeof(buf));
-		if(bytes <= 0) break;
-		int channels = 2;
-		size_t frames = bytes / (channels * sizeof(float));
-		float *p = buf;
-		for(size_t i=0; i<frames; i++) {
-			for(int c=0; c<channels; c++) {
-				m_streams.get(c).write(*p++);
-			}
-		}
+		int r = SDL_GetAudioStreamData(m_sdl_audiostream, buf, sizeof(buf));
+		if(r <= 0) break;
+		m_audio_reader.handle_data(buf, r);
 	}
 	
 	for(;;) {
-		int bytes = read(0, buf, sizeof(buf));
-		if(bytes <= 0) break;
-		int channels = 6;
-		size_t frames = bytes / (channels * sizeof(float));
-		float *p = buf;
-		for(size_t i=0; i<frames; i++) {
-			for(int c=0; c<channels; c++) {
-				m_streams.get(c+2).write(*p++);
-			}
-		}
+		int r = read(0, buf, sizeof(buf));
+		if(r <= 0) break;
+		m_stdin_reader.handle_data(buf, r);
 	}
 }
 

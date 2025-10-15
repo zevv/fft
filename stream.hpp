@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdio.h>
 #include <vector>
 #include <stddef.h>
 #include <mutex>
@@ -32,11 +33,18 @@ public:
 
 class StreamsReader {
 
-	StreamsReader(Streams &streams, int channel_map);
-	void handle_data(void *data, size_t nbytes);
+public:
+
+	StreamsReader(Streams &streams, int channel_base, int channel_count);
+	void handle_data(uint8_t *data, size_t nbytes);
 
 private:
-	Streams m_streams;
-	int m_channel_map;
+	Streams &m_streams;
+	int m_channel_base;
+	int m_channel_count;
+
+	size_t m_frame_bytes;
+	uint8_t buf[sizeof(float) * 8];
+	size_t m_pos;
 
 };
