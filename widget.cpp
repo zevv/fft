@@ -2,6 +2,7 @@
 #include <string>
 #include <math.h>
 #include <assert.h>
+#include <algorithm>
 
 #include <SDL3/SDL.h>
 #include <imgui.h>
@@ -39,6 +40,7 @@ Widget::Widget(Type type)
 	},
 	m_spectrum{
 		.size = 0,
+		.window_type = Window::Type::Gauss,
 		.in{},
 		.out{},
 		.plan = nullptr,
@@ -138,6 +140,7 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	ImGui::Checkbox("AGC", &m_waveform.agc);
 		   
 	if(ImGui::IsWindowFocused()) {
+		view.cursor =  view.count * (1 - (ImGui::GetMousePos().x - r.x) / r.w);
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
 			float dx = ImGui::GetIO().MouseDelta.x;
 			float dy = ImGui::GetIO().MouseDelta.y;
@@ -202,6 +205,25 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		SDL_RenderFillRects(rend, rect, npoints);
 	}
 	
+	// draw window function over graph, properly scale horizontally
+	// with the view.count, center at view.cursor
+
+	if(view.window) {
+		const float *wdata = view.window->data();
+		SDL_FPoint p[r.w];
+		for(size_t x=0; x<(size_t)r.w; x++) {
+			size_t idx = view.cursor + view.window->size()/2 - ((x * view.count) / r.w);
+			idx = std::clamp(idx, (size_t)0, view.window->size() - 1);
+			float v = wdata[idx];
+			p[x].x = r.x + r.w - x;
+			p[x].y = r.y + r.h - v * r.h;
+		}
+
+		SDL_SetRenderDrawColor(rend, 255, 255, 255, 128);
+		SDL_RenderLines(rend, p, r.w);
+	}
+
+	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
 	m_waveform.peak *= 0.9f;
@@ -210,18 +232,22 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 
 void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
-
-	ImGui::SameLine();
-	ImGui::SetNextItemWidth(100);
 	bool update = false;
-	static const char *k_type_str[] = { "rect", "hanning", "hamming", "blackman", "gauss" };
-	update |= ImGui::Combo("window", (int *)&m_spectrum.window_type, 
-			                    k_type_str, IM_ARRAYSIZE(k_type_str));
+
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(100);
 	update |= ImGui::SliderInt("fft size", (int *)&m_spectrum.size, 
 				256, 16384, "%d", ImGuiSliderFlags_Logarithmic);
 
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(100);
+	static const char *k_type_str[] = { "rect", "hanning", "hamming", "blackman", "gauss" };
+	update |= ImGui::Combo("window", (int *)&m_spectrum.window_type, 
+			                    k_type_str, IM_ARRAYSIZE(k_type_str));
+
+	if(ImGui::IsWindowFocused()) {
+		view.window = &m_spectrum.window;
+	}
 	
 	if(update) {
 		configure_fft(m_spectrum.size, m_spectrum.window_type);
@@ -250,8 +276,10 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 
 		stream.read(0, &m_spectrum.in[0], m_spectrum.size);
 
+		const float *w = m_spectrum.window.data();
+		assert(m_spectrum.window.size() == m_spectrum.size);
 		for(size_t i=0; i<m_spectrum.size; i++) {
-			m_spectrum.in[i] *= m_spectrum.window.get_data(i);
+			m_spectrum.in[i] *= w[i];
 		}
 
 		fftwf_execute(m_spectrum.plan);

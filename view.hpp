@@ -3,6 +3,8 @@
 
 #include <algorithm>
 
+#include "window.hpp"
+
 class View {
 
 public:
@@ -15,16 +17,6 @@ public:
 		, m_offset_max(1024 * 1024)
 	{}
 
-	void zoom(float factor) {
-		count = count * factor;
-		clamp();
-	};
-
-	void pan(int delta) {
-		offset += delta;
-		clamp();
-	};
-
 	void clamp() {
 		float a1 = 0.9;
 		float a2 = 1 - a1;
@@ -36,6 +28,9 @@ public:
 	
 	int count;
 	int offset;
+	int cursor;
+	int fft_width;
+	Window *window;
 
 private:
 

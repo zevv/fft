@@ -10,12 +10,13 @@ public:
 	};
 
 	void configure(Type type, size_t size, float sigma = 0.4f);
-	double get_data(size_t index) { return m_data[index]; }
+	const float *data() const { return m_data.data(); }
+	size_t size() const { return m_size; }
 
 private:
 	Type m_type;
 	size_t m_size;
 	float m_sigma;
-	std::vector<double> m_data;
+	std::vector<float> m_data;
 };
 
