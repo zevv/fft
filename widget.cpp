@@ -10,7 +10,7 @@
 #include "widget.hpp"
 		
 const char *k_window_str[] = { 
-	"rect", "hanning", "hamming", "blackman", "gauss" 
+	"square", "hanning", "hamming", "blackman", "gauss" 
 };
 
 static const char *k_type_str[] = {
@@ -86,7 +86,7 @@ void Widget::load(ConfigReader::Node *n)
 			if(auto nc = n->find("spectrum")) {
 				m_type = Type::Spectrum;
 				if(const char *window_type = nc->read_str("window_type")) {
-					if(strcmp(window_type, "rect") == 0) m_spectrum.window_type = Window::Type::Rectangular;
+					if(strcmp(window_type, "square") == 0) m_spectrum.window_type = Window::Type::Square;
 					if(strcmp(window_type, "hanning") == 0) m_spectrum.window_type = Window::Type::Hanning;
 					if(strcmp(window_type, "hamming") == 0) m_spectrum.window_type = Window::Type::Hamming;
 					if(strcmp(window_type, "blackman") == 0) m_spectrum.window_type = Window::Type::Blackman;
@@ -94,8 +94,7 @@ void Widget::load(ConfigReader::Node *n)
 				}
 				nc->read("window_beta", m_spectrum.window_beta);
 				nc->read("fft_size", m_spectrum.size);
-				m_spectrum.window.configure(m_spectrum.window_type, 
-					                    m_spectrum.size, m_spectrum.window_beta);
+				configure_fft(m_spectrum.size, m_spectrum.window_type);
 			}
 		}
 	}
@@ -274,15 +273,19 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	if(view.window) {
 		size_t wsize = view.window->size();
 		const float *wdata = view.window->data();
-		SDL_FPoint p[64];
+		SDL_FPoint p[66];
+		p[0].x = view.idx_to_x(view.cursor, r);
+		p[0].y = r.y + r.h - 1;
+		p[65].x = view.idx_to_x(view.cursor + wsize, r);
+		p[65].y = r.y + r.h - 1;
 		for(int i=0; i<64; i++) {
 			int n = wsize * i / 64;
-			p[i].x = view.idx_to_x(view.cursor + wsize * i / 64.0, r);
-			p[i].y = r.y + (r.h-1) * (1.0f - wdata[n]);
+			p[i+1].x = view.idx_to_x(view.cursor + wsize * i / 63.0, r);
+			p[i+1].y = r.y + (r.h-1) * (1.0f - wdata[n]);
 		}
 
 		SDL_SetRenderDrawColor(rend, 255, 255, 255, 128);
-		SDL_RenderLines(rend, p, 64);
+		SDL_RenderLines(rend, p, 66);
 	}
 
 	
@@ -299,7 +302,7 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(100);
 	update |= ImGui::SliderInt("fft size", (int *)&m_spectrum.size, 
-				256, 16384, "%d", ImGuiSliderFlags_Logarithmic);
+				16, 16384, "%d", ImGuiSliderFlags_Logarithmic);
 
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(100);
@@ -314,8 +317,7 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		configure_fft(m_spectrum.size, m_spectrum.window_type);
 	}
 
-	if(m_spectrum.window_type == Window::Type::Gauss || 
-	   m_spectrum.window_type == Window::Type::Blackman) {
+	if(m_spectrum.window_type == Window::Type::Gauss) {
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(100);
 		bool changed = ImGui::SliderFloat("beta", &m_spectrum.window_beta, 
@@ -353,6 +355,8 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		if(!m_channel_map[ch]) continue;
 		Stream stream = streams.get(ch);
 
+		printf("memset %d elements %d\n", m_spectrum.size, (int)m_spectrum.in.size());
+		memset(&m_spectrum.in[0], 0, sizeof(float) * m_spectrum.size);
 		stream.read(view.cursor, &m_spectrum.in[0], m_spectrum.size);
 
 		const float *w = m_spectrum.window.data();
@@ -381,7 +385,7 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		for(size_t i=0; i<npoints; i++) {
 			float v = m_spectrum.out[i];
 			float dB = (v > 1e-6f) ? 20.0f * log10f(v) : -100.0f;
-			p[i].x = r.x + (i * r.w) / npoints;
+			p[i].x = r.x + (i * r.w) / (npoints - 1);
 			p[i].y = view.db_to_y(dB, r);
 		}
 		ImVec4 col = channel_color(ch);

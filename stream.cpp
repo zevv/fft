@@ -39,22 +39,28 @@ float Stream::read(size_t idx)
 
 void Stream::read(size_t idx, float *out, size_t count)
 {
-	if(idx > m_size) {
-		idx = m_size;
-	}
-	if(idx + count > m_size) {
-		count = m_size - idx;
-	}
-	size_t i = m_head + m_size - idx - 1;
-	if(i >= m_size) i -= m_size;
-	for(size_t n=0; n<count; n++) {
-		out[n] = m_data[i];
-		if(i == 0) {
-			i = m_size - 1;
-		} else {
-			i--;
-		}
-	}
+    if(idx > m_size) {
+        idx = m_size;
+    }
+    if(idx + count > m_size) {
+        count = m_size - idx;
+    }
+    if (count == 0) {
+        return;
+    }
+
+    size_t i = m_head + m_size - idx - 1;
+    if(i >= m_size) i -= m_size;
+    size_t start_index = (i + m_size - count + 1) % m_size;
+
+    if (start_index <= i) {
+        memcpy(out, &m_data[start_index], count * sizeof(float));
+    } else {
+        size_t first_block_size = m_size - start_index;
+        memcpy(out, &m_data[start_index], first_block_size * sizeof(float));
+        size_t second_block_size = count - first_block_size;
+        memcpy(out + first_block_size, &m_data[0], second_block_size * sizeof(float));
+    }
 }
 
 

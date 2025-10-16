@@ -33,7 +33,7 @@ void Window::configure(Window::Type type, size_t size, float beta)
 		case Type::Gauss:
 			y = exp(-2.0f * beta * beta * (x - 0.5f) * (x - 0.5f));
 			break;
-		case Type::Rectangular:
+		case Type::Square:
 			y = 1.0f;
 			break;
 		}
