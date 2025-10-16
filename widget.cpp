@@ -394,6 +394,20 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 }
 
 
+const char *k_type_str[] = {
+	"none", "spectrum", "waterfall", "wave"
+};
+
+const char **Widget::type_names()
+{
+	return k_type_str;
+}
+
+size_t Widget::type_count()
+{
+	return IM_ARRAYSIZE(k_type_str);
+}
+
 const char *Widget::type_to_string(Type type)
 {
 	size_t count = type_count();
@@ -413,19 +427,5 @@ Widget::Type Widget::string_to_type(const char *str)
 		if(strcmp(names[i], str) == 0) return (Type)i;
 	}
 	return Type::None;
-}
-
-const char *k_type_str[] = {
-	"none", "spectrum", "waterfall", "wave"
-};
-
-const char **Widget::type_names()
-{
-	return k_type_str;
-}
-
-size_t Widget::type_count()
-{
-	return IM_ARRAYSIZE(k_type_str);
 }
 
