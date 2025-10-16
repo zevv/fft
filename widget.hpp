@@ -21,6 +21,8 @@ public:
 	void draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 	void draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 
+	void save(FILE *f);
+
 private:
 	Type m_type;
 	bool m_channel_map[8];

@@ -52,6 +52,12 @@ Widget::Widget(Type type)
 }
 
 
+void Widget::save(FILE *f)
+{
+
+}
+
+
 void Widget::configure_fft(size_t size, Window::Type window_type)
 {
 	if(m_spectrum.plan) {
