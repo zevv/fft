@@ -9,33 +9,62 @@ class View {
 
 public:
 	View()
-		: count(1024)
-		, offset(0)
-		, m_count_min(100)
-		, m_count_max(1024 * 1024)
-		, m_offset_min(0)
-		, m_offset_max(1024 * 1024)
+		: from(0)
+		, to(1024)
+		, m_width_min(100)
+		, m_width_max(1024 * 1024)
 	{}
 
 	void clamp() {
 		float a1 = 0.9;
-		float a2 = 1 - a1;
-		if(count > m_count_max) count = count * a1 + m_count_max * a2;
-		if(count < m_count_min) count = count * a1 + m_count_min * a2;
-		if(offset < m_offset_min) offset = offset * a1 + m_offset_min * a2;
-		if(offset > m_offset_max - count) offset = offset * a1 + (m_offset_max - count) * a2;
+		float a2 = 0.1;
+		float span = to - from;
+		if(span < m_width_min) {
+			from = from * a1 + (to - m_width_min) * a2;
+			to = to * a1 + (from + m_width_min) * a2;
+		}
 	};
+
+	void pan(float delta) {
+		from += delta;
+		to += delta;
+	};
+
+	void zoom(float f)
+	{
+		from += (cursor - from) * f;
+		to   -= (to - cursor) * f;
+	};
+
+	float x_to_idx(float x, SDL_Rect &r)
+	{
+		return to + (from - to) * (x - r.x) / r.w;
+	}
+
+	float idx_to_x(float idx, SDL_Rect &r)
+	{
+		return r.x + r.w * (idx - to) / (from - to);
+	}
+
+	float didx_to_dx(float didx, SDL_Rect &r)
+	{
+		return r.w * didx / (from - to);
+	}
+
+	float dx_to_didx(float dx, SDL_Rect &r)
+	{
+		return dx * (to - from) / r.w;
+	}
 	
-	int count;
-	int offset;
-	int cursor;
+	float from;
+	float to;
+	float cursor;
 	int fft_width;
 	Window *window;
 
 private:
 
-	int m_count_min;
-	int m_count_max;
-	int m_offset_min;
-	int m_offset_max;
+	float m_width_min;
+	float m_width_max;
 };
+

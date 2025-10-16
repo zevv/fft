@@ -34,7 +34,6 @@ Widget::Widget(Type type)
 	: m_type(type)
 	, m_channel_map{}
 	, m_waveform{
-		.step = 2,
 		.agc = true,
 		.peak = 0.0f,
 	},
@@ -121,36 +120,18 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r
 	SDL_SetRenderClipRect(rend, nullptr);
 }
 
-
 void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
-	ImGui::SameLine();
-	ImGui::SetNextItemWidth(100);
-	ImGui::SliderInt("off", &view.offset, 0, 10 * 1024, "%d");
-
-	ImGui::SameLine();
-	ImGui::SetNextItemWidth(100);
-	ImGui::SliderInt("#", &view.count, 100, 1024 * 1024, "%d", ImGuiSliderFlags_Logarithmic);
-	
-	ImGui::SameLine();
-	ImGui::SetNextItemWidth(50);
-	ImGui::SliderInt("step", &m_waveform.step, 1, 8, "%d");
 	
 	ImGui::SameLine();
 	ImGui::Checkbox("AGC", &m_waveform.agc);
 		   
 	if(ImGui::IsWindowFocused()) {
-		view.cursor =  view.count * (1 - (ImGui::GetMousePos().x - r.x) / r.w);
+		view.cursor = view.x_to_idx(ImGui::GetIO().MousePos.x, r);
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			float dx = ImGui::GetIO().MouseDelta.x;
-			float dy = ImGui::GetIO().MouseDelta.y;
-			view.count *= (1.0f - dy * 0.01f);
-			view.offset += dx * view.count / r.w;
+			view.pan(view.dx_to_didx(ImGui::GetIO().MouseDelta.x, r));
+			view.zoom(ImGui::GetIO().MouseDelta.y / 100.0);
 		}
-		if(ImGui::IsKeyPressed(ImGuiKey_LeftBracket)) view.count *= 1.25f;
-		if(ImGui::IsKeyPressed(ImGuiKey_RightBracket)) view.count /= 1.25f;
-		if(ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) view.offset -= view.count / 4;
-		if(ImGui::IsKeyPressed(ImGuiKey_RightArrow)) view.offset += view.count / 4;
 	}
 
 	int midy = r.y + r.h / 2;
@@ -165,12 +146,14 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
-	int step = m_waveform.step;
-	int npoints = r.w / step;
-	int nsamples = view.count;
+	int npoints = r.w;
+	int nsamples = view.to - view.from;
 	SDL_FPoint p_min[npoints];
 	SDL_FPoint p_max[npoints];
 	SDL_FRect rect[npoints];
+
+	ImGui::SameLine();
+	ImGui::Text("| %d-%d %d", (int)view.from, (int)view.to, (int)view.cursor);
 
 	for(int ch=0; ch<8; ch++) {
 		Stream stream = streams.get(ch);
@@ -179,21 +162,21 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		for(int i=0; i<npoints; i++) {
 			int idx_start = ((i+0) * nsamples) / npoints;
 			int idx_end   = ((i+1) * nsamples) / npoints;
-			float vmin = stream.read(idx_start + view.offset);
+			float vmin = stream.read(idx_start + view.from);
 			float vmax = vmin;
 			for(int idx=idx_start; idx<idx_end; idx++) {
-				float v = stream.read(idx + view.offset);
+				float v = stream.read(idx + view.from);
 				vmin = (idx == idx_start || v < vmin) ? v : vmin;
 				vmax = (idx == idx_start || v > vmax) ? v : vmax;
 			}
 			m_waveform.peak = (vmax > m_waveform.peak) ? vmax : m_waveform.peak;
-			p_min[i].x = r.x + (npoints - i) * step;
-			p_max[i].x = r.x + (npoints - i) * step;
+			p_min[i].x = r.x + (npoints - i);
+			p_max[i].x = r.x + (npoints - i);
 			p_min[i].y = midy - vmin * scale * (r.h / 2);
 			p_max[i].y = midy - vmax * scale * (r.h / 2);
 			rect[i].x = p_min[i].x;
 			rect[i].y = p_max[i].y;
-			rect[i].w = step;
+			rect[i].w = 1;
 			rect[i].h = p_min[i].y - p_max[i].y;
 		}
 		ImVec4 col = channel_color(ch);
@@ -203,10 +186,16 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		SDL_SetRenderDrawColor(rend, col.x * 32, col.y * 32, col.z * 32, col.w * 255);
 		SDL_RenderFillRects(rend, rect, npoints);
 	}
-	
-	// draw window function over graph, properly scale horizontally
+
+	// cursor
+	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
+	int cx = view.idx_to_x(view.cursor, r);
+	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
+
+	// windwo
 	// with the view.count, center at view.cursor
 
+	/*
 	if(view.window) {
 		const float *wdata = view.window->data();
 		SDL_FPoint p[r.w];
@@ -221,6 +210,7 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		SDL_SetRenderDrawColor(rend, 255, 255, 255, 128);
 		SDL_RenderLines(rend, p, r.w);
 	}
+	*/
 
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);

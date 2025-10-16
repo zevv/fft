@@ -26,7 +26,6 @@ private:
 	bool m_channel_map[8];
 
 	struct {
-		int step;
 		bool agc;
 		float peak;
 	} m_waveform;
