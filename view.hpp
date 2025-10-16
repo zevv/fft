@@ -57,20 +57,34 @@ public:
 		return dx * (wave_to - wave_from) / r.w;
 	}
 
-	void save(ConfigWriter &cfg)
+	float db_to_y(float db, SDL_Rect &r)
 	{
-		cfg.push("view");
-		cfg.write("wave_from", wave_from);
-		cfg.write("wave_to", wave_to);
-		cfg.write("cursor", cursor);
-		cfg.write("fft_width", fft_width);
-		cfg.pop();
+		return r.y - r.h * db / 100.0f;
 	}
 	
+	float y_to_db(float y, SDL_Rect &r)
+	{
+		return 100.0f * (y - r.y) / r.h;
+	}
+
+
+	void load(ConfigReader::Node *n)
+	{
+		n->read("cursor", cursor);
+		n->read("wave_from", wave_from);
+		n->read("wave_to", wave_to);
+	}
+
+	void save(ConfigWriter &cfg)
+	{
+		cfg.write("cursor", cursor);
+		cfg.write("wave_from", wave_from);
+		cfg.write("wave_to", wave_to);
+	}
+
 	float wave_from;
 	float wave_to;
 	float cursor;
-	int fft_width;
 	Window *window;
 
 private:

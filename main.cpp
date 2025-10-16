@@ -32,6 +32,8 @@ class Corrie {
 public:
     Corrie(SDL_Window *window, SDL_Renderer *renderer);
 
+	void init();
+	void load(const char *fname);
 	void save(const char *fname);
     void audio_init();
     void poll_audio();
@@ -73,15 +75,48 @@ Corrie::Corrie(SDL_Window *window, SDL_Renderer *renderer)
 }
 
 
+
+void Corrie::init()
+{
+	m_root_panel = new Panel(Panel::Type::None);
+}
+
+
+void Corrie::load(const char *fname)
+{
+	ConfigReader cr;
+	cr.open(fname);
+	if(auto n = cr.find("config")) {
+		n->read("samplerate", m_srate, 8000);
+	}
+
+	if(auto n = cr.find("view")) {
+		m_view.load(n);
+	}
+
+	m_root_panel->load(cr.find("panel"));
+
+	cr.close();
+}
+
+
 void Corrie::save(const char *fname)
 {
 	ConfigWriter cw;
 	cw.open(fname);
+
+	cw.push("config");
 	cw.write("samplerate", m_srate);
+	cw.pop();
+
+	cw.push("view");
 	m_view.save(cw);
+	cw.pop();
+
 	cw.push("panel");
 	m_root_panel->save(cw);
 	cw.pop();
+
 	cw.close();
 }
 
@@ -184,15 +219,19 @@ int main(int, char**)
     ImGui_ImplSDLRenderer3_Init(renderer);
 
     Corrie *cor = new Corrie(window, renderer);
+	cor->init();
     cor->audio_init();
+	cor->load("config.txt");
 
-	cor->m_root_panel = new Panel(Panel::Type::SplitV);
-	Panel *p2 = new Panel(Panel::Type::SplitH, 500);
-	cor->m_root_panel->add(p2);
-	p2->add(new Widget(Widget::Type::Waterfall), 400);
-	p2->add(new Widget(Widget::Type::Spectrum), 150);
-	cor->m_root_panel->add(new Widget(Widget::Type::Waveform), 200);
-	cor->m_root_panel->add(new Widget(Widget::Type::Waveform), 200);
+	if(0 && !cor->m_root_panel) {
+		cor->m_root_panel = new Panel(Panel::Type::SplitV);
+		Panel *p2 = new Panel(Panel::Type::SplitH, 500);
+		cor->m_root_panel->add(p2);
+		p2->add(new Widget(Widget::Type::Waterfall), 400);
+		p2->add(new Widget(Widget::Type::Spectrum), 150);
+		cor->m_root_panel->add(new Widget(Widget::Type::Waveform), 200);
+		cor->m_root_panel->add(new Widget(Widget::Type::Waveform), 200);
+	}
 
 	fcntl(0, F_SETFL, O_NONBLOCK);
 

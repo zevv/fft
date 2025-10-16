@@ -14,13 +14,14 @@ class Panel {
 public:
 
 	enum class Type {
-		Widget, SplitH, SplitV
+		None, Widget, SplitH, SplitV
 	};
 
 	Panel(Widget *widget, int size);
 	Panel(Type type, int size = 100);
 
 	void save(ConfigWriter &cfg);
+	void load(ConfigReader::Node *node);
 
 	void add(Panel *p);
 	void add(Widget *widget, int size);
@@ -29,7 +30,6 @@ public:
 
 private:
 
-	int m_id;
 	Panel *m_parent;
 	Widget *m_widget;
 	const char *m_title;

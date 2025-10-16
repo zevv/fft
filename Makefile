@@ -23,6 +23,7 @@ CXXFLAGS += -std=c++17 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 CXXFLAGS += -g -Wall -Wformat -Werror
 CXXFLAGS += -O3
 CXXFLAGS += -MMD
+CXXFLAGS += -ffast-math
 
 CXXFLAGS += `pkg-config sdl3 fftw3 fftw3f --cflags`
 LIBS += -ldl `pkg-config sdl3 fftw3 fftw3f --libs`

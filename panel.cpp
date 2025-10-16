@@ -6,8 +6,7 @@
 	
 
 Panel::Panel(Widget *widget, int size)
-	: m_id(0)
-	, m_parent(nullptr)
+	: m_parent(nullptr)
 	, m_widget(widget)
 	, m_type(Type::Widget)
 	, m_size(size)
@@ -23,38 +22,85 @@ Panel::Panel(Widget *widget, int size)
 
 
 Panel::Panel(Type type, int size)
-	: m_id(0)
-	, m_parent(nullptr)
+	: m_parent(nullptr)
 	, m_type(type)
 	, m_size(size)
 	, m_kids{}
 {
+	char buf[16] = "";
+	for(int i=0; i<15; i++) {
+		char c = 'a' + (rand() % 26);
+		buf[i] = c;
+	}
+	buf[15] = 0;
+	m_title = strdup(buf);
+}
+
+
+void Panel::load(ConfigReader::Node *node)
+{
+	if(node) {
+
+		node->read("size", m_size);
+		
+		if(const char *type = node->read_str("type")) {
+
+			if(strcmp(type, "split_v") == 0) {
+				m_type = Type::SplitV;
+			}
+
+			if(strcmp(type, "split_h") == 0) {
+				m_type = Type::SplitH;
+			}
+
+			if(strcmp(type, "widget") == 0) {
+				m_type = Type::Widget;
+				m_widget = new Widget(Widget::Type::None);
+				m_widget->load(node->find("widget"));
+			}
+
+			if(auto kids = node->find("kids")) {
+				for(auto &k : kids->kids) {
+					Panel *p = new Panel(Type::None);
+					p->load(k.second);
+					add(p);
+				}
+			}
+		}
+	}
 }
 
 
 void Panel::save(ConfigWriter &cw)
 {
-	cw.push(m_id);
 	if(m_type == Type::Widget) {
 		cw.write("type", "widget");
+		cw.write("size", m_size);
 		m_widget->save(cw);
 	} else if(m_type == Type::SplitH) {
 		cw.write("type", "split_h");
 		cw.write("size", m_size);
-		for(auto &pk : m_kids) {
-			pk->save(cw);
+		cw.push("kids");
+		for(size_t i=0; i<m_kids.size(); i++) {
+			cw.push(i);
+			m_kids[i]->save(cw);
+			cw.pop();
 		}
+		cw.pop();
 	} else if(m_type == Type::SplitV) {
 		cw.write("type", "split_v");
 		cw.write("size", m_size);
-		for(auto &pk : m_kids) {
-			pk->save(cw);
+		cw.push("kids");
+		for(size_t i=0; i<m_kids.size(); i++) {
+			cw.push(i);
+			m_kids[i]->save(cw);
+			cw.pop();
 		}
+		cw.pop();
 	}
-	cw.pop();
 }
 
-
+	
 void Panel::add(Panel *p)
 {
 	m_kids.push_back(p);

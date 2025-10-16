@@ -39,7 +39,9 @@ float Stream::read(size_t idx)
 
 void Stream::read(size_t idx, float *out, size_t count)
 {
-	// fast impl, no calls
+	if(idx > m_size) {
+		idx = m_size;
+	}
 	if(idx + count > m_size) {
 		count = m_size - idx;
 	}

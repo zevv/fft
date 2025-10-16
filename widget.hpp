@@ -17,9 +17,10 @@ public:
 
 	Widget(Type type = None);
 
+	void load(ConfigReader::Node *node);
 	void save(ConfigWriter &cfg);
 
-	void configure_fft(size_t size, Window::Type window_type);
+	void configure_fft(int size, Window::Type window_type);
 
 	void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 	void draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
@@ -35,9 +36,9 @@ private:
 	} m_waveform;
 
 	struct {
-		size_t size;
+		int size;
 		Window::Type window_type;
-		float window_sigma;
+		float window_beta;
 		std::vector<float> in;
 		std::vector<float> out;
 		fftwf_plan plan;

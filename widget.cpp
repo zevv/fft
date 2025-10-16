@@ -8,6 +8,10 @@
 #include <imgui.h>
 
 #include "widget.hpp"
+		
+const char *k_window_str[] = { 
+	"rect", "hanning", "hamming", "blackman", "gauss" 
+};
 
 static const char *k_type_str[] = {
 	"none", "spectrum", "waterfall", "wave"
@@ -43,7 +47,7 @@ Widget::Widget(Type type)
 	},
 	m_spectrum{
 		.size = 0,
-		.window_type = Window::Type::Gauss,
+		.window_type = Window::Type::Hanning,
 		.in{},
 		.out{},
 		.plan = nullptr,
@@ -53,6 +57,48 @@ Widget::Widget(Type type)
 		m_channel_map[i] = true;
 	}
 	configure_fft(2048, Window::Type::Hanning);
+}
+
+
+void Widget::load(ConfigReader::Node *n)
+{
+	if(const char *type = n->read_str("type")) {
+
+		int channel_map = 0;
+		if(n->read("channel_map", channel_map)) {
+			for(int i=0; i<8; i++) {
+				m_channel_map[i] = (channel_map & (1 << i)) ? true : false;
+			}
+		}
+
+		if(strcmp(type, "none") == 0) {
+			m_type = Type::None;
+		}
+
+		if(strcmp(type, "wave") == 0) {
+			m_type = Type::Waveform;
+			if(auto *nc = n->find("waveform")) {
+				nc->read("agc", m_waveform.agc, true);
+			}
+		}
+
+		if(strcmp(type, "spectrum") == 0) {
+			if(auto nc = n->find("spectrum")) {
+				m_type = Type::Spectrum;
+				if(const char *window_type = nc->read_str("window_type")) {
+					if(strcmp(window_type, "rect") == 0) m_spectrum.window_type = Window::Type::Rectangular;
+					if(strcmp(window_type, "hanning") == 0) m_spectrum.window_type = Window::Type::Hanning;
+					if(strcmp(window_type, "hamming") == 0) m_spectrum.window_type = Window::Type::Hamming;
+					if(strcmp(window_type, "blackman") == 0) m_spectrum.window_type = Window::Type::Blackman;
+					if(strcmp(window_type, "gauss") == 0) m_spectrum.window_type = Window::Type::Gauss;
+				}
+				nc->read("window_beta", m_spectrum.window_beta);
+				nc->read("fft_size", m_spectrum.size);
+				m_spectrum.window.configure(m_spectrum.window_type, 
+					                    m_spectrum.size, m_spectrum.window_beta);
+			}
+		}
+	}
 }
 
 
@@ -77,24 +123,17 @@ void Widget::save(ConfigWriter &cw)
 	if(m_type == Type::Spectrum) {
 		cw.push("spectrum");
 		cw.write("fft_size", (int)m_spectrum.size);
-		const char *k_window_str[] = { "rect", "hanning", "hamming", "blackman", "gauss" };
-		cw.write("window", k_window_str[(int)m_spectrum.window_type]);
-		if(m_spectrum.window_type == Window::Type::Gauss || 
-		   m_spectrum.window_type == Window::Type::Blackman) {
-			cw.write("sigma", m_spectrum.window_sigma);
-		}
+		cw.write("window_type", k_window_str[(int)m_spectrum.window_type]);
+		cw.write("window_beta", m_spectrum.window_beta);
 		cw.pop();
 	}
-
-	cw.pop();
-
 
 	cw.pop();
 
 }
 
 
-void Widget::configure_fft(size_t size, Window::Type window_type)
+void Widget::configure_fft(int size, Window::Type window_type)
 {
 	if(m_spectrum.plan) {
 		fftwf_destroy_plan(m_spectrum.plan);
@@ -122,8 +161,9 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, col);
 		char label[2] = { (char)('1' + i), 0 };
 		ImGuiKey key = (ImGuiKey)(ImGuiKey_1 + i);
-		if(ImGui::SmallButton(label) ||
-		   (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(key))) {
+		if(ImGui::SmallButton(label) || (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(key))) {
+			// with shift: solo, otherwise toggle
+			if(ImGui::GetIO().KeyShift) for(int j=0; j<8; j++) m_channel_map[j] = 0;
 			m_channel_map[i] = !m_channel_map[i];
 		}
 		ImGui::PopStyleColor(3);
@@ -191,7 +231,7 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	SDL_FRect rect[npoints];
 
 	ImGui::SameLine();
-	ImGui::Text("| %d-%d %d", (int)view.wave_from, (int)view.wave_to, (int)view.cursor);
+	ImGui::Text("| peak: %.2f", m_waveform.peak);
 
 	for(int ch=0; ch<8; ch++) {
 		Stream stream = streams.get(ch);
@@ -230,25 +270,20 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	int cx = view.idx_to_x(view.cursor, r);
 	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
 
-	// windwo
-	// with the view.count, center at view.cursor
-
-	/*
+	// window
 	if(view.window) {
+		size_t wsize = view.window->size();
 		const float *wdata = view.window->data();
-		SDL_FPoint p[r.w];
-		for(size_t x=0; x<(size_t)r.w; x++) {
-			size_t idx = view.cursor + view.window->size() - ((x * view.count) / r.w);
-			idx = std::clamp(idx, (size_t)0, view.window->size() - 1);
-			float v = wdata[idx];
-			p[x].x = r.x + r.w - x;
-			p[x].y = r.y + r.h - v * r.h;
+		SDL_FPoint p[64];
+		for(int i=0; i<64; i++) {
+			int n = wsize * i / 64;
+			p[i].x = view.idx_to_x(view.cursor + wsize * i / 64.0, r);
+			p[i].y = r.y + (r.h-1) * (1.0f - wdata[n]);
 		}
 
 		SDL_SetRenderDrawColor(rend, 255, 255, 255, 128);
-		SDL_RenderLines(rend, p, r.w);
+		SDL_RenderLines(rend, p, 64);
 	}
-	*/
 
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
@@ -268,9 +303,8 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(100);
-	static const char *k_type_str[] = { "rect", "hanning", "hamming", "blackman", "gauss" };
 	update |= ImGui::Combo("window", (int *)&m_spectrum.window_type, 
-			                    k_type_str, IM_ARRAYSIZE(k_type_str));
+			                    k_window_str, IM_ARRAYSIZE(k_window_str));
 
 	if(ImGui::IsWindowFocused()) {
 		view.window = &m_spectrum.window;
@@ -284,36 +318,53 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	   m_spectrum.window_type == Window::Type::Blackman) {
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(100);
-		bool changed = ImGui::SliderFloat("sigma", &m_spectrum.window_sigma, 
-				0.1f, 10.0f, "%.2f", ImGuiSliderFlags_Logarithmic);
+		bool changed = ImGui::SliderFloat("beta", &m_spectrum.window_beta, 
+				0.0f, 40.0f, "%.2f", ImGuiSliderFlags_Logarithmic);
 		if(changed) {
 			m_spectrum.window.configure(m_spectrum.window_type, 
-					                    m_spectrum.size, m_spectrum.window_sigma);
+					                    m_spectrum.size, m_spectrum.window_beta);
 		}
 	}
 
 	size_t npoints = m_spectrum.size / 2 + 1;
 	SDL_FPoint p[npoints];
 	
+
+	// grid
+		
+	SDL_SetRenderDrawColor(rend, 64, 64, 64, 255);
+
+	ImDrawList* dl = ImGui::GetWindowDrawList();
+
+	// 0 .. -100 dB
+	for(float dB=-100.0f; dB<=0.0f; dB+=10.0f) {
+		int y = view.db_to_y(dB, r);
+		SDL_RenderLine(rend, r.x, y, r.x + r.w, y);
+		char buf[32];
+		snprintf(buf, sizeof(buf), "%+.0f", dB);
+		dl->AddText(ImVec2((float)r.x + 4, y), ImColor(64, 64, 64, 255), buf);
+	}
+	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
+
+	// spectorams
 
 	for(int ch=0; ch<8; ch++) {
 		if(!m_channel_map[ch]) continue;
 		Stream stream = streams.get(ch);
 
-		if(view.cursor < 0) view.cursor = 0;
-		if(view.cursor > 1000000) view.cursor = 0;
 		stream.read(view.cursor, &m_spectrum.in[0], m_spectrum.size);
 
 		const float *w = m_spectrum.window.data();
-		assert(m_spectrum.window.size() == m_spectrum.size);
-		for(size_t i=0; i<m_spectrum.size; i++) {
+		for(int i=0; i<m_spectrum.size; i++) {
 			m_spectrum.in[i] *= w[i];
 		}
 
 		fftwf_execute(m_spectrum.plan);
 
-		for(size_t i=0; i<m_spectrum.size; i++) {
+		float scale = 2.0f / (float)m_spectrum.size * m_spectrum.window.gain();
+
+		for(int i=0; i<m_spectrum.size; i++) {
 			float v;
 			if(i == 0) {
 				v = fabsf(m_spectrum.out[0]);
@@ -324,18 +375,26 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 			} else {
 				v = 0.0f;
 			}
-			m_spectrum.out[i] = v;
+			m_spectrum.out[i] = v * scale;
 		}
 
 		for(size_t i=0; i<npoints; i++) {
-			float v = 20.0f * log10f(m_spectrum.out[i] + 1e-6f);
-			int h = (int)((v + 100.0f) * (r.h / 150.0f)) - 30;
+			float v = m_spectrum.out[i];
+			float dB = (v > 1e-6f) ? 20.0f * log10f(v) : -100.0f;
 			p[i].x = r.x + (i * r.w) / npoints;
-			p[i].y = r.y + r.h - h;
+			p[i].y = view.db_to_y(dB, r);
 		}
 		ImVec4 col = channel_color(ch);
 		SDL_SetRenderDrawColor(rend, col.x * 255, col.y * 255, col.z * 255, col.w * 255);
 		SDL_RenderLines(rend, p, npoints);
+
+		if(ch == 2) {
+			FILE *f = fopen("/tmp/spectrum", "w");
+			for(size_t i=0; i<npoints; i++) {
+				fprintf(f, "%f\n", 20.0f * log10f(m_spectrum.out[i] + 1e-6f));
+			}
+			fclose(f);
+		}
 	}
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
