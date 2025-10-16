@@ -1,6 +1,8 @@
 #include <math.h>
+#include <string.h>
 #include <stdio.h>
 #include "window.hpp"
+
 
 void Window::configure(Window::Type type, size_t size, float beta)
 {
@@ -44,4 +46,42 @@ void Window::configure(Window::Type type, size_t size, float beta)
 	m_gain = (float)size / sum;
 }
 
+
+static const char *k_window_str[] = { 
+	"square", "hanning", "hamming", "blackman", "gauss" 
+};
+
+
+const char **Window::type_names()
+{
+	return k_window_str;
+}
+
+
+size_t Window::type_count()
+{
+	return sizeof(k_window_str) / sizeof(k_window_str[0]);
+}
+
+
+const char *Window::type_to_str(Type t)
+{
+	size_t count = type_count();
+	const char **names = type_names();
+	for(size_t i=0; i<count; i++) {
+		if((int)t == (int)i) return names[i];
+	}
+	return "square";
+}
+
+
+Window::Type Window::str_to_type(const char *s)
+{
+	size_t count = type_count();
+	const char **names = type_names();
+	for(size_t i=0; i<count; i++) {
+		if(strcmp(s, names[i]) == 0) return (Type)i;
+	}
+	return Type::Square;
+}
 

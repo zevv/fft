@@ -9,14 +9,6 @@
 
 #include "widget.hpp"
 		
-const char *k_window_str[] = { 
-	"square", "hanning", "hamming", "blackman", "gauss" 
-};
-
-static const char *k_type_str[] = {
-	"none", "spectrum", "waterfall", "wave"
-};
-
 
 static ImVec4 channel_color(int channel)
 {
@@ -86,11 +78,7 @@ void Widget::load(ConfigReader::Node *n)
 			if(auto nc = n->find("spectrum")) {
 				m_type = Type::Spectrum;
 				if(const char *window_type = nc->read_str("window_type")) {
-					if(strcmp(window_type, "square") == 0) m_spectrum.window_type = Window::Type::Square;
-					if(strcmp(window_type, "hanning") == 0) m_spectrum.window_type = Window::Type::Hanning;
-					if(strcmp(window_type, "hamming") == 0) m_spectrum.window_type = Window::Type::Hamming;
-					if(strcmp(window_type, "blackman") == 0) m_spectrum.window_type = Window::Type::Blackman;
-					if(strcmp(window_type, "gauss") == 0) m_spectrum.window_type = Window::Type::Gauss;
+					m_spectrum.window_type = Window::str_to_type(window_type);
 				}
 				nc->read("window_beta", m_spectrum.window_beta);
 				nc->read("fft_size", m_spectrum.size);
@@ -110,7 +98,7 @@ void Widget::save(ConfigWriter &cw)
 		if(m_channel_map[i]) channel_map |= (1 << i);
 	}
 
-	cw.write("type", k_type_str[(int)m_type]);
+	cw.write("type", Widget::type_to_string(m_type));
 	cw.write("channel_map", channel_map);
 
 	if(m_type == Type::Waveform) {
@@ -122,7 +110,7 @@ void Widget::save(ConfigWriter &cw)
 	if(m_type == Type::Spectrum) {
 		cw.push("spectrum");
 		cw.write("fft_size", (int)m_spectrum.size);
-		cw.write("window_type", k_window_str[(int)m_spectrum.window_type]);
+		cw.write("window_type", Window::type_to_str(m_spectrum.window_type));
 		cw.write("window_beta", m_spectrum.window_beta);
 		cw.pop();
 	}
@@ -149,7 +137,8 @@ void Widget::configure_fft(int size, Window::Type window_type)
 void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r)
 {
 	ImGui::SetNextItemWidth(100);
-	ImGui::Combo("type", (int *)&m_type, k_type_str, IM_ARRAYSIZE(k_type_str));
+	ImGui::Combo("type", (int *)&m_type, 
+			Widget::type_names(), Widget::type_count());
 
 	// Channel enable buttons
 	for(size_t i=0; i<8; i++) {
@@ -307,7 +296,7 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(100);
 	update |= ImGui::Combo("window", (int *)&m_spectrum.window_type, 
-			                    k_window_str, IM_ARRAYSIZE(k_window_str));
+			Window::type_names(), Window::type_count());
 
 	if(ImGui::IsWindowFocused()) {
 		view.window = &m_spectrum.window;
@@ -355,7 +344,6 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		if(!m_channel_map[ch]) continue;
 		Stream stream = streams.get(ch);
 
-		printf("memset %d elements %d\n", m_spectrum.size, (int)m_spectrum.in.size());
 		memset(&m_spectrum.in[0], 0, sizeof(float) * m_spectrum.size);
 		stream.read(view.cursor, &m_spectrum.in[0], m_spectrum.size);
 
@@ -404,3 +392,40 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
 }
+
+
+const char *Widget::type_to_string(Type type)
+{
+	size_t count = type_count();
+	const char **names = type_names();
+	for(size_t i=0; i<count; i++) {
+		if((Type)i == type) return names[i];
+	}
+	return "none";
+}
+
+
+Widget::Type Widget::string_to_type(const char *str)
+{
+	size_t count = type_count();
+	const char **names = type_names();
+	for(size_t i=0; i<count; i++) {
+		if(strcmp(names[i], str) == 0) return (Type)i;
+	}
+	return Type::None;
+}
+
+const char *k_type_str[] = {
+	"none", "spectrum", "waterfall", "wave"
+};
+
+const char **Widget::type_names()
+{
+	return k_type_str;
+}
+
+size_t Widget::type_count()
+{
+	return IM_ARRAYSIZE(k_type_str);
+}
+

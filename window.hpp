@@ -9,6 +9,11 @@ public:
 		Square, Hamming, Hanning, Blackman, Gauss
 	};
 
+	static const char **type_names();
+	static size_t type_count();
+	static const char *type_to_str(Type t);
+	static Type str_to_type(const char *s);
+
 	void configure(Type type, size_t size, float beta = 6.0f);
 	const float *data() const { return m_data.data(); }
 	size_t size() const { return m_size; }
