@@ -1,5 +1,6 @@
 
 #include <assert.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <math.h>
 #include <fcntl.h>
@@ -31,11 +32,17 @@
 class Corrie {
 public:
     Corrie(SDL_Window *window, SDL_Renderer *renderer);
-
-	void init();
+	
 	void load(const char *fname);
 	void save(const char *fname);
-    void audio_init();
+
+	void init();
+	void run();
+	void exit();
+    
+	void init_audio();
+    void init_video();
+
     void poll_audio();
     void draw();
     void resize_window(int w, int h);
@@ -76,10 +83,6 @@ Corrie::Corrie(SDL_Window *window, SDL_Renderer *renderer)
 
 
 
-void Corrie::init()
-{
-	m_root_panel = new Panel(Panel::Type::None);
-}
 
 
 void Corrie::load(const char *fname)
@@ -147,8 +150,64 @@ void Corrie::draw()
 }
 
 
+void Corrie::init()
+{
+	fcntl(0, F_SETFL, O_NONBLOCK);
 
-void Corrie::audio_init(void)
+	init_video();
+	init_audio();
+
+	m_root_panel = new Panel(Panel::Type::None);
+
+	load("config.txt");
+
+	if(0 && !m_root_panel) {
+		m_root_panel = new Panel(Panel::Type::SplitV);
+		Panel *p2 = new Panel(Panel::Type::SplitH, 500);
+		m_root_panel->add(p2);
+		p2->add(new Widget(Widget::Type::Waterfall), 400);
+		p2->add(new Widget(Widget::Type::Spectrum), 150);
+		m_root_panel->add(new Widget(Widget::Type::Waveform), 200);
+		m_root_panel->add(new Widget(Widget::Type::Waveform), 200);
+	}
+}
+
+
+void Corrie::init_video(void)
+{
+    float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
+    SDL_WindowFlags window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
+    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL3+SDL_Renderer example", (int)(1280 * main_scale), (int)(800 * main_scale), window_flags);
+    if(window == nullptr)
+    {
+        printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
+        ::exit(1);
+    }
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, nullptr);
+    SDL_SetRenderVSync(renderer, 1);
+    if(renderer == nullptr)
+    {
+        SDL_Log("Error: SDL_CreateRenderer(): %s\n", SDL_GetError());
+        ::exit(1);
+    }
+    SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+    SDL_ShowWindow(window);
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+    ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
+    ImGui_ImplSDLRenderer3_Init(renderer);
+
+	m_win = window;
+	m_rend = renderer;
+
+}
+
+
+void Corrie::init_audio(void)
 {
     SDL_AudioSpec want;
 
@@ -165,8 +224,6 @@ void Corrie::audio_init(void)
 
     SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audiostream));
 }
-
-
 
 
 void Corrie::poll_audio()
@@ -186,63 +243,18 @@ void Corrie::poll_audio()
 	}
 }
 
-
-
-int main(int, char**)
+void Corrie::run()
 {
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 
-    float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
-    SDL_WindowFlags window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL3+SDL_Renderer example", (int)(1280 * main_scale), (int)(800 * main_scale), window_flags);
-    if(window == nullptr)
-    {
-        printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
-        return 1;
-    }
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, nullptr);
-    SDL_SetRenderVSync(renderer, 1);
-    if(renderer == nullptr)
-    {
-        SDL_Log("Error: SDL_CreateRenderer(): %s\n", SDL_GetError());
-        return 1;
-    }
-    SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-    SDL_ShowWindow(window);
-
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-
-    ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
-    ImGui_ImplSDLRenderer3_Init(renderer);
-
-    Corrie *cor = new Corrie(window, renderer);
-	cor->init();
-    cor->audio_init();
-	cor->load("config.txt");
-
-	if(0 && !cor->m_root_panel) {
-		cor->m_root_panel = new Panel(Panel::Type::SplitV);
-		Panel *p2 = new Panel(Panel::Type::SplitH, 500);
-		cor->m_root_panel->add(p2);
-		p2->add(new Widget(Widget::Type::Waterfall), 400);
-		p2->add(new Widget(Widget::Type::Spectrum), 150);
-		cor->m_root_panel->add(new Widget(Widget::Type::Waveform), 200);
-		cor->m_root_panel->add(new Widget(Widget::Type::Waveform), 200);
-	}
-
-	fcntl(0, F_SETFL, O_NONBLOCK);
 
     bool done = false;
     while (!done)
     {
 		if(ImGui::IsKeyPressed(ImGuiKey_Space)) {
-			cor->m_capture ^= 1;
+			m_capture ^= 1;
 		}
-		if(cor->m_capture) {
-			cor->poll_audio();
+		if(m_capture) {
+			poll_audio();
 		}
 
         SDL_Event event;
@@ -251,15 +263,15 @@ int main(int, char**)
             ImGui_ImplSDL3_ProcessEvent(&event);
             if (event.type == SDL_EVENT_QUIT)
                 done = true;
-            if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == SDL_GetWindowID(window))
+            if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == SDL_GetWindowID(m_win))
                 done = true;
             if(event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_Q)
                 done = true;
-            if(event.type == SDL_EVENT_WINDOW_RESIZED && event.window.windowID == SDL_GetWindowID(window))
-                cor->resize_window(event.window.data1, event.window.data2);
+            if(event.type == SDL_EVENT_WINDOW_RESIZED && event.window.windowID == SDL_GetWindowID(m_win))
+                resize_window(event.window.data1, event.window.data2);
         }
 
-        if (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED)
+        if (SDL_GetWindowFlags(m_win) & SDL_WINDOW_MINIMIZED)
         {
             SDL_Delay(10);
             continue;
@@ -269,28 +281,42 @@ int main(int, char**)
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
 
-		cor->draw();
+		draw();
 		//ImGui::ShowDemoWindow(nullptr);
 
         ImGui::Render();
-        SDL_SetRenderScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        SDL_RenderClear(renderer);
-        SDL_RenderTexture(renderer, cor->m_tex, nullptr, nullptr);
-        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
-        SDL_RenderPresent(renderer);
+		ImGuiIO& io = ImGui::GetIO();
+        SDL_SetRenderScale(m_rend, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+        SDL_SetRenderDrawColor(m_rend, 0, 0, 0, 255);
+        SDL_RenderClear(m_rend);
+        SDL_RenderTexture(m_rend, m_tex, nullptr, nullptr);
+        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_rend);
+        SDL_RenderPresent(m_rend);
     }
 
-	cor->save("config.txt");
+}
+
+
+void Corrie::exit()
+{
+	save("config.txt");
 
     ImGui_ImplSDLRenderer3_Shutdown();
     ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
 
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
+    SDL_DestroyRenderer(m_rend);
+    SDL_DestroyWindow(m_win);
     SDL_Quit();
+}
 
-    return 0;
+
+int main(int, char**)
+{
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+
+    Corrie *cor = new Corrie(nullptr, nullptr);
+	cor->init();
+	cor->run();
 }
 
