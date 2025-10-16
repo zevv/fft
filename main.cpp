@@ -177,6 +177,7 @@ int main(int, char**)
 	p2->add(new Widget(Widget::Type::Waterfall), 400);
 	p2->add(new Widget(Widget::Type::Spectrum), 150);
 	cor->m_root_panel->add(new Widget(Widget::Type::Waveform), 200);
+	cor->m_root_panel->add(new Widget(Widget::Type::Waveform), 200);
 
 	fcntl(0, F_SETFL, O_NONBLOCK);
 

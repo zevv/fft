@@ -147,13 +147,13 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
 	int npoints = r.w;
-	int nsamples = view.to - view.from;
+	int nsamples = view.wave_to - view.wave_from;
 	SDL_FPoint p_min[npoints];
 	SDL_FPoint p_max[npoints];
 	SDL_FRect rect[npoints];
 
 	ImGui::SameLine();
-	ImGui::Text("| %d-%d %d", (int)view.from, (int)view.to, (int)view.cursor);
+	ImGui::Text("| %d-%d %d", (int)view.wave_from, (int)view.wave_to, (int)view.cursor);
 
 	for(int ch=0; ch<8; ch++) {
 		Stream stream = streams.get(ch);
@@ -162,10 +162,10 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		for(int i=0; i<npoints; i++) {
 			int idx_start = ((i+0) * nsamples) / npoints;
 			int idx_end   = ((i+1) * nsamples) / npoints;
-			float vmin = stream.read(idx_start + view.from);
+			float vmin = stream.read(idx_start + view.wave_from);
 			float vmax = vmin;
 			for(int idx=idx_start; idx<idx_end; idx++) {
-				float v = stream.read(idx + view.from);
+				float v = stream.read(idx + view.wave_from);
 				vmin = (idx == idx_start || v < vmin) ? v : vmin;
 				vmax = (idx == idx_start || v > vmax) ? v : vmax;
 			}
