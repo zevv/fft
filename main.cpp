@@ -25,12 +25,14 @@
 #include "widget.hpp"
 #include "stream.hpp"
 #include "view.hpp"
+#include "config.hpp"
 
 
 class Corrie {
 public:
     Corrie(SDL_Window *window, SDL_Renderer *renderer);
 
+	void save(const char *fname);
     void audio_init();
     void poll_audio();
     void draw();
@@ -68,6 +70,19 @@ Corrie::Corrie(SDL_Window *window, SDL_Renderer *renderer)
 	, m_view()
 {
     resize_window(800, 600);
+}
+
+
+void Corrie::save(const char *fname)
+{
+	ConfigWriter cw;
+	cw.open(fname);
+	cw.write("samplerate", m_srate);
+	m_view.save(cw);
+	cw.push("panel");
+	m_root_panel->save(cw);
+	cw.pop();
+	cw.close();
 }
 
 
@@ -226,6 +241,8 @@ int main(int, char**)
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
         SDL_RenderPresent(renderer);
     }
+
+	cor->save("config.txt");
 
     ImGui_ImplSDLRenderer3_Shutdown();
     ImGui_ImplSDL3_Shutdown();

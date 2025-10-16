@@ -9,6 +9,10 @@
 
 #include "widget.hpp"
 
+static const char *k_type_str[] = {
+	"none", "spectrum", "waterfall", "wave"
+};
+
 
 static ImVec4 channel_color(int channel)
 {
@@ -52,8 +56,40 @@ Widget::Widget(Type type)
 }
 
 
-void Widget::save(FILE *f)
+void Widget::save(ConfigWriter &cw)
 {
+	cw.push("widget");
+
+	int channel_map = 0;
+	for(int i=0; i<8; i++) {
+		if(m_channel_map[i]) channel_map |= (1 << i);
+	}
+
+	cw.write("type", k_type_str[(int)m_type]);
+	cw.write("channel_map", channel_map);
+
+	if(m_type == Type::Waveform) {
+		cw.push("waveform");
+		cw.write("agc", m_waveform.agc);
+		cw.pop();
+	}
+
+	if(m_type == Type::Spectrum) {
+		cw.push("spectrum");
+		cw.write("fft_size", (int)m_spectrum.size);
+		const char *k_window_str[] = { "rect", "hanning", "hamming", "blackman", "gauss" };
+		cw.write("window", k_window_str[(int)m_spectrum.window_type]);
+		if(m_spectrum.window_type == Window::Type::Gauss || 
+		   m_spectrum.window_type == Window::Type::Blackman) {
+			cw.write("sigma", m_spectrum.window_sigma);
+		}
+		cw.pop();
+	}
+
+	cw.pop();
+
+
+	cw.pop();
 
 }
 
@@ -74,10 +110,6 @@ void Widget::configure_fft(size_t size, Window::Type window_type)
 
 void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r)
 {
-	// Type selection combo box
-	static const char *k_type_str[] = {
-		"none", "spectrum", "waterfall", "wave"
-	};
 	ImGui::SetNextItemWidth(100);
 	ImGui::Combo("type", (int *)&m_type, k_type_str, IM_ARRAYSIZE(k_type_str));
 

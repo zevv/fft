@@ -7,7 +7,7 @@
 #include "widget.hpp"
 #include "stream.hpp"
 #include "view.hpp"
-
+#include "config.hpp"
 
 class Panel {
 
@@ -19,6 +19,9 @@ public:
 
 	Panel(Widget *widget, int size);
 	Panel(Type type, int size = 100);
+
+	void save(ConfigWriter &cfg);
+
 	void add(Panel *p);
 	void add(Widget *widget, int size);
 	void update_kid(Panel *pk, int dx, int dy, int dw, int dh);
@@ -26,6 +29,7 @@ public:
 
 private:
 
+	int m_id;
 	Panel *m_parent;
 	Widget *m_widget;
 	const char *m_title;

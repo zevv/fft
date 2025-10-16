@@ -4,6 +4,7 @@
 #include "stream.hpp"
 #include "window.hpp"
 #include "view.hpp"
+#include "config.hpp"
 
 
 class Widget {
@@ -15,13 +16,14 @@ public:
 	};
 
 	Widget(Type type = None);
+
+	void save(ConfigWriter &cfg);
+
 	void configure_fft(size_t size, Window::Type window_type);
 
 	void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 	void draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 	void draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
-
-	void save(FILE *f);
 
 private:
 	Type m_type;

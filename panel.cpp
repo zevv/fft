@@ -6,7 +6,8 @@
 	
 
 Panel::Panel(Widget *widget, int size)
-	: m_parent(nullptr)
+	: m_id(0)
+	, m_parent(nullptr)
 	, m_widget(widget)
 	, m_type(Type::Widget)
 	, m_size(size)
@@ -22,11 +23,35 @@ Panel::Panel(Widget *widget, int size)
 
 
 Panel::Panel(Type type, int size)
-	: m_parent(nullptr)
+	: m_id(0)
+	, m_parent(nullptr)
 	, m_type(type)
 	, m_size(size)
 	, m_kids{}
 {
+}
+
+
+void Panel::save(ConfigWriter &cw)
+{
+	cw.push(m_id);
+	if(m_type == Type::Widget) {
+		cw.write("type", "widget");
+		m_widget->save(cw);
+	} else if(m_type == Type::SplitH) {
+		cw.write("type", "split_h");
+		cw.write("size", m_size);
+		for(auto &pk : m_kids) {
+			pk->save(cw);
+		}
+	} else if(m_type == Type::SplitV) {
+		cw.write("type", "split_v");
+		cw.write("size", m_size);
+		for(auto &pk : m_kids) {
+			pk->save(cw);
+		}
+	}
+	cw.pop();
 }
 
 

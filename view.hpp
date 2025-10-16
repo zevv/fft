@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include "window.hpp"
+#include "config.hpp"
 
 class View {
 
@@ -54,6 +55,16 @@ public:
 	float dx_to_didx(float dx, SDL_Rect &r)
 	{
 		return dx * (wave_to - wave_from) / r.w;
+	}
+
+	void save(ConfigWriter &cfg)
+	{
+		cfg.push("view");
+		cfg.write("wave_from", wave_from);
+		cfg.write("wave_to", wave_to);
+		cfg.write("cursor", cursor);
+		cfg.write("fft_width", fft_width);
+		cfg.pop();
 	}
 	
 	float wave_from;
