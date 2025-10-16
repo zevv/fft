@@ -158,7 +158,6 @@ void Panel::update_kid(Panel *pk, int dx1, int dy1, int dx2, int dy2)
 
 int Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h)
 {
-	
 	if(m_type == Type::Widget) {
 
 		ImGuiWindowFlags flags = 0;

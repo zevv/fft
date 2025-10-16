@@ -82,9 +82,6 @@ Corrie::Corrie(SDL_Window *window, SDL_Renderer *renderer)
 }
 
 
-
-
-
 void Corrie::load(const char *fname)
 {
 	ConfigReader cr;
@@ -97,7 +94,9 @@ void Corrie::load(const char *fname)
 		m_view.load(n);
 	}
 
-	m_root_panel->load(cr.find("panel"));
+	if(auto n = cr.find("panel")) {
+		m_root_panel->load(n);
+	}
 
 	cr.close();
 }
@@ -243,10 +242,9 @@ void Corrie::poll_audio()
 	}
 }
 
+
 void Corrie::run()
 {
-
-
     bool done = false;
     while (!done)
     {
