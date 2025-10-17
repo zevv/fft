@@ -160,7 +160,7 @@ void Corrie::init()
 
 	load("config.txt");
 
-	if(0 && !m_root_panel) {
+	if(m_root_panel->get_type() == Panel::Type::None) {
 		m_root_panel = new Panel(Panel::Type::SplitV);
 		Panel *p2 = new Panel(Panel::Type::SplitH, 500);
 		m_root_panel->add(p2);
@@ -316,5 +316,8 @@ int main(int, char**)
     Corrie *cor = new Corrie(nullptr, nullptr);
 	cor->init();
 	cor->run();
+	cor->exit();
+
+	return 0;
 }
 
