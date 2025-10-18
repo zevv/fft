@@ -196,7 +196,8 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r
 
 
 static float draw_graph(View &view, SDL_Renderer *rend, SDL_Rect &r, 
-					 ImVec4 &col, float *data, size_t stride, float scale)
+					 ImVec4 &col, float *data, size_t stride,
+					 float y_min, float y_max)
 {
 	int nsamples = view.wave_to - view.wave_from;
 
@@ -206,8 +207,8 @@ static float draw_graph(View &view, SDL_Renderer *rend, SDL_Rect &r,
 
 	int idx_from = view.x_to_idx(r.x, r) - 1;
 	int idx_to   = view.x_to_idx(r.x + r.w, r) + 1;
-	float y_off = r.y + r.h / 2;
-	float y_scale = scale * 0.95 * (r.h / 2.0f);
+	float y_off = r.y + r.h / 2.0f;
+	float y_scale = (r.h / 2.0f) / (y_max - y_min);
 	float v_peak = 0.0;
 
 	int npoints = 0;
@@ -255,9 +256,12 @@ static float draw_graph(View &view, SDL_Renderer *rend, SDL_Rect &r,
 
 void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
-	
 	ImGui::SameLine();
 	ImGui::Checkbox("AGC", &m_waveform.agc);
+	ImGui::SameLine();
+	ImGui::Text("| %d..%d @%d", (int)view.wave_from, (int)view.wave_to, (int)view.cursor);
+	ImGui::SameLine();
+	ImGui::Text("| peak: %.2f", m_waveform.peak);
 		   
 	if(ImGui::IsWindowFocused()) {
 		view.cursor = view.x_to_idx(ImGui::GetIO().MousePos.x, r);
@@ -267,25 +271,18 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		}
 	}
 
-	int midy = r.y + r.h / 2;
 	float scale = 1.0;
-
 	if(m_waveform.agc && m_waveform.peak > 0.0f) {
-		scale = 1.0 / m_waveform.peak * 0.9;
+		scale = m_waveform.peak;
 	}
 	
-	ImGui::SameLine();
-	ImGui::Text("| %d..%d @%d", (int)view.wave_from, (int)view.wave_to, (int)view.cursor);
-	ImGui::SameLine();
-	ImGui::Text("| peak: %.2f", m_waveform.peak);
-
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 	for(int ch=0; ch<8; ch++) {
 		if(!m_channel_map[ch]) continue;
 		size_t stride;
 		float *data = streams.peek(ch, 0, stride);
 		ImVec4 col = channel_color(ch);
-		float peak = draw_graph(view, rend, r, col, data, stride, scale);
+		float peak = draw_graph(view, rend, r, col, data, stride, -scale, +scale);
 		if(peak > m_waveform.peak) {
 			m_waveform.peak = peak;
 		}
@@ -299,7 +296,7 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 
 	// zero Y
 	SDL_SetRenderDrawColor(rend, 100, 100, 100, 255);
-	SDL_RenderLine(rend, r.x, midy, r.x + r.w, midy);
+	SDL_RenderLine(rend, r.x, r.y + r.h / 2, r.x + r.w, r.y + r.h / 2);
 
 	// zero X
 	float x = view.idx_to_x(0.0f, r);
