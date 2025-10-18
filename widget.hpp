@@ -35,6 +35,13 @@ public:
 	static size_t type_count();
 
 private:
+
+	ImVec4 channel_color(int channel);
+	float draw_graph(View &view, SDL_Renderer *rend, SDL_Rect &r, 
+					 ImVec4 &col, float *data, size_t stride,
+					 int idx_from, int idx_to,
+					 float y_min, float y_max);
+
 	Type m_type;
 	bool m_channel_map[8];
 
