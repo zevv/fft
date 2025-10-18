@@ -148,13 +148,11 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r
 }
 
 
-float Widget::graph(View &view, SDL_Renderer *rend, SDL_Rect &r, 
+float Widget::graph(SDL_Renderer *rend, SDL_Rect &r, 
 					 ImVec4 &col, float *data, size_t stride,
 					 int idx_from, int idx_to,
 					 float y_min, float y_max)
 {
-	int nsamples = view.wave_to - view.wave_from;
-
 	assert(r.w < 2048);
 
 	SDL_FPoint p_max[2048];

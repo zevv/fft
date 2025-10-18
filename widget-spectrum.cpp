@@ -136,7 +136,7 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		}
 
 		ImVec4 col = widget.channel_color(ch);
-		float p = widget.graph(view, rend, r, col, m_out.data(), 1,
+		float p = widget.graph(rend, r, col, m_out.data(), 1,
 				0, npoints,
 				0, -100);
 	}

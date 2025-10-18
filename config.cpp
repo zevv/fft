@@ -282,9 +282,9 @@ bool ConfigReader::Node::read(const char *key, float &val, float defval)
 
 bool ConfigReader::Node::read(const char *key, char *val, size_t maxlen)
 {
-	const char *c = m_attrs[key];
-	if(c) {
-		snprintf(val, maxlen, "%s", c);
+	auto it = m_attrs.find(key);
+	if(it != m_attrs.end()) {
+		snprintf(val, maxlen, "%s", it->second);
 		return true;
 	} else {
 		return false;
@@ -294,9 +294,9 @@ bool ConfigReader::Node::read(const char *key, char *val, size_t maxlen)
 
 bool ConfigReader::Node::read(const char *key, char *val, size_t maxlen, const char *defval)
 {
-	const char *c = m_attrs[key];
-	if(c) {
-		snprintf(val, maxlen, "%s", c);
+	auto it = m_attrs.find(key);
+	if(it != m_attrs.end()) {
+		snprintf(val, maxlen, "%s", it->second);
 		val[maxlen - 1] = 0;
 		return true;
 	} else {
@@ -309,6 +309,11 @@ bool ConfigReader::Node::read(const char *key, char *val, size_t maxlen, const c
 
 const char *ConfigReader::Node::read_str(const char *key)
 {
-	return  m_attrs[key];
+	auto it = m_attrs.find(key);
+	if(it != m_attrs.end()) {
+		return it->second;
+	} else {
+		return nullptr;
+	}
 }
 

@@ -32,37 +32,6 @@ public:
 		}
 	};
 
-	void pan(float delta) {
-		wave_from += delta;
-		wave_to += delta;
-	};
-
-	void zoom(float f)
-	{
-		wave_from += (cursor - wave_from) * f;
-		wave_to   -= (wave_to - cursor) * f;
-	};
-
-	float x_to_idx(float x, SDL_Rect &r)
-	{
-		return wave_from - (wave_from - wave_to) * (x - r.x) / r.w;
-	}
-
-	float idx_to_x(float idx, SDL_Rect &r)
-	{
-		return r.x + r.w * (wave_from - idx) / (wave_from - wave_to);
-	}
-
-	float didx_to_dx(float didx, SDL_Rect &r)
-	{
-		return r.w * didx / (wave_from - wave_to);
-	}
-
-	float dx_to_didx(float dx, SDL_Rect &r)
-	{
-		return dx * (wave_to - wave_from) / r.w;
-	}
-
 	float db_to_y(float db, SDL_Rect &r)
 	{
 		return r.y - r.h * db / 100.0f;

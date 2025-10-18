@@ -12,6 +12,8 @@
 Widget::Waveform::Waveform()
 	: m_agc(true)
 	, m_peak(0.0f)
+	, m_idx_from(-1024)
+	, m_idx_to(1024)
 {
 }
 
@@ -20,6 +22,9 @@ void Widget::Waveform::load(ConfigReader::Node *node)
 {
 	if(!node) return;
 	node->read("agc", m_agc);
+	node->read("idx_from", m_idx_from);
+	node->read("idx_to", m_idx_to);
+	node->read("idx_cursor", m_idx_cursor);
 }
 
 
@@ -27,6 +32,9 @@ void Widget::Waveform::save(ConfigWriter &cw)
 {
 	cw.push("waveform");
 	cw.write("agc", m_agc);
+	cw.write("idx_from", m_idx_from);
+	cw.write("idx_to", m_idx_to);
+	cw.write("idx_cursor", m_idx_cursor);
 	cw.pop();
 }
 
@@ -43,16 +51,16 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 	ImGui::SameLine();
 	ImGui::Checkbox("AGC", &m_agc);
 	ImGui::SameLine();
-	ImGui::Text("| %d..%d @%d", (int)view.wave_from, (int)view.wave_to, (int)view.cursor);
+	ImGui::Text("| %d..%d @%d", (int)view.wave_from, (int)view.wave_to, (int)m_idx_cursor);
 	ImGui::SameLine();
 	ImGui::Text("| peak: %.2f", m_peak);
 		   
 	if(ImGui::IsWindowFocused()) {
 		auto pos = ImGui::GetIO().MousePos;
-		if(pos.x >= 0) view.cursor = view.x_to_idx(pos.x, r);
+		if(pos.x >= 0) m_idx_cursor = x_to_idx(pos.x, r);
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			view.pan(-view.dx_to_didx(ImGui::GetIO().MouseDelta.x, r));
-			view.zoom(ImGui::GetIO().MouseDelta.y / 100.0);
+			pan(-dx_to_didx(ImGui::GetIO().MouseDelta.x, r));
+			zoom(ImGui::GetIO().MouseDelta.y / 100.0);
 		}
 	}
 
@@ -68,10 +76,10 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		float *data = streams.peek(ch, 0, stride);
 		ImVec4 col = widget.channel_color(ch);
 
-		int idx_from = view.x_to_idx(r.x, r) - 1;
-		int idx_to   = view.x_to_idx(r.x + r.w, r) + 1;
+		int idx_from = x_to_idx(r.x, r) - 1;
+		int idx_to   = x_to_idx(r.x + r.w, r) + 1;
 
-		float peak = widget.graph(view, rend, r, col, data, stride,
+		float peak = widget.graph(rend, r, col, data, stride,
 				idx_from, idx_to,
 				-scale, +scale);
 		if(peak > m_peak) {
@@ -81,7 +89,7 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 
 	// cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
-	int cx = view.idx_to_x(view.cursor, r);
+	int cx = idx_to_x(m_idx_cursor, r);
 	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
 
 	// zero Y
@@ -89,7 +97,7 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 	SDL_RenderLine(rend, r.x, r.y + r.h / 2, r.x + r.w, r.y + r.h / 2);
 
 	// zero X
-	float x = view.idx_to_x(0.0f, r);
+	float x = idx_to_x(0.0f, r);
 	if(x >= r.x && x <= r.x + r.w) {
 		SDL_SetRenderDrawColor(rend, 0, 255, 255, 128);
 		SDL_RenderLine(rend, x, r.y, x, r.y + r.h);
@@ -102,13 +110,13 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		size_t wsize = view.window->size();
 		const float *wdata = view.window->data();
 		SDL_FPoint p[66];
-		p[0].x = view.idx_to_x(view.cursor, r);
+		p[0].x = idx_to_x(m_idx_cursor, r);
 		p[0].y = r.y + r.h - 1;
-		p[65].x = view.idx_to_x(view.cursor - wsize, r);
+		p[65].x = idx_to_x(m_idx_cursor - wsize, r);
 		p[65].y = r.y + r.h - 1;
 		for(int i=0; i<64; i++) {
 			int n = wsize * i / 64;
-			p[i+1].x = view.idx_to_x(view.cursor - wsize * i / 63.0, r);
+			p[i+1].x = idx_to_x(m_idx_cursor - wsize * i / 63.0, r);
 			p[i+1].y = r.y + (r.h-1) * (1.0f - wdata[n]);
 		}
 

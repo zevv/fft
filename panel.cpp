@@ -173,9 +173,6 @@ void Panel::update_kid(Panel *pk, int dx1, int dy1, int dx2, int dy2)
 				}
 			}
 		}
-		if (m_parent) {
-			m_parent->update_kid(this, 0, dy1, 0, dy2);
-		}
 	}
 
 	if(m_type == Type::SplitV) {
@@ -195,11 +192,10 @@ void Panel::update_kid(Panel *pk, int dx1, int dy1, int dx2, int dy2)
 				}
 			}
 		}
-		if (m_parent) {
-			m_parent->update_kid(this, dx1, 0, dx2, 0);
-		}
 	}
-
+	if (m_parent) {
+		m_parent->update_kid(this, dx1, dy1, dx2, dy2);
+	}
 }
 
 
