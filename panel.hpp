@@ -25,6 +25,8 @@ public:
 
 	void add(Panel *p);
 	void add(Widget *widget, int size);
+	void replace(Panel *kid_old, Panel *kid_new);
+	void remove(Panel *kid);
 	void update_kid(Panel *pk, int dx, int dy, int dw, int dh);
 	int draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h);
 
@@ -38,5 +40,6 @@ private:
 	Type m_type;
 	int m_size;
 	std::vector<Panel *> m_kids;
+	std::vector<Panel *> m_kids_remove;
 };
 

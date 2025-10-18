@@ -115,6 +115,24 @@ void Panel::add(Widget *w, int size)
 }
 
 
+void Panel::replace(Panel *kid_old, Panel *kid_new)
+{
+	for(size_t i=0; i<m_kids.size(); i++) {
+		if(m_kids[i] == kid_old) {
+			m_kids[i] = kid_new;
+			kid_new->m_parent = this;
+			kid_old->m_parent = nullptr;
+		}
+	}
+}
+
+
+void Panel::remove(Panel *kid)
+{
+	m_kids_remove.push_back(kid);
+}
+
+
 void Panel::update_kid(Panel *pk, int dx1, int dy1, int dx2, int dy2)
 {
 	size_t nkids = m_kids.size();
@@ -178,6 +196,37 @@ int Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y, 
 		   !ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
 			ImGui::SetWindowFocus();
 		}
+	
+		if(ImGui::IsWindowFocused()) {
+			if(ImGui::IsKeyPressed(ImGuiKey_V)) {
+				if(m_parent->get_type() == Type::SplitV) {
+					Panel *pn = new Panel(m_widget->copy(), m_size);
+					m_parent->add(pn);
+				} else {
+					Panel *pnew = new Panel(Type::SplitV, m_size);
+					m_parent->replace(this, pnew);
+					pnew->add(this);
+					pnew->add(new Panel(m_widget->copy(), m_size));
+				}
+			}
+			if(ImGui::IsKeyPressed(ImGuiKey_H)) {
+				if(m_parent->get_type() == Type::SplitH) {
+					Panel *pn = new Panel(m_widget->copy(), m_size);
+					m_parent->add(pn);
+				} else {
+					Panel *pnew = new Panel(Type::SplitH, m_size);
+					m_parent->replace(this, pnew);
+					pnew->add(this);
+					pnew->add(new Panel(m_widget->copy(), m_size));
+				}
+			}
+			if(ImGui::IsKeyPressed(ImGuiKey_X)) {
+				if(m_parent) {
+					Panel *pp = m_parent;
+					m_parent->remove(this);
+				}
+			}
+		}
 
 		ImVec2 pos = ImGui::GetWindowPos();
 		ImVec2 size = ImGui::GetWindowSize();
@@ -224,6 +273,18 @@ int Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y, 
 			ky += kh + 1;
 		}
 
+	}
+
+	// remove kids marked for deletion
+	
+	for(auto &pk : m_kids_remove) {
+		for(size_t i=0; i<m_kids.size(); i++) {
+			if(m_kids[i] == pk) {
+				m_kids.erase(m_kids.begin() + i);
+				pk->m_parent = nullptr;
+				delete pk;
+			}
+		}
 	}
 
 	return m_size;

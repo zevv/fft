@@ -89,6 +89,22 @@ void Widget::load(ConfigReader::Node *n)
 }
 
 
+Widget *Widget::copy(void)
+{
+	Widget *w = new Widget(m_type);
+	for(int i=0; i<8; i++) {
+		w->m_channel_map[i] = m_channel_map[i];
+	}
+	w->m_waveform.agc = m_waveform.agc;
+	w->m_waveform.peak = m_waveform.peak;
+	w->m_spectrum.size = m_spectrum.size;
+	w->m_spectrum.window_type = m_spectrum.window_type;
+	w->m_spectrum.window_beta = m_spectrum.window_beta;
+	w->configure_fft(w->m_spectrum.size, w->m_spectrum.window_type);
+	return w;
+}
+
+
 void Widget::save(ConfigWriter &cw)
 {
 	cw.push("widget");

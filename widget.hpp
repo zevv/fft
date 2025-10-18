@@ -19,6 +19,7 @@ public:
 
 	void load(ConfigReader::Node *node);
 	void save(ConfigWriter &cfg);
+	Widget *copy();
 
 	void configure_fft(int size, Window::Type window_type);
 
