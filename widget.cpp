@@ -129,7 +129,15 @@ void Widget::configure_fft(int size, Window::Type window_type)
 	m_spectrum.size = size;
 	m_spectrum.in.resize(size);
 	m_spectrum.out.resize(size);
-	m_spectrum.plan = fftwf_plan_r2r_1d((int)size, m_spectrum.in.data(), m_spectrum.out.data(), FFTW_R2HC, FFTW_ESTIMATE);
+
+	int sizes[] = {size};
+	fftwf_r2r_kind kinds[] = { FFTW_R2HC };
+	m_spectrum.plan = fftwf_plan_many_r2r(
+			1, sizes, 1, 
+			m_spectrum.in.data(), NULL, 1, 0, 
+			m_spectrum.out.data(), NULL, 1, 0, 
+			kinds, FFTW_ESTIMATE);
+
 	m_spectrum.window.configure(window_type, size);
 }
 
