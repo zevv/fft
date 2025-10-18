@@ -207,7 +207,7 @@ static float draw_graph(View &view, SDL_Renderer *rend, SDL_Rect &r,
 	SDL_FRect rects[r.w + 2];
 
 	float y_off = r.y + r.h / 2.0f;
-	float y_scale = (r.h / 2.0f) / (y_max - y_min);
+	float y_scale = (r.h - 2) / (y_max - y_min);
 	float v_peak = 0.0;
 
 	int npoints = 0;
@@ -220,7 +220,6 @@ static float draw_graph(View &view, SDL_Renderer *rend, SDL_Rect &r,
 
 		float vmin = data[stride * idx_start];
 		float vmax = data[stride * idx_start];
-		if(x == 0 || vmax > v_peak) v_peak = vmax;
 
 		for(int idx=idx_start; idx<idx_end; idx++) {
 			float v = data[stride * idx];
@@ -241,6 +240,8 @@ static float draw_graph(View &view, SDL_Renderer *rend, SDL_Rect &r,
 			rects[nrects].h = p_min[npoints - 1].y - p_max[npoints - 1].y;
 			nrects++;
 		}
+
+		if(x == 0 || vmax > v_peak) v_peak = vmax;
 	}
 
 	SDL_SetRenderDrawColor(rend, col.x * 255, col.y * 255, col.z * 255, col.w * 255);
@@ -251,6 +252,7 @@ static float draw_graph(View &view, SDL_Renderer *rend, SDL_Rect &r,
 
 	return v_peak;
 }
+
 
 
 void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
@@ -273,7 +275,7 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 
 	float scale = 1.0;
 	if(m_waveform.agc && m_waveform.peak > 0.0f) {
-		scale = m_waveform.peak;
+		scale = m_waveform.peak / 0.9;
 	}
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
@@ -341,7 +343,7 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(100);
 	update |= ImGui::SliderInt("fft size", (int *)&m_spectrum.size, 
-				16, 16384, "%d", ImGuiSliderFlags_Logarithmic);
+				16, 32768, "%d", ImGuiSliderFlags_Logarithmic);
 
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(100);
@@ -393,8 +395,9 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		float *data = streams.peek(ch, -view.cursor + m_spectrum.size, stride);
 
 		const float *w = m_spectrum.window.data();
+		float gain = m_spectrum.window.gain();
 		for(int i=0; i<m_spectrum.size; i++) {
-			m_spectrum.in[i] = data[stride * i] * w[i];
+			m_spectrum.in[i] = data[stride * i] * w[i] * gain;
 		}
 
 		fftwf_execute(m_spectrum.plan);

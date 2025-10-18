@@ -16,6 +16,13 @@ public:
 		, m_width_max(1024 * 1024)
 	{}
 
+	void reset()
+	{
+		wave_from = -1000;
+		wave_to = 1000;
+		cursor = 512;
+	}
+
 	void clamp() {
 		float a1 = 0.9;
 		float a2 = 0.1;

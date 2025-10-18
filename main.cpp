@@ -157,10 +157,11 @@ void Corrie::init()
 #if 1
 	m_capture = true;
 #else
-	float f = 100.0;
-	for(float t=0.0; t<1.0; t+=1.0/m_srate) {
-		float v = sinf(2.0 * M_PI * f * t);
-		f = f * 1.00008;
+	float phase = 0.0;
+	for(int i=0; i<m_srate; i++) {
+		float f = i / 2.0;
+		float v = sinf(2.0 * M_PI * phase);
+		phase += f / m_srate;
 		float data[8] = { v, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 		m_streams.write(data, 1);
 	}
@@ -298,6 +299,10 @@ void Corrie::run()
             if(event.type == SDL_EVENT_WINDOW_RESIZED && event.window.windowID == SDL_GetWindowID(m_win))
                 resize_window(event.window.data1, event.window.data2);
         }
+
+		if(ImGui::IsKeyPressed(ImGuiKey_R)) {
+			m_view.reset();
+		}
 
         if (SDL_GetWindowFlags(m_win) & SDL_WINDOW_MINIMIZED)
         {
