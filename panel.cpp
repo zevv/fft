@@ -157,20 +157,19 @@ void Panel::update_kid(Panel *pk, int dx1, int dy1, int dx2, int dy2)
 	}
 
 	if(m_type == Type::SplitH) {
-		int drawable_w = m_last_w - (m_kids.size() > 0 ? m_kids.size() - 1 : 0);
-		float pixels_per_weight = drawable_w > 0 ? (float)drawable_w / total_weight : 0.0f;
+		float ppw = (float)m_last_w / total_weight;
 
 		for(size_t i=0; i<m_kids.size(); i++) {
 			if(m_kids[i] == pk) {
 				if(dx1 != 0 && i > 0) {
 					Panel *pp = m_kids[i-1];
-					float weight_delta = (float)dx1 / pixels_per_weight;
+					float weight_delta = (float)dx1 / ppw;
 					pk->m_weight -= weight_delta;
 					pp->m_weight += weight_delta;
 				}
 				if(i < (nkids - 1)) {
 					Panel *pn = m_kids[i+1];
-					float weight_delta = (float)dx2 / pixels_per_weight;
+					float weight_delta = (float)dx2 / ppw;
 					pk->m_weight += weight_delta;
 					pn->m_weight -= weight_delta;
 				}
@@ -182,20 +181,19 @@ void Panel::update_kid(Panel *pk, int dx1, int dy1, int dx2, int dy2)
 	}
 
 	if(m_type == Type::SplitV) {
-		int drawable_h = m_last_h - (m_kids.size() > 0 ? m_kids.size() - 1 : 0);
-		float pixels_per_weight = drawable_h > 0 ? (float)drawable_h / total_weight : 0.0f;
+		float ppw = (float)m_last_h / total_weight;
 
 		for(size_t i=0; i<m_kids.size(); i++) {
 			if(m_kids[i] == pk) {
 				if(dy1 != 0 && i > 0) {
 					Panel *pp = m_kids[i-1];
-					float weight_delta = (float)dy1 / pixels_per_weight;
+					float weight_delta = (float)dy1 / ppw;
 					pk->m_weight -= weight_delta;
 					pp->m_weight += weight_delta;
 				}
 				if(i < (nkids - 1)) {
 					Panel *pn = m_kids[i+1];
-					float weight_delta = (float)dy2 / pixels_per_weight;
+					float weight_delta = (float)dy2 / ppw;
 					pk->m_weight += weight_delta;
 					pn->m_weight -= weight_delta;
 				}
@@ -228,11 +226,16 @@ int Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y, 
 		ImGui::SetNextWindowPos(ImVec2((float)x, (float)y));
 		ImGui::SetNextWindowSize(ImVec2((float)w, (float)h));
 
-		ImGui::SetNextWindowBgAlpha(0.0f);
 
-		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.0f, 0.5f, 0.0f, 1.0f));
-		ImGui::Begin(m_title, nullptr, flags);
-		ImGui::PopStyleColor();
+		if(m_widget->has_focus()) {
+			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+			ImGui::SetNextWindowBgAlpha(0.0f);
+			ImGui::Begin(m_title, nullptr, flags);
+			ImGui::PopStyleColor();
+		} else {
+			ImGui::SetNextWindowBgAlpha(0.1f);
+			ImGui::Begin(m_title, nullptr, flags);
+		}
 
 		if(ImGui::IsWindowHovered() && 
 		   !ImGui::IsMouseDragging(ImGuiMouseButton_Left) && 

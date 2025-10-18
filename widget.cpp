@@ -189,10 +189,11 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r
 		ImGui::PopStyleColor(3);
 	}
 
+	m_has_focus = ImGui::IsWindowFocused();
+
 	if(ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey_0)) {
 		for(int i=0; i<8; i++) m_channel_map[i] ^= 1;
 	}
-
 
 	ImVec2 cursor = ImGui::GetCursorScreenPos();
 	ImVec2 avail = ImGui::GetContentRegionAvail();
@@ -450,7 +451,7 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 
 
 const char *k_type_str[] = {
-	"none", "spectrum", "waterfall", "wave"
+	"none", "wave", "spectrum", "waterfall"
 };
 
 const char **Widget::type_names()

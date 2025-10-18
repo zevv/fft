@@ -152,7 +152,7 @@ void Corrie::init()
 	init_video();
 	init_audio();
 
-#if 0
+#if 1
 	m_capture = true;
 #else
 	float phase = 0.0;

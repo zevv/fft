@@ -12,7 +12,7 @@ class Widget {
 
 public:
 	enum Type : int {
-		None, Spectrum, Waterfall, Waveform
+		None, Waveform, Spectrum, Waterfall
 	};
 
 	Widget(Type type = None);
@@ -27,6 +27,7 @@ public:
 	void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 	void draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 	void draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
+	bool has_focus() const { return m_has_focus; }
 
 	static const char* type_to_string(Type type);
 	static Type string_to_type(const char *str);
@@ -51,5 +52,7 @@ private:
 		fftwf_plan plan;
 		Window window;
 	} m_spectrum;
+
+	bool m_has_focus;
 };
 
