@@ -17,12 +17,13 @@ public:
 	{}
 
 	void clamp() {
+		return;
 		float a1 = 0.9;
 		float a2 = 0.1;
-		float span = wave_to - wave_from;
+		float span = wave_from - wave_to;
 		if(span < m_width_min) {
-			wave_from = wave_from * a1 + (wave_to - m_width_min) * a2;
-			wave_to = wave_to * a1 + (wave_from + m_width_min) * a2;
+			wave_from = wave_from * a1 + (wave_to   + m_width_min) * a2;
+			wave_to   = wave_to   * a1 + (wave_from - m_width_min) * a2;
 		}
 	};
 
@@ -39,12 +40,16 @@ public:
 
 	float x_to_idx(float x, SDL_Rect &r)
 	{
-		return wave_to + (wave_from - wave_to) * (x - r.x) / r.w;
+		//return wave_to + (wave_from - wave_to) * (x - r.x) / r.w;
+		return wave_from - (wave_from - wave_to) * (x - r.x) / r.w;
 	}
 
 	float idx_to_x(float idx, SDL_Rect &r)
 	{
-		return r.x + r.w * (idx - wave_to) / (wave_from - wave_to);
+		//return r.x + r.w * (idx - wave_to) / (wave_from - wave_to);
+		////reverse:
+		return r.x + r.w * (wave_from - idx) / (wave_from - wave_to);
+		
 	}
 
 	float didx_to_dx(float didx, SDL_Rect &r)

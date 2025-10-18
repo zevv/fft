@@ -203,7 +203,7 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	if(ImGui::IsWindowFocused()) {
 		view.cursor = view.x_to_idx(ImGui::GetIO().MousePos.x, r);
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			view.pan(view.dx_to_didx(ImGui::GetIO().MouseDelta.x, r));
+			view.pan(-view.dx_to_didx(ImGui::GetIO().MouseDelta.x, r));
 			view.zoom(ImGui::GetIO().MouseDelta.y / 100.0);
 		}
 	}
@@ -219,28 +219,34 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	SDL_RenderLine(rend, r.x, midy, r.x + r.w, midy);
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
+	
+	ImGui::SameLine();
+	ImGui::Text("| %d..%d @%d", (int)view.wave_from, (int)view.wave_to, (int)view.cursor);
+	ImGui::SameLine();
+	ImGui::Text("| peak: %.2f", m_waveform.peak);
+
 
 	int npoints = r.w;
 	int nsamples = view.wave_to - view.wave_from;
 	SDL_FPoint p_min[npoints];
 	SDL_FPoint p_max[npoints];
 	SDL_FRect rect[npoints];
-
-	ImGui::SameLine();
-	ImGui::Text("| peak: %.2f", m_waveform.peak);
+	
 
 	for(int ch=0; ch<8; ch++) {
-		Stream stream = streams.get(ch);
 		if(!m_channel_map[ch]) continue;
+
+		size_t stride;
+		float *data = streams.peek(ch, 0, stride);
 
 		int nrects = 0;
 		for(int i=0; i<npoints; i++) {
-			int idx_start = ((i+0) * nsamples) / npoints;
-			int idx_end   = ((i+1) * nsamples) / npoints;
-			float vmin = stream.read(idx_start + view.wave_from);
-			float vmax = vmin;
+			int idx_start = ((r.w - i+0) * nsamples) / npoints;
+			int idx_end   = ((r.w - i+1) * nsamples) / npoints;
+			float vmin = 0.0;
+			float vmax = 0.0;;
 			for(int idx=idx_start; idx<idx_end; idx++) {
-				float v = stream.read(idx + view.wave_from);
+				float v = data[stride * (int)(view.wave_from + idx)];
 				vmin = (idx == idx_start || v < vmin) ? v : vmin;
 				vmax = (idx == idx_start || v > vmax) ? v : vmax;
 			}
@@ -272,6 +278,13 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	int cx = view.idx_to_x(view.cursor, r);
 	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
 
+	// zero X
+	float x = view.idx_to_x(0.0f, r);
+	if(x >= r.x && x <= r.x + r.w) {
+		SDL_SetRenderDrawColor(rend, 0, 255, 255, 128);
+		SDL_RenderLine(rend, x, r.y, x, r.y + r.h);
+	}
+
 	// window
 	if(view.window) {
 		size_t wsize = view.window->size();
@@ -279,11 +292,11 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		SDL_FPoint p[66];
 		p[0].x = view.idx_to_x(view.cursor, r);
 		p[0].y = r.y + r.h - 1;
-		p[65].x = view.idx_to_x(view.cursor + wsize, r);
+		p[65].x = view.idx_to_x(view.cursor - wsize, r);
 		p[65].y = r.y + r.h - 1;
 		for(int i=0; i<64; i++) {
 			int n = wsize * i / 64;
-			p[i+1].x = view.idx_to_x(view.cursor + wsize * i / 63.0, r);
+			p[i+1].x = view.idx_to_x(view.cursor - wsize * i / 63.0, r);
 			p[i+1].y = r.y + (r.h-1) * (1.0f - wdata[n]);
 		}
 
@@ -334,14 +347,10 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	size_t npoints = m_spectrum.size / 2 + 1;
 	SDL_FPoint p[npoints];
 	
-
 	// grid
-		
+
 	SDL_SetRenderDrawColor(rend, 64, 64, 64, 255);
-
 	ImDrawList* dl = ImGui::GetWindowDrawList();
-
-	// 0 .. -100 dB
 	for(float dB=-100.0f; dB<=0.0f; dB+=10.0f) {
 		int y = view.db_to_y(dB, r);
 		SDL_RenderLine(rend, r.x, y, r.x + r.w, y);
@@ -352,18 +361,17 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
-	// spectorams
+	// spectograms
 
 	for(int ch=0; ch<8; ch++) {
 		if(!m_channel_map[ch]) continue;
-		Stream stream = streams.get(ch);
 
-		memset(&m_spectrum.in[0], 0, sizeof(float) * m_spectrum.size);
-		stream.read(view.cursor, &m_spectrum.in[0], m_spectrum.size);
+		size_t stride;
+		float *data = streams.peek(ch, -view.cursor + m_spectrum.size, stride);
 
 		const float *w = m_spectrum.window.data();
 		for(int i=0; i<m_spectrum.size; i++) {
-			m_spectrum.in[i] *= w[i];
+			m_spectrum.in[i] = data[stride * i] * w[i];
 		}
 
 		fftwf_execute(m_spectrum.plan);

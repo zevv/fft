@@ -9,6 +9,7 @@ SRC += panel.cpp
 SRC += widget.cpp
 SRC += stream.cpp
 SRC += config.cpp
+SRC += rb.cpp
 SRC += $(IMGUI_DIR)/imgui.cpp 
 SRC += $(IMGUI_DIR)/imgui_demo.cpp
 SRC += $(IMGUI_DIR)/imgui_draw.cpp 

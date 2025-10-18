@@ -5,46 +5,34 @@
 #include <stddef.h>
 #include <mutex>
 
-class Stream {
-
-public:
-	Stream();
-	void set_size(size_t size);
-	void write(float v);
-	float read(size_t idx);
-	void read(size_t idx, float *out, size_t count);
-
-private:
-
-	size_t m_size;
-	size_t m_head;
-	size_t m_tail;
-	std::vector<float> m_data;
-};
+#include "rb.hpp"
 
 
 class Streams {
 public:
-	Streams();
-	Stream &get(size_t channel);
-	std::vector<Stream> m_streams;
-};
 
+	Streams()
+	{
+		m_channels = 8;
+		m_rb.set_size(m_channels * 1024 * 1024 * sizeof(float));
+	}
 
-class StreamsReader {
+	void write(void *data, size_t nframes)
+	{
+		size_t n = nframes * m_channels * sizeof(float);
+		m_rb.write(data, n);
+	}
 
-public:
-
-	StreamsReader(Streams &streams, int channel_base, int channel_count);
-	void handle_data(uint8_t *data, size_t nbytes);
+	float *peek(size_t channel, size_t idx, size_t &stride)
+	{
+		stride = m_channels;
+		float *rv = (float *)m_rb.peek((idx + 1) * m_channels * sizeof(float) + channel * sizeof(float));
+		return rv;
+	}
 
 private:
-	Streams &m_streams;
-	int m_channel_base;
-	int m_channel_count;
-
-	size_t m_frame_bytes;
-	uint8_t buf[sizeof(float) * 8];
-	size_t m_pos;
-
+	size_t m_channels;
+	Rb m_rb;
 };
+
+

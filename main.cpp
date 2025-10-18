@@ -1,6 +1,7 @@
 
 #include <assert.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
 #include <stdlib.h>
 #include <math.h>
 #include <fcntl.h>
@@ -47,6 +48,7 @@ public:
     void draw();
     void resize_window(int w, int h);
 
+private:
 	Panel *m_root_panel;
 
     SDL_Window *m_win;
@@ -60,8 +62,6 @@ public:
 	SDL_AudioStream *m_sdl_audiostream;
 
 	Streams m_streams;
-	StreamsReader m_audio_reader;
-	StreamsReader m_stdin_reader;
 	View m_view;
 };
 
@@ -72,10 +72,8 @@ Corrie::Corrie(SDL_Window *window, SDL_Renderer *renderer)
 	, m_resize(true)
 	, m_w(800)
 	, m_h(600)
-    , m_srate(8000)
+    , m_srate(48000)
 	, m_capture(true)
-	, m_audio_reader(m_streams, 0, 2)
-	, m_stdin_reader(m_streams, 2, 6)
 	, m_view()
 {
     resize_window(800, 600);
@@ -227,18 +225,37 @@ void Corrie::init_audio(void)
 
 void Corrie::poll_audio()
 {
-	uint8_t buf[2048];
+	for(;;) {
+		int frames_avail_audio = SDL_GetAudioStreamAvailable(m_sdl_audiostream) / (sizeof(float) * 2);
+		int n = 0;
+		ioctl(0, FIONREAD, &n);
+		int frames_avail_stdin = n / (sizeof(float) * 6);
+		int frames_avail = std::min(frames_avail_audio, frames_avail_stdin);
+		frames_avail = std::min(frames_avail, 256);
+		if(frames_avail == 0) break;
 
-	for(;;) {
-		int r = SDL_GetAudioStreamData(m_sdl_audiostream, buf, sizeof(buf));
-		if(r <= 0) break;
-		m_audio_reader.handle_data(buf, r);
-	}
-	
-	for(;;) {
-		int r = read(0, buf, sizeof(buf));
-		if(r <= 0) break;
-		m_stdin_reader.handle_data(buf, r);
+		float buf_audio[256 * 2];
+		int r1 = SDL_GetAudioStreamData(m_sdl_audiostream, buf_audio, frames_avail * sizeof(float) * 2);
+		assert(r1 == (int)(frames_avail * sizeof(float) * 2));
+
+		float buf_stdin[256 * 6];
+		int nbytes = frames_avail * sizeof(float) * 6;
+		int r2 = read(0, buf_stdin, nbytes);
+		assert(r2 == nbytes);
+		
+		float buf[256][8];
+		for(int i=0; i<frames_avail; i++) {
+			buf[i][0] = buf_audio[i * 2 + 0];
+			buf[i][1] = buf_audio[i * 2 + 1];
+			buf[i][2] = buf_stdin[i * 6 + 0];
+			buf[i][3] = buf_stdin[i * 6 + 1];
+			buf[i][4] = buf_stdin[i * 6 + 2];
+			buf[i][5] = buf_stdin[i * 6 + 3];
+			buf[i][6] = buf_stdin[i * 6 + 4];
+			buf[i][7] = buf_stdin[i * 6 + 5];
+		}
+
+		m_streams.write(buf, frames_avail);
 	}
 }
 
