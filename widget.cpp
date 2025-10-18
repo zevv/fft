@@ -197,6 +197,7 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r
 
 static float draw_graph(View &view, SDL_Renderer *rend, SDL_Rect &r, 
 					 ImVec4 &col, float *data, size_t stride,
+					 int idx_from, int idx_to,
 					 float y_min, float y_max)
 {
 	int nsamples = view.wave_to - view.wave_from;
@@ -205,8 +206,6 @@ static float draw_graph(View &view, SDL_Renderer *rend, SDL_Rect &r,
 	SDL_FPoint p_min[r.w + 2];
 	SDL_FRect rects[r.w + 2];
 
-	int idx_from = view.x_to_idx(r.x, r) - 1;
-	int idx_to   = view.x_to_idx(r.x + r.w, r) + 1;
 	float y_off = r.y + r.h / 2.0f;
 	float y_scale = (r.h / 2.0f) / (y_max - y_min);
 	float v_peak = 0.0;
@@ -264,7 +263,8 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	ImGui::Text("| peak: %.2f", m_waveform.peak);
 		   
 	if(ImGui::IsWindowFocused()) {
-		view.cursor = view.x_to_idx(ImGui::GetIO().MousePos.x, r);
+		auto pos = ImGui::GetIO().MousePos;
+		if(pos.x >= 0) view.cursor = view.x_to_idx(pos.x, r);
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
 			view.pan(-view.dx_to_didx(ImGui::GetIO().MouseDelta.x, r));
 			view.zoom(ImGui::GetIO().MouseDelta.y / 100.0);
@@ -282,7 +282,13 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		size_t stride;
 		float *data = streams.peek(ch, 0, stride);
 		ImVec4 col = channel_color(ch);
-		float peak = draw_graph(view, rend, r, col, data, stride, -scale, +scale);
+
+		int idx_from = view.x_to_idx(r.x, r) - 1;
+		int idx_to   = view.x_to_idx(r.x + r.w, r) + 1;
+
+		float peak = draw_graph(view, rend, r, col, data, stride,
+				idx_from, idx_to,
+				-scale, +scale);
 		if(peak > m_waveform.peak) {
 			m_waveform.peak = peak;
 		}
@@ -394,38 +400,19 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		fftwf_execute(m_spectrum.plan);
 
 		float scale = 2.0f / (float)m_spectrum.size * m_spectrum.window.gain();
-
 		for(int i=0; i<m_spectrum.size; i++) {
 			float v;
-			if(i == 0) {
-				v = fabsf(m_spectrum.out[0]);
-			} else if(i < m_spectrum.size / 2) {
-				v = hypotf(fabsf(m_spectrum.out[i]), fabsf(m_spectrum.out[m_spectrum.size - i]));
-			} else if(i == m_spectrum.size / 2) {
-				v = fabsf(m_spectrum.out[m_spectrum.size / 2]);
-			} else {
-				v = 0.0f;
-			}
-			m_spectrum.out[i] = v * scale;
+			     if(i == 0) v = fabsf(m_spectrum.out[0]);
+			else if(i < m_spectrum.size / 2) v = hypotf(fabsf(m_spectrum.out[i]), fabsf(m_spectrum.out[m_spectrum.size - i]));
+			else if(i == m_spectrum.size / 2) v = fabsf(m_spectrum.out[m_spectrum.size / 2]);
+			else v = 0.0f;
+			m_spectrum.out[i] = (v >= 1e-20f) ? 20.0f * log10f(v) : -100.0f;
 		}
 
-		for(size_t i=0; i<npoints; i++) {
-			float v = m_spectrum.out[i];
-			float dB = (v > 1e-6f) ? 20.0f * log10f(v) : -100.0f;
-			p[i].x = r.x + (i * r.w) / (npoints - 1);
-			p[i].y = view.db_to_y(dB, r);
-		}
 		ImVec4 col = channel_color(ch);
-		SDL_SetRenderDrawColor(rend, col.x * 255, col.y * 255, col.z * 255, col.w * 255);
-		SDL_RenderLines(rend, p, npoints);
-
-		if(ch == 2) {
-			FILE *f = fopen("/tmp/spectrum", "w");
-			for(size_t i=0; i<npoints; i++) {
-				fprintf(f, "%f\n", 20.0f * log10f(m_spectrum.out[i] + 1e-6f));
-			}
-			fclose(f);
-		}
+		float p = draw_graph(view, rend, r, col, m_spectrum.out.data(), 1,
+				0, npoints,
+				0, -100);
 	}
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
