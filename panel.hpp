@@ -17,14 +17,15 @@ public:
 		None, Widget, SplitH, SplitV
 	};
 
-	Panel(Widget *widget, int size);
-	Panel(Type type, int size = 100);
+	Panel(Widget *widget);
+	Panel(Type type);
+	~Panel();
 
 	void save(ConfigWriter &cfg);
 	void load(ConfigReader::Node *node);
 
-	void add(Panel *p);
-	void add(Widget *widget, int size);
+	void add(Panel *p, Panel *p_after = nullptr);
+	void add(Widget *widget);
 	void replace(Panel *kid_old, Panel *kid_new);
 	void remove(Panel *kid);
 	void update_kid(Panel *pk, int dx, int dy, int dw, int dh);
@@ -34,12 +35,20 @@ public:
 
 private:
 
+	struct AddRequest {
+		Panel *p_new;
+		Panel *p_after;
+	};
+
 	Panel *m_parent;
 	Widget *m_widget;
+	int m_last_w;
+	int m_last_h;
 	const char *m_title;
 	Type m_type;
-	int m_size;
+	float m_weight;
 	std::vector<Panel *> m_kids;
 	std::vector<Panel *> m_kids_remove;
+	std::vector<AddRequest> m_add_requests;
 };
 

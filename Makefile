@@ -32,6 +32,9 @@ CXXFLAGS += -ffast-math
 CXXFLAGS += `pkg-config sdl3 fftw3 fftw3f --cflags`
 LIBS += -ldl `pkg-config sdl3 fftw3 fftw3f --libs`
 
+CXXFLAGS += -fsanitize=address
+LDFLAGS += -fsanitize=address
+
 CFLAGS = $(CXXFLAGS)
 
 %.o:%.cpp

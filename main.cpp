@@ -174,12 +174,12 @@ void Corrie::init()
 
 	if(m_root_panel->get_type() == Panel::Type::None) {
 		m_root_panel = new Panel(Panel::Type::SplitV);
-		Panel *p2 = new Panel(Panel::Type::SplitH, 500);
+		Panel *p2 = new Panel(Panel::Type::SplitH);
 		m_root_panel->add(p2);
-		p2->add(new Widget(Widget::Type::Waterfall), 400);
-		p2->add(new Widget(Widget::Type::Spectrum), 150);
-		m_root_panel->add(new Widget(Widget::Type::Waveform), 200);
-		m_root_panel->add(new Widget(Widget::Type::Waveform), 200);
+		p2->add(new Widget(Widget::Type::Waterfall));
+		p2->add(new Widget(Widget::Type::Spectrum));
+		m_root_panel->add(new Widget(Widget::Type::Waveform));
+		m_root_panel->add(new Widget(Widget::Type::Waveform));
 	}
 }
 
