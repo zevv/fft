@@ -14,32 +14,17 @@
 Widget::Widget(Type type)
 	: m_type(type)
 	, m_channel_map{}
-	, m_waveform{
-		.agc = true,
-		.peak = 0.0f,
-	},
-	m_spectrum{
-		.size = 0,
-		.window_type = Window::Type::Hanning,
-		.in{},
-		.out{},
-		.plan = nullptr,
-	}
 {
 	for(int i=0; i<8; i++) {
 		m_channel_map[i] = true;
 	}
-	configure_fft(2048, Window::Type::Hanning);
 }
 
 
 Widget::~Widget()
 {
-	if(m_spectrum.plan) {
-		fftwf_destroy_plan(m_spectrum.plan);
-		m_spectrum.plan = nullptr;
-	}
 }
+
 
 void Widget::load(ConfigReader::Node *n)
 {
@@ -58,39 +43,14 @@ void Widget::load(ConfigReader::Node *n)
 
 		if(strcmp(type, "wave") == 0) {
 			m_type = Type::Waveform;
-			if(auto *nc = n->find("waveform")) {
-				nc->read("agc", m_waveform.agc, true);
-			}
+			m_waveform.load(n->find("waveform"));
 		}
 
 		if(strcmp(type, "spectrum") == 0) {
-			if(auto nc = n->find("spectrum")) {
-				m_type = Type::Spectrum;
-				if(const char *window_type = nc->read_str("window_type")) {
-					m_spectrum.window_type = Window::str_to_type(window_type);
-				}
-				nc->read("window_beta", m_spectrum.window_beta);
-				nc->read("fft_size", m_spectrum.size);
-				configure_fft(m_spectrum.size, m_spectrum.window_type);
-			}
+			m_type = Type::Spectrum;
+			m_spectrum.load(n->find("spectrum"));
 		}
 	}
-}
-
-
-Widget *Widget::copy(void)
-{
-	Widget *w = new Widget(m_type);
-	for(int i=0; i<8; i++) {
-		w->m_channel_map[i] = m_channel_map[i];
-	}
-	w->m_waveform.agc = m_waveform.agc;
-	w->m_waveform.peak = m_waveform.peak;
-	w->m_spectrum.size = m_spectrum.size;
-	w->m_spectrum.window_type = m_spectrum.window_type;
-	w->m_spectrum.window_beta = m_spectrum.window_beta;
-	w->configure_fft(w->m_spectrum.size, w->m_spectrum.window_type);
-	return w;
 }
 
 
@@ -107,17 +67,11 @@ void Widget::save(ConfigWriter &cw)
 	cw.write("channel_map", channel_map);
 
 	if(m_type == Type::Waveform) {
-		cw.push("waveform");
-		cw.write("agc", m_waveform.agc);
-		cw.pop();
+		m_waveform.save(cw);
 	}
 
 	if(m_type == Type::Spectrum) {
-		cw.push("spectrum");
-		cw.write("fft_size", (int)m_spectrum.size);
-		cw.write("window_type", Window::type_to_str(m_spectrum.window_type));
-		cw.write("window_beta", m_spectrum.window_beta);
-		cw.pop();
+		m_spectrum.save(cw);
 	}
 
 	cw.pop();
@@ -125,26 +79,17 @@ void Widget::save(ConfigWriter &cw)
 }
 
 
-void Widget::configure_fft(int size, Window::Type window_type)
+Widget *Widget::copy(void)
 {
-	if(m_spectrum.plan) {
-		fftwf_destroy_plan(m_spectrum.plan);
-		m_spectrum.plan = nullptr;
+	Widget *w = new Widget(m_type);
+	for(int i=0; i<8; i++) {
+		w->m_channel_map[i] = m_channel_map[i];
 	}
-	m_spectrum.size = size;
-	m_spectrum.in.resize(size);
-	m_spectrum.out.resize(size);
-
-	int sizes[] = {size};
-	fftwf_r2r_kind kinds[] = { FFTW_R2HC };
-	m_spectrum.plan = fftwf_plan_many_r2r(
-			1, sizes, 1, 
-			m_spectrum.in.data(), NULL, 1, 0, 
-			m_spectrum.out.data(), NULL, 1, 0, 
-			kinds, FFTW_ESTIMATE);
-
-	m_spectrum.window.configure(window_type, size);
+	m_waveform.copy_to(w->m_waveform);
+	m_spectrum.copy_to(w->m_spectrum);
+	return w;
 }
+
 
 
 void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r)
@@ -190,27 +135,29 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r
 	if(m_type == Type::None) {
 
 	} else if(m_type == Type::Spectrum) {
-		 draw_spectrum(view, streams, rend, r);
+		m_spectrum.draw(*this, view, streams, rend, r);
 	} else if(m_type == Type::Waterfall) {
 
 	} else if(m_type == Type::Waveform) {
-		draw_waveform(view, streams, rend, r);
+		m_waveform.draw(*this, view, streams, rend, r);
 	}
 
 	SDL_SetRenderClipRect(rend, nullptr);
 }
 
 
-float Widget::draw_graph(View &view, SDL_Renderer *rend, SDL_Rect &r, 
+float Widget::graph(View &view, SDL_Renderer *rend, SDL_Rect &r, 
 					 ImVec4 &col, float *data, size_t stride,
 					 int idx_from, int idx_to,
 					 float y_min, float y_max)
 {
 	int nsamples = view.wave_to - view.wave_from;
 
-	SDL_FPoint p_max[r.w + 2];
-	SDL_FPoint p_min[r.w + 2];
-	SDL_FRect rects[r.w + 2];
+	assert(r.w < 2048);
+
+	SDL_FPoint p_max[2048];
+	SDL_FPoint p_min[2048];
+	SDL_FRect rects[2048];
 
 	float y_off = r.y + r.h / 2.0f;
 	float y_scale = (r.h - 2) / (y_max - y_min);

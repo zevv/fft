@@ -60,7 +60,6 @@ struct ConfigReader {
 	};
 
 public:
-	class Node;
 
 	ConfigReader();
 	~ConfigReader();

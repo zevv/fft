@@ -11,7 +11,6 @@ class View {
 public:
 	View()
 		: m_width_min(100)
-		, m_width_max(1024 * 1024)
 	{
 		reset();
 	}
@@ -97,5 +96,4 @@ public:
 private:
 
 	float m_width_min;
-	float m_width_max;
 };

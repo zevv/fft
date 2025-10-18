@@ -8,16 +8,44 @@
 #include <imgui.h>
 
 #include "widget.hpp"
-		
 
-void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+Widget::Waveform::Waveform()
+	: m_agc(true)
+	, m_peak(0.0f)
+{
+}
+
+
+void Widget::Waveform::load(ConfigReader::Node *node)
+{
+	if(!node) return;
+	node->read("agc", m_agc);
+}
+
+
+void Widget::Waveform::save(ConfigWriter &cw)
+{
+	cw.push("waveform");
+	cw.write("agc", m_agc);
+	cw.pop();
+}
+
+
+void Widget::Waveform::copy_to(Waveform &w)
+{
+	w.m_agc = m_agc;
+	w.m_peak = m_peak;
+}
+
+
+void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	ImGui::SameLine();
-	ImGui::Checkbox("AGC", &m_waveform.agc);
+	ImGui::Checkbox("AGC", &m_agc);
 	ImGui::SameLine();
 	ImGui::Text("| %d..%d @%d", (int)view.wave_from, (int)view.wave_to, (int)view.cursor);
 	ImGui::SameLine();
-	ImGui::Text("| peak: %.2f", m_waveform.peak);
+	ImGui::Text("| peak: %.2f", m_peak);
 		   
 	if(ImGui::IsWindowFocused()) {
 		auto pos = ImGui::GetIO().MousePos;
@@ -29,25 +57,25 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	}
 
 	float scale = 1.0;
-	if(m_waveform.agc && m_waveform.peak > 0.0f) {
-		scale = m_waveform.peak / 0.9;
+	if(m_agc && m_peak > 0.0f) {
+		scale = m_peak / 0.9;
 	}
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 	for(int ch=0; ch<8; ch++) {
-		if(!m_channel_map[ch]) continue;
+		if(!widget.channel_enabled(ch)) continue;
 		size_t stride;
 		float *data = streams.peek(ch, 0, stride);
-		ImVec4 col = channel_color(ch);
+		ImVec4 col = widget.channel_color(ch);
 
 		int idx_from = view.x_to_idx(r.x, r) - 1;
 		int idx_to   = view.x_to_idx(r.x + r.w, r) + 1;
 
-		float peak = draw_graph(view, rend, r, col, data, stride,
+		float peak = widget.graph(view, rend, r, col, data, stride,
 				idx_from, idx_to,
 				-scale, +scale);
-		if(peak > m_waveform.peak) {
-			m_waveform.peak = peak;
+		if(peak > m_peak) {
+			m_peak = peak;
 		}
 	}
 
@@ -88,6 +116,5 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		SDL_RenderLines(rend, p, 66);
 	}
 
-	m_waveform.peak *= 0.9f;
+	m_peak *= 0.9f;
 }
-
