@@ -82,14 +82,15 @@ void Rb::write(void *data, size_t len)
 void *Rb::peek(size_t idx)
 {
 	idx = idx % m_size;
-	return m_map1 + m_head + m_size - idx;
+	size_t off = (m_head + m_size - idx) % m_size;
+	void *rv = m_map1 + off;
+	return rv;
 }
 
 
 void Rb::dump()
 {
 	printf("head: %zu\n", m_head);
-
 	int *v = (int *)m_map1;
 	for(size_t i=0; i<2*m_size/sizeof(int); i++) {
 		if(i == m_head/4) printf("\e[1;31m");

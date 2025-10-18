@@ -236,7 +236,7 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	for(int ch=0; ch<8; ch++) {
 		if(!m_channel_map[ch]) continue;
 
-		size_t stride;
+		size_t stride = 0;
 		float *data = streams.peek(ch, 0, stride);
 
 		int nrects = 0;
@@ -366,7 +366,7 @@ void Widget::draw_spectrum(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	for(int ch=0; ch<8; ch++) {
 		if(!m_channel_map[ch]) continue;
 
-		size_t stride;
+		size_t stride = 0;
 		float *data = streams.peek(ch, -view.cursor + m_spectrum.size, stride);
 
 		const float *w = m_spectrum.window.data();

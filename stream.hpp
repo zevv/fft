@@ -26,8 +26,7 @@ public:
 	float *peek(size_t channel, size_t idx, size_t &stride)
 	{
 		stride = m_channels;
-		float *rv = (float *)m_rb.peek((idx + 1) * m_channels * sizeof(float) + channel * sizeof(float));
-		return rv;
+		return (float *)m_rb.peek(sizeof(float) * ((idx + 1) * m_channels - channel));
 	}
 
 private:
