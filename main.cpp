@@ -73,7 +73,7 @@ Corrie::Corrie(SDL_Window *window, SDL_Renderer *renderer)
 	, m_w(800)
 	, m_h(600)
     , m_srate(48000)
-	, m_capture(true)
+	, m_capture(false)
 	, m_view()
 {
     resize_window(800, 600);
@@ -151,27 +151,21 @@ void Corrie::init()
 {
 	fcntl(0, F_SETFL, O_NONBLOCK);
 
-#if 0
-	{
-	float data[8] = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0 };
-	m_streams.write(data, 1);
-	}
-	{
-	float data[8] = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0 };
-	m_streams.write(data, 1);
-	}
-
-	size_t stride;
-	float *p = m_streams.peek(1, 1, stride);
-	printf("%f %f %f %f %f %f %f %f\n",
-		p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
-	printf("%f %f %f %f %f %f %f %f\n",
-		p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15]);
-	std::exit(0);
-#endif
-
 	init_video();
 	init_audio();
+
+#if 1
+	m_capture = true;
+#else
+	float f = 100.0;
+	for(float t=0.0; t<1.0; t+=1.0/m_srate) {
+		float v = sinf(2.0 * M_PI * f * t);
+		f = f * 1.00008;
+		float data[8] = { v, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+		m_streams.write(data, 1);
+	}
+#endif
+
 
 	m_root_panel = new Panel(Panel::Type::None);
 

@@ -12,9 +12,10 @@ class Streams {
 public:
 
 	Streams()
+		: m_depth(32 * 1024 * 1024)
+		, m_channels(8)
 	{
-		m_channels = 8;
-		m_rb.set_size(m_channels * 1024 * 1024 * sizeof(float));
+		m_rb.set_size(m_channels * m_depth * sizeof(float));
 	}
 
 	void write(void *data, size_t nframes)
@@ -30,6 +31,7 @@ public:
 	}
 
 private:
+	size_t m_depth;
 	size_t m_channels;
 	Rb m_rb;
 };

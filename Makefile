@@ -21,8 +21,11 @@ OBJS = $(SRC:.cpp=.o)
 DEPS = $(OBJS:.o=.d)
 
 CXXFLAGS += -std=c++17 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
-CXXFLAGS += -g -Wall -Wformat -Werror
-CXXFLAGS += -O3
+CXXFLAGS += -g 
+CXXFLAGS += -Wall -Wformat -Werror
+CXXFLAGS += -Wno-unused-but-set-variable
+CXXFLAGS += -Wno-unused-variable
+CXXFLAGS += -O0
 CXXFLAGS += -MMD
 CXXFLAGS += -ffast-math
 

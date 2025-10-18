@@ -186,13 +186,72 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r
 	} else if(m_type == Type::Spectrum) {
 		 draw_spectrum(view, streams, rend, r);
 	} else if(m_type == Type::Waterfall) {
-	
+
 	} else if(m_type == Type::Waveform) {
 		draw_waveform(view, streams, rend, r);
 	}
 
 	SDL_SetRenderClipRect(rend, nullptr);
 }
+
+
+static float draw_graph(View &view, SDL_Renderer *rend, SDL_Rect &r, 
+					 ImVec4 &col, float *data, size_t stride, float scale)
+{
+	int nsamples = view.wave_to - view.wave_from;
+
+	SDL_FPoint p_max[r.w + 2];
+	SDL_FPoint p_min[r.w + 2];
+	SDL_FRect rects[r.w + 2];
+
+	int idx_from = view.x_to_idx(r.x, r) - 1;
+	int idx_to   = view.x_to_idx(r.x + r.w, r) + 1;
+	float y_off = r.y + r.h / 2;
+	float y_scale = scale * 0.95 * (r.h / 2.0f);
+	float v_peak = 0.0;
+
+	int npoints = 0;
+	int nrects = 0;
+
+	for(int x=0; x<r.w; x+=2) {
+
+		int idx_start = idx_from + ((x + 0) * (idx_to - idx_from)) / r.w;
+		int idx_end   = idx_from + ((x + 2) * (idx_to - idx_from)) / r.w;
+
+		float vmin = data[stride * idx_start];
+		float vmax = data[stride * idx_start];
+		if(x == 0 || vmax > v_peak) v_peak = vmax;
+
+		for(int idx=idx_start; idx<idx_end; idx++) {
+			float v = data[stride * idx];
+			vmin = (idx == idx_start || v < vmin) ? v : vmin;
+			vmax = (idx == idx_start || v > vmax) ? v : vmax;
+		}
+
+		p_min[npoints].x = r.x + x;
+		p_min[npoints].y = vmin * y_scale + y_off;
+		p_max[npoints].x = r.x + x;
+		p_max[npoints].y = vmax * y_scale + y_off;
+		npoints++;
+
+		if(vmax > vmin) {
+			rects[nrects].x = r.x + x;
+			rects[nrects].y = p_max[npoints - 1].y;
+			rects[nrects].w = 2;
+			rects[nrects].h = p_min[npoints - 1].y - p_max[npoints - 1].y;
+			nrects++;
+		}
+	}
+
+	SDL_SetRenderDrawColor(rend, col.x * 255, col.y * 255, col.z * 255, col.w * 255);
+	SDL_RenderLines(rend, p_max, npoints);
+	SDL_RenderLines(rend, p_min, npoints);
+	SDL_SetRenderDrawColor(rend, col.x * 32, col.y * 32, col.z * 32, col.w * 255);
+	SDL_RenderFillRects(rend, rects, nrects);
+
+	return v_peak;
+}
+
 
 void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
@@ -214,69 +273,33 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 	if(m_waveform.agc && m_waveform.peak > 0.0f) {
 		scale = 1.0 / m_waveform.peak * 0.9;
 	}
-
-	SDL_SetRenderDrawColor(rend, 100, 100, 100, 255);
-	SDL_RenderLine(rend, r.x, midy, r.x + r.w, midy);
-	
-	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 	
 	ImGui::SameLine();
 	ImGui::Text("| %d..%d @%d", (int)view.wave_from, (int)view.wave_to, (int)view.cursor);
 	ImGui::SameLine();
 	ImGui::Text("| peak: %.2f", m_waveform.peak);
 
-
-	int npoints = r.w;
-	int nsamples = view.wave_to - view.wave_from;
-	SDL_FPoint p_min[npoints];
-	SDL_FPoint p_max[npoints];
-	SDL_FRect rect[npoints];
-	
-
+	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 	for(int ch=0; ch<8; ch++) {
 		if(!m_channel_map[ch]) continue;
-
-		size_t stride = 0;
+		size_t stride;
 		float *data = streams.peek(ch, 0, stride);
-
-		int nrects = 0;
-		for(int i=0; i<npoints; i++) {
-			int idx_start = ((r.w - i+0) * nsamples) / npoints;
-			int idx_end   = ((r.w - i+1) * nsamples) / npoints;
-			float vmin = 0.0;
-			float vmax = 0.0;;
-			for(int idx=idx_start; idx<idx_end; idx++) {
-				float v = data[stride * (int)(view.wave_from + idx)];
-				vmin = (idx == idx_start || v < vmin) ? v : vmin;
-				vmax = (idx == idx_start || v > vmax) ? v : vmax;
-			}
-			m_waveform.peak = (vmax > m_waveform.peak) ? vmax : m_waveform.peak;
-			p_min[i].x = r.x + (npoints - i);
-			p_max[i].x = r.x + (npoints - i);
-			p_min[i].y = midy - vmin * scale * (r.h / 2);
-			p_max[i].y = midy - vmax * scale * (r.h / 2);
-			
-			int rh = p_min[i].y - p_max[i].y;
-			if(rh > 0) {
-				rect[nrects].x = p_min[i].x;
-				rect[nrects].y = p_max[i].y;
-				rect[nrects].w = 1;
-				rect[nrects].h = p_min[i].y - p_max[i].y;
-				nrects++;
-			}
-		}
 		ImVec4 col = channel_color(ch);
-		SDL_SetRenderDrawColor(rend, col.x * 255, col.y * 255, col.z * 255, col.w * 255);
-		SDL_RenderLines(rend, p_min, npoints);
-		SDL_RenderLines(rend, p_max, npoints);
-		SDL_SetRenderDrawColor(rend, col.x * 32, col.y * 32, col.z * 32, col.w * 255);
-		SDL_RenderFillRects(rend, rect, nrects);
+		float peak = draw_graph(view, rend, r, col, data, stride, scale);
+		if(peak > m_waveform.peak) {
+			m_waveform.peak = peak;
+		}
 	}
+	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
 	// cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
 	int cx = view.idx_to_x(view.cursor, r);
 	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
+
+	// zero Y
+	SDL_SetRenderDrawColor(rend, 100, 100, 100, 255);
+	SDL_RenderLine(rend, r.x, midy, r.x + r.w, midy);
 
 	// zero X
 	float x = view.idx_to_x(0.0f, r);
@@ -303,9 +326,6 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		SDL_SetRenderDrawColor(rend, 255, 255, 255, 128);
 		SDL_RenderLines(rend, p, 66);
 	}
-
-	
-	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
 	m_waveform.peak *= 0.9f;
 }
