@@ -162,7 +162,7 @@ void Corrie::init()
 		float f = i / 2.0;
 		float v = sinf(2.0 * M_PI * phase);
 		phase += f / m_srate;
-		float data[8] = { v, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+		float data[8] = { v, v * i/m_srate, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 		m_streams.write(data, 1);
 	}
 #endif

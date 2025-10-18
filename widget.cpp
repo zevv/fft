@@ -241,13 +241,14 @@ static float draw_graph(View &view, SDL_Renderer *rend, SDL_Rect &r,
 			nrects++;
 		}
 
-		if(x == 0 || vmax > v_peak) v_peak = vmax;
+		if(x == 0 || vmax >  v_peak) v_peak =  vmax;
+		if(x == 0 || vmin < -v_peak) v_peak = -vmin;
 	}
 
 	SDL_SetRenderDrawColor(rend, col.x * 255, col.y * 255, col.z * 255, col.w * 255);
 	SDL_RenderLines(rend, p_max, npoints);
 	SDL_RenderLines(rend, p_min, npoints);
-	SDL_SetRenderDrawColor(rend, col.x * 32, col.y * 32, col.z * 32, col.w * 255);
+	SDL_SetRenderDrawColor(rend, col.x * 48, col.y * 48, col.z * 48, col.w * 255);
 	SDL_RenderFillRects(rend, rects, nrects);
 
 	return v_peak;
