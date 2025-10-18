@@ -52,6 +52,13 @@ Widget::Widget(Type type)
 }
 
 
+Widget::~Widget()
+{
+	if(m_spectrum.plan) {
+		fftwf_destroy_plan(m_spectrum.plan);
+	}
+}
+
 void Widget::load(ConfigReader::Node *n)
 {
 	if(const char *type = n->read_str("type")) {

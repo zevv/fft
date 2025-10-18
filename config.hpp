@@ -41,6 +41,8 @@ struct ConfigReader {
 
 	class Node {
 	public:
+		Node();
+		~Node();
 		Node *find(const char *key);
 		bool read(const char *key, bool &val);
 		bool read(const char *key, bool &val, bool defval);
@@ -61,8 +63,10 @@ public:
 	class Node;
 
 	ConfigReader();
+	~ConfigReader();
 
 	void open(const char *fname);
+	void dump();
 	void close();
 
 

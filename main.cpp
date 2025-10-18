@@ -95,8 +95,6 @@ void Corrie::load(const char *fname)
 	if(auto n = cr.find("panel")) {
 		m_root_panel->load(n);
 	}
-
-	cr.close();
 }
 
 
@@ -334,6 +332,8 @@ void Corrie::exit()
 {
 	save("config.txt");
 
+	delete m_root_panel;
+
     ImGui_ImplSDLRenderer3_Shutdown();
     ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
@@ -348,10 +348,12 @@ int main(int, char**)
 {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 
-    Corrie *cor = new Corrie(nullptr, nullptr);
-	cor->init();
-	cor->run();
-	cor->exit();
+    Corrie cor = Corrie(nullptr, nullptr);
+	cor.init();
+	cor.run();
+	cor.exit();
+
+	fftwf_cleanup();
 
 	return 0;
 }

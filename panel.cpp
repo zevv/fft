@@ -40,8 +40,13 @@ Panel::Panel(Type type)
 
 Panel::~Panel()
 {
-	fprintf(stderr, "Deleting panel %s\n", m_title);
+	for(auto &k : m_kids) {
+		delete k;
+	}
 	free((void *)m_title);
+	if(m_widget) {
+		delete m_widget;
+	}
 }
 
 

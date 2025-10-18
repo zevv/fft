@@ -16,6 +16,7 @@ public:
 	};
 
 	Widget(Type type = None);
+	~Widget();
 
 	void load(ConfigReader::Node *node);
 	void save(ConfigWriter &cfg);

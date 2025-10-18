@@ -109,14 +109,43 @@ void ConfigReader::open(const char *fname)
 		parse_line(buf);
 	}
 	fclose(f);
-
-	//m_root->dump();
 }
 
+
+void ConfigReader::dump()
+{
+	m_root->dump();
+}
+
+
+ConfigReader::~ConfigReader()
+{
+	delete m_root;
+}
 
 
 void ConfigReader::close()
 {
+}
+
+
+ConfigReader::Node::Node()
+	: kids()
+	, m_attrs()
+{}
+
+
+
+ConfigReader::Node::~Node()
+{
+	for(auto it : m_attrs) {
+		if(it.first) free((void *)it.first);
+		if(it.second) free((void *)it.second);
+	}
+	for(auto it : kids) {
+		if(it.first) free((void *)it.first);
+		delete it.second;
+	}
 }
 
 
@@ -142,7 +171,11 @@ ConfigReader::Node *ConfigReader::find(const char *key)
 
 ConfigReader::Node *ConfigReader::find(Node *node, const char *key)
 {
-	return node->kids[key];
+	if(node->kids.find(key) != node->kids.end()) {
+		return node->kids[key];
+	} else {
+		return nullptr;
+	}
 }
 
 
@@ -153,8 +186,6 @@ void ConfigReader::parse_line(char *line)
 	*eq = '\0';
 	char *key = line;
 	const char *val = eq + 1;
-
-
 	Node * node = m_root;
 	for(;;) {
 		char *dot = strchr(key, '.');
@@ -162,7 +193,6 @@ void ConfigReader::parse_line(char *line)
 			*dot = 0;
 			if(node->kids.find(key) == node->kids.end()) {
 				node->kids[strdup(key)] = new Node();
-			} else {
 			}
 			node = node->kids[key];
 			key = dot + 1;
@@ -178,7 +208,7 @@ void ConfigReader::parse_line(char *line)
 		
 ConfigReader::Node *ConfigReader::Node::find(const char *key)
 {
-	return kids[key];
+	return (kids.find(key) != kids.end()) ? kids[key] : nullptr;
 }
 
 
