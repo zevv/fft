@@ -56,6 +56,7 @@ Widget::~Widget()
 {
 	if(m_spectrum.plan) {
 		fftwf_destroy_plan(m_spectrum.plan);
+		m_spectrum.plan = nullptr;
 	}
 }
 
@@ -319,7 +320,6 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 			m_waveform.peak = peak;
 		}
 	}
-	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
 	// cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
@@ -336,6 +336,8 @@ void Widget::draw_waveform(View &view, Streams &streams, SDL_Renderer *rend, SDL
 		SDL_SetRenderDrawColor(rend, 0, 255, 255, 128);
 		SDL_RenderLine(rend, x, r.y, x, r.y + r.h);
 	}
+	
+	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
 	// window
 	if(0 && view.window) {

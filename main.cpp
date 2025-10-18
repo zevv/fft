@@ -152,7 +152,7 @@ void Corrie::init()
 	init_video();
 	init_audio();
 
-#if 1
+#if 0
 	m_capture = true;
 #else
 	float phase = 0.0;
@@ -164,7 +164,6 @@ void Corrie::init()
 		m_streams.write(data, 1);
 	}
 #endif
-
 
 	m_root_panel = new Panel(Panel::Type::None);
 

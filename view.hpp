@@ -10,11 +10,11 @@ class View {
 
 public:
 	View()
-		: wave_from(0)
-		, wave_to(1024)
-		, m_width_min(100)
+		: m_width_min(100)
 		, m_width_max(1024 * 1024)
-	{}
+	{
+		reset();
+	}
 
 	void reset()
 	{

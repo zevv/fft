@@ -229,7 +229,10 @@ int Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y, 
 		ImGui::SetNextWindowSize(ImVec2((float)w, (float)h));
 
 		ImGui::SetNextWindowBgAlpha(0.0f);
+
+		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.0f, 0.5f, 0.0f, 1.0f));
 		ImGui::Begin(m_title, nullptr, flags);
+		ImGui::PopStyleColor();
 
 		if(ImGui::IsWindowHovered() && 
 		   !ImGui::IsMouseDragging(ImGuiMouseButton_Left) && 
