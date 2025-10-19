@@ -165,11 +165,9 @@ void Corrie::init()
 	}
 #endif
 
-	m_root_panel = new Panel(Panel::Type::None);
-
 	load("config.txt");
 
-	if(m_root_panel->get_type() == Panel::Type::None) {
+	if(m_root_panel == nullptr) {
 		m_root_panel = new Panel(Panel::Type::SplitV);
 		Panel *p2 = new Panel(Panel::Type::SplitH);
 		m_root_panel->add(p2);
