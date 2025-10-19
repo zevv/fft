@@ -139,6 +139,7 @@ void Corrie::draw()
 	SDL_SetRenderDrawColor(m_rend, 10, 10, 10, 255);
 	SDL_RenderClear(m_rend);
 	if(m_root_panel) {
+		//m_root_panel->dump();
 		m_root_panel->draw(m_view, m_streams, m_rend, 0, 0, m_w, m_h);
 	}
 	SDL_SetRenderTarget(m_rend, nullptr);
@@ -165,16 +166,19 @@ void Corrie::init()
 	}
 #endif
 
+	m_root_panel = new Panel(Panel::Type::Root);
+
 	load("config.txt");
 
-	if(m_root_panel == nullptr) {
-		m_root_panel = new Panel(Panel::Type::SplitV);
+	if(m_root_panel->nkids() == 0) {
 		Panel *p2 = new Panel(Panel::Type::SplitH);
-		m_root_panel->add(p2);
 		p2->add(new Widget(Widget::Type::Waterfall));
 		p2->add(new Widget(Widget::Type::Spectrum));
-		m_root_panel->add(new Widget(Widget::Type::Waveform));
-		m_root_panel->add(new Widget(Widget::Type::Waveform));
+		Panel *p1 = new Panel(Panel::Type::SplitV);
+		p1->add(p2);
+		p1->add(new Widget(Widget::Type::Waveform));
+		p1->add(new Widget(Widget::Type::Waveform));
+		m_root_panel->add(p1);
 	}
 }
 

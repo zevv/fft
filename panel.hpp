@@ -1,5 +1,4 @@
 
-#include <functional>
 #include <vector>
 
 #include <SDL3/SDL.h>
@@ -14,7 +13,7 @@ class Panel {
 public:
 
 	enum class Type {
-		None, Widget, SplitH, SplitV
+		Root, None, Widget, SplitH, SplitV
 	};
 
 	Panel(Widget *widget);
@@ -30,6 +29,8 @@ public:
 	void remove(Panel *kid);
 	void update_kid(Panel *pk, int dx, int dy, int dw, int dh);
 	void draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h);
+	void dump(int depth = 0);
+	int nkids() { return (int)m_kids.size(); }
 
 	Type get_type() { return m_type; }
 

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <fftw3.h>
+#include <imgui.h>
+
 #include "stream.hpp"
 #include "window.hpp"
 #include "view.hpp"

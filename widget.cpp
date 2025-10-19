@@ -1,8 +1,6 @@
 
-#include <string>
 #include <math.h>
 #include <assert.h>
-#include <algorithm>
 
 #include <SDL3/SDL.h>
 #include <imgui.h>

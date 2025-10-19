@@ -204,6 +204,37 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 	m_last_w = w;
 	m_last_h = h;
 
+	if(m_type == Type::Root) {
+		if(m_kids.size() == 1) {
+			m_kids[0]->draw(view, streams, rend, x, y, w, h);
+		}
+	}
+
+	if(m_type == Type::SplitH) {
+
+		int kx = x;
+		for(auto &pk : m_kids) {
+			bool last = (&pk == &m_kids.back());
+			int kw = pk->m_weight * w;
+			pk->draw(view, streams, rend, kx, y, kw, h);
+			kx += kw + 1;
+		}
+
+	} 
+
+	if(m_type == Type::SplitV) {
+		
+		int ky = y;
+		for(auto &pk : m_kids) {
+			bool last = (&pk == &m_kids.back());
+			int kh = pk->m_weight * h;
+			pk->draw(view, streams, rend, x, ky, w, kh);
+			ky += kh + 1;
+		}
+
+	}
+
+
 	if(m_type == Type::Widget) {
 
 		ImGuiWindowFlags flags = 0;
@@ -257,7 +288,7 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 				}
 			}
 			if(ImGui::IsKeyPressed(ImGuiKey_X)) {
-				if(m_parent) {
+				if(m_parent && m_parent->get_type() != Type::Root) {
 					Panel *pp = m_parent;
 					m_parent->remove(this);
 				}
@@ -292,27 +323,7 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 
 		ImGui::End();
 
-	} else if(m_type == Type::SplitH) {
-
-		int kx = x;
-		for(auto &pk : m_kids) {
-			bool last = (&pk == &m_kids.back());
-			int kw = pk->m_weight * w;
-			pk->draw(view, streams, rend, kx + 5, y + 5, kw - 10, h - 10);
-			kx += kw + 1;
-		}
-
-	} else if(m_type == Type::SplitV) {
-		
-		int ky = y;
-		for(auto &pk : m_kids) {
-			bool last = (&pk == &m_kids.back());
-			int kh = pk->m_weight * h;
-			pk->draw(view, streams, rend, x + 5, ky + 5, w - 10, kh - 10);
-			ky += kh + 1;
-		}
-
-	}
+	} 
 
 	// remove kids marked for deletion
 	for(auto &pk : m_kids_remove) {
@@ -350,16 +361,27 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 	for(auto &k : m_kids) total_weight += k->m_weight;
 	for(auto &k : m_kids) k->m_weight /= total_weight;
 
-#if 0
-	// if only one kid, collapse this panel into the parent
+	// if only one kid left, collapse
 	if(m_kids.size() == 1 && m_parent) {
-		Panel *only_kid = m_kids[0];
-		m_parent->replace(this, only_kid);
-		only_kid->m_parent = m_parent;
+		Panel *kid = m_kids[0];
+		m_parent->replace(this, kid);
 		m_kids.clear();
-		m_parent = nullptr;
 		delete this;
 	}
-#endif
+}
 
+void Panel::dump(int depth)
+{
+	printf("%p ", this);
+	for(int i=0; i<depth; i++) {
+		printf("  ");
+	}
+	if(m_type == Type::Root) printf("root");
+	if(m_type == Type::SplitH) printf("split_h");
+	if(m_type == Type::SplitV) printf("split_v");
+	if(m_type == Type::Widget) printf("widget");
+	printf(" %p\n", m_parent);
+	for(auto &k : m_kids) {
+		k->dump(depth + 1);
+	}
 }
