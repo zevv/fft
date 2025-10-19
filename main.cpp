@@ -152,20 +152,25 @@ void Corrie::init()
 	init_video();
 	init_audio();
 
+	m_view.srate = m_srate;
+
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
 	io.LogFilename = NULL;
 
-#if 1
+#if 0
 	m_capture = true;
 #else
 	float phase = 0.0;
+	float t = 0.0;
 	for(int i=0; i<m_srate; i++) {
 		float f = i / 2.0;
 		float v = sinf(2.0 * M_PI * phase);
-		phase += f / m_srate;
-		float data[8] = { v, v * i/m_srate, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+		float v2 = 0.01 * sinf(t * 2.0 * M_PI * 8000.0) + rand() / (float)RAND_MAX * 0.1f - 0.05f;
+		float data[8] = { v, v * i/m_srate, v2, 0.0, 0.0, 0.0, 0.0, 0.0 };
 		m_streams.write(data, 1);
+		phase += f / m_srate;
+		t += 1.0 / m_srate;
 	}
 #endif
 
@@ -304,10 +309,6 @@ void Corrie::run()
             if(event.type == SDL_EVENT_WINDOW_RESIZED && event.window.windowID == SDL_GetWindowID(m_win))
                 resize_window(event.window.data1, event.window.data2);
         }
-
-		if(ImGui::IsKeyPressed(ImGuiKey_R)) {
-			m_view.reset();
-		}
 
         if (SDL_GetWindowFlags(m_win) & SDL_WINDOW_MINIMIZED)
         {

@@ -85,14 +85,16 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 	for(int ch=0; ch<8; ch++) {
 		if(!widget.channel_enabled(ch)) continue;
 		size_t stride;
-		float *data = streams.peek(ch, 0, stride);
+		size_t depth;
+		float *data = streams.peek(ch, 0, stride, &depth);
 		ImVec4 col = widget.channel_color(ch);
 
 		int idx_from = x_to_idx(r.x, r) - 1;
 		int idx_to   = x_to_idx(r.x + r.w, r) + 1;
 
 		float peak = widget.graph(rend, r, col, data, stride,
-				idx_from, idx_to,
+				idx_from, idx_to, 
+				-depth, 0,
 				-scale, +scale);
 		if(peak > m_peak) {
 			m_peak = peak;

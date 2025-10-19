@@ -13,6 +13,9 @@
 
 Widget::Spectrum::Spectrum()
 	: m_size(2048)
+	, m_freq_from(0.1f)
+	, m_freq_to(1.1f)
+	, m_freq_cursor(0.0f)
 	, m_window_type(Window::Type::Hanning)
 	, m_window_beta(5.0f)
 	, m_plan(nullptr)
@@ -37,6 +40,8 @@ void Widget::Spectrum::load(ConfigReader::Node *node)
 	}
 	node->read("window_beta", m_window_beta);
 	node->read("fft_size", m_size);
+	node->read("freq_from", m_freq_from);
+	node->read("freq_to", m_freq_to);
 	configure_fft(m_size, m_window_type);
 }
 
@@ -47,6 +52,8 @@ void Widget::Spectrum::save(ConfigWriter &cw)
 	cw.write("fft_size", (int)m_size);
 	cw.write("window_type", Window::type_to_str(m_window_type));
 	cw.write("window_beta", m_window_beta);
+	cw.write("freq_from", m_freq_from);
+	cw.write("freq_to", m_freq_to);
 	cw.pop();
 }
 
@@ -74,6 +81,23 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		ImGui::SetNextItemWidth(100);
 		update |= ImGui::Combo("window", (int *)&m_window_type, 
 				Window::type_names(), Window::type_count());
+		
+		ImGui::SameLine();
+		ImGui::Text("| %.7g", m_freq_cursor * view.srate * 0.5);
+
+		auto pos = ImGui::GetIO().MousePos;
+		if(pos.x >= 0) {
+			m_freq_cursor = x_to_freq(pos.x, r);
+		}
+		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
+			pan(-dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r));
+			zoom(ImGui::GetIO().MouseDelta.y / 100.0f);
+		}
+	
+		if(ImGui::IsKeyPressed(ImGuiKey_R)) {
+			m_freq_from = 0.0f;
+			m_freq_to = 1.0;
+		}
 	}
 
 	if(ImGui::IsWindowFocused()) {
@@ -138,10 +162,16 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		}
 
 		ImVec4 col = widget.channel_color(ch);
-		float p = widget.graph(rend, r, col, m_out.data(), 1,
-				0, npoints,
+		widget.graph(rend, r, col, m_out.data(), 1,
+				m_freq_from * npoints, m_freq_to * npoints, 0, npoints,
 				0, -100);
 	}
+	
+	// cursor
+	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
+	int cx = freq_to_x(m_freq_cursor, r);
+	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
+
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 

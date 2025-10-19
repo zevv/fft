@@ -39,6 +39,7 @@ public:
 	float wave_from;
 	float wave_to;
 	float cursor;
+	float srate;
 	Window *window;
 
 private:

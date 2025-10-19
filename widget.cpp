@@ -147,6 +147,7 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r
 float Widget::graph(SDL_Renderer *rend, SDL_Rect &r, 
 					 ImVec4 &col, float *data, size_t stride,
 					 int idx_from, int idx_to,
+					 int idx_min, int idx_max,
 					 float y_min, float y_max)
 {
 	assert(r.w < 2048);
@@ -167,11 +168,17 @@ float Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
 		int idx_start = idx_from + ((x + 0) * (idx_to - idx_from)) / r.w;
 		int idx_end   = idx_from + ((x + 2) * (idx_to - idx_from)) / r.w;
 
+		if(idx_end   >= idx_max) break;
+		if(idx_start <= idx_min) continue;
+
 		float vmin = data[stride * idx_start];
 		float vmax = data[stride * idx_start];
 
 		for(int idx=idx_start; idx<idx_end; idx++) {
-			float v = data[stride * idx];
+			float v = 0;
+			if(idx >= idx_min && idx < idx_max) {
+				v = data[stride * idx];
+			}
 			vmin = (idx == idx_start || v < vmin) ? v : vmin;
 			vmax = (idx == idx_start || v > vmax) ? v : vmax;
 		}

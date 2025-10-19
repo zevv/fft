@@ -41,6 +41,7 @@ private:
 	float graph(SDL_Renderer *rend, SDL_Rect &r, 
 					 ImVec4 &col, float *data, size_t stride,
 					 int idx_from, int idx_to,
+					 int idx_min, int idx_max,
 					 float y_min, float y_max);
 	
 
@@ -56,23 +57,15 @@ private:
 		void draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 	private:
 
-		float x_to_idx(float x, SDL_Rect &r)
-		{
+		float x_to_idx(float x, SDL_Rect &r) {
 			return m_idx_from - (m_idx_from - m_idx_to) * (x - r.x) / r.w;
 		}
 
-		float idx_to_x(float idx, SDL_Rect &r)
-		{
+		float idx_to_x(float idx, SDL_Rect &r) {
 			return r.x + r.w * (m_idx_from - idx) / (m_idx_from - m_idx_to);
 		}
 
-		float didx_to_dx(float didx, SDL_Rect &r)
-		{
-			return r.w * didx / (m_idx_from - m_idx_to);
-		}
-
-		float dx_to_didx(float dx, SDL_Rect &r)
-		{
+		float dx_to_didx(float dx, SDL_Rect &r) {
 			return dx * (m_idx_to - m_idx_from) / r.w;
 		}
 
@@ -81,8 +74,7 @@ private:
 			m_idx_to += delta;
 		};
 
-		void zoom(float f)
-		{
+		void zoom(float f) {
 			m_idx_from += (m_idx_cursor - m_idx_from) * f;
 			m_idx_to   -= (m_idx_to - m_idx_cursor) * f;
 		};
@@ -105,7 +97,33 @@ private:
 	private:
 		void configure_fft(int size, Window::Type window_type);
 
+		float x_to_freq(float x, SDL_Rect &r) {
+			return m_freq_from + (m_freq_to - m_freq_from) * (x - r.x) / r.w;
+		}
+
+		float freq_to_x(float freq, SDL_Rect &r) {
+			return r.x + r.w * (freq - m_freq_from) / (m_freq_to - m_freq_from);
+		}
+
+		float dx_to_dfreq(float dx, SDL_Rect &r) {
+			return dx * (m_freq_to - m_freq_from) / r.w;
+		}
+
+		void pan(float delta) {
+			m_freq_from += delta;
+			m_freq_to += delta;
+		};
+
+		void zoom(float f) {
+			m_freq_from += (m_freq_cursor - m_freq_from) * f;
+			m_freq_to   -= (m_freq_to - m_freq_cursor) * f;
+		};
+
+
 		int m_size;
+		float m_freq_from;
+		float m_freq_to;
+		float m_freq_cursor;
 		Window::Type m_window_type;
 		float m_window_beta;
 		std::vector<float> m_in;
