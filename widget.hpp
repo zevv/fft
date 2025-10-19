@@ -79,11 +79,11 @@ private:
 			m_idx_to   -= (m_idx_to - m_idx_cursor) * f;
 		};
 
-		bool m_agc;
-		float m_peak;
-		float m_idx_from;
-		float m_idx_to;
-		float m_idx_cursor;
+		bool m_agc{true};
+		float m_peak{0.0};
+		float m_idx_from{0.0};
+		float m_idx_to{0.0};
+		float m_idx_cursor{0.0};
 	} m_waveform;
 
 	struct Spectrum {
@@ -119,16 +119,16 @@ private:
 			m_freq_to   -= (m_freq_to - m_freq_cursor) * f;
 		};
 
+		int m_size{256};
+		float m_freq_from{0.0};
+		float m_freq_to{1.0};
+		float m_freq_cursor{0.0};
+		Window::Type m_window_type{Window::Type::Hanning};
+		float m_window_beta{5.0f};
+		fftwf_plan m_plan{nullptr};
 
-		int m_size;
-		float m_freq_from;
-		float m_freq_to;
-		float m_freq_cursor;
-		Window::Type m_window_type;
-		float m_window_beta;
 		std::vector<float> m_in;
 		std::vector<float> m_out;
-		fftwf_plan m_plan;
 		Window m_window;
 	} m_spectrum;
 

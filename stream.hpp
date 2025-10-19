@@ -12,7 +12,7 @@ class Streams {
 public:
 
 	Streams()
-		: m_depth(64 * 1024 * 1024)
+		: m_depth(1024 * 1024 * 1024)
 		, m_used(0)
 		, m_channels(8)
 	{

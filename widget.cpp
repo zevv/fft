@@ -162,11 +162,12 @@ float Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
 
 	int npoints = 0;
 	int nrects = 0;
+	int step = 2;
 
-	for(int x=0; x<r.w; x+=2) {
+	for(int x=0; x<r.w; x+=step) {
 
 		int idx_start = idx_from + ((x + 0) * (idx_to - idx_from)) / r.w;
-		int idx_end   = idx_from + ((x + 2) * (idx_to - idx_from)) / r.w;
+		int idx_end   = idx_from + ((x + step) * (idx_to - idx_from)) / r.w;
 
 		if(idx_end   >= idx_max) break;
 		if(idx_start <= idx_min) continue;

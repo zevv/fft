@@ -27,15 +27,17 @@ CXXFLAGS += -g
 CXXFLAGS += -Wall -Wformat -Werror
 CXXFLAGS += -Wno-unused-but-set-variable
 CXXFLAGS += -Wno-unused-variable
-CXXFLAGS += -O0
+CXXFLAGS += -O3
 CXXFLAGS += -MMD
 CXXFLAGS += -ffast-math
 
 CXXFLAGS += `pkg-config sdl3 fftw3 fftw3f --cflags`
 LIBS += -ldl `pkg-config sdl3 fftw3 fftw3f --libs`
 
+ifdef asan
 CXXFLAGS += -fsanitize=address
 LDFLAGS += -fsanitize=address
+endif
 
 CFLAGS = $(CXXFLAGS)
 

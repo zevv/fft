@@ -10,10 +10,6 @@
 #include "widget.hpp"
 
 Widget::Waveform::Waveform()
-	: m_agc(true)
-	, m_peak(0.0f)
-	, m_idx_from(-1024)
-	, m_idx_to(1024)
 {
 }
 
@@ -46,23 +42,27 @@ void Widget::Waveform::copy_to(Waveform &w)
 
 void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
-	if(ImGui::IsWindowFocused()) {
-		//ImGui::SameLine();
-		ImGui::Checkbox("AGC", &m_agc);
-		ImGui::SameLine();
-		ImGui::Text("| %d..%d @%d", (int)view.wave_from, (int)view.wave_to, (int)view.cursor);
-		ImGui::SameLine();
-		ImGui::Text("| peak: %.2f", m_peak);
+	ImGui::SameLine();
+	ImGui::Checkbox("AGC", &m_agc);
+	ImGui::SameLine();
+	ImGui::Text("| t:%.4gs", m_idx_cursor / view.srate);
 		   
-		auto pos = ImGui::GetIO().MousePos;
-		if(pos.x >= 0) {
-			view.cursor = x_to_idx(pos.x, r);
-			m_idx_cursor = view.cursor;
-		}
+	if(ImGui::IsWindowFocused()) {
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
 			pan(-dx_to_didx(ImGui::GetIO().MouseDelta.x, r));
 			zoom(ImGui::GetIO().MouseDelta.y / 100.0);
 		}
+		if(ImGui::IsKeyPressed(ImGuiKey_R)) {
+			size_t used;
+			size_t stride;
+			streams.peek(0, 0, stride, &used);
+			m_idx_from = -(float)used;
+			m_idx_to   = 0;
+		}
+
+		auto pos = ImGui::GetIO().MousePos;
+		view.cursor = x_to_idx(pos.x, r);
+		m_idx_cursor = view.cursor;
 	}
 	
 	ImVec2 cursor = ImGui::GetCursorScreenPos();

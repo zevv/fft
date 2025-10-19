@@ -12,13 +12,6 @@
 
 
 Widget::Spectrum::Spectrum()
-	: m_size(2048)
-	, m_freq_from(0.1f)
-	, m_freq_to(1.1f)
-	, m_freq_cursor(0.0f)
-	, m_window_type(Window::Type::Hanning)
-	, m_window_beta(5.0f)
-	, m_plan(nullptr)
 {
 	configure_fft(m_size, m_window_type);
 }
@@ -71,19 +64,20 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 {
 	bool update = false;
 	
-	if(ImGui::IsWindowFocused()) {
-		//ImGui::SameLine();
-		ImGui::SetNextItemWidth(100);
-		update |= ImGui::SliderInt("fft size", (int *)&m_size, 
-					16, 32768, "%d", ImGuiSliderFlags_Logarithmic);
+	ImGui::SetNextItemWidth(100);
+	ImGui::SameLine();
+	update |= ImGui::SliderInt("##fft size", (int *)&m_size, 
+				16, 32768, "%d", ImGuiSliderFlags_Logarithmic);
 
-		ImGui::SameLine();
-		ImGui::SetNextItemWidth(100);
-		update |= ImGui::Combo("window", (int *)&m_window_type, 
-				Window::type_names(), Window::type_count());
-		
-		ImGui::SameLine();
-		ImGui::Text("| %.7g", m_freq_cursor * view.srate * 0.5);
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(100);
+	update |= ImGui::Combo("##window", (int *)&m_window_type, 
+			Window::type_names(), Window::type_count());
+	
+	ImGui::SameLine();
+	ImGui::Text("f=%.7g", m_freq_cursor * view.srate * 0.5);
+
+	if(widget.has_focus()) {
 
 		auto pos = ImGui::GetIO().MousePos;
 		if(pos.x >= 0) {
