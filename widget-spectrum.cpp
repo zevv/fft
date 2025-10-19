@@ -63,16 +63,18 @@ void Widget::Spectrum::copy_to(Spectrum &w)
 void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	bool update = false;
+	
+	if(ImGui::IsWindowFocused()) {
+		//ImGui::SameLine();
+		ImGui::SetNextItemWidth(100);
+		update |= ImGui::SliderInt("fft size", (int *)&m_size, 
+					16, 32768, "%d", ImGuiSliderFlags_Logarithmic);
 
-	ImGui::SameLine();
-	ImGui::SetNextItemWidth(100);
-	update |= ImGui::SliderInt("fft size", (int *)&m_size, 
-				16, 32768, "%d", ImGuiSliderFlags_Logarithmic);
-
-	ImGui::SameLine();
-	ImGui::SetNextItemWidth(100);
-	update |= ImGui::Combo("window", (int *)&m_window_type, 
-			Window::type_names(), Window::type_count());
+		ImGui::SameLine();
+		ImGui::SetNextItemWidth(100);
+		update |= ImGui::Combo("window", (int *)&m_window_type, 
+				Window::type_names(), Window::type_count());
+	}
 
 	if(ImGui::IsWindowFocused()) {
 		view.window = &m_window;

@@ -167,15 +167,15 @@ void Panel::update_kid(Panel *pk, int dx1, int dy1, int dx2, int dy2)
 			if(m_kids[i] == pk) {
 				if(dx1 != 0 && i > 0) {
 					Panel *pp = m_kids[i-1];
-					float weight_delta = (float)dx1 / m_last_w;
-					pk->m_weight -= weight_delta;
-					pp->m_weight += weight_delta;
+					float dw = (float)dx1 / m_last_w;
+					pk->m_weight -= dw;
+					pp->m_weight += dw;
 				}
 				if(i < (nkids - 1)) {
 					Panel *pn = m_kids[i+1];
-					float weight_delta = (float)dx2 / m_last_w;
-					pk->m_weight += weight_delta;
-					pn->m_weight -= weight_delta;
+					float dw = (float)dx2 / m_last_w;
+					pk->m_weight += dw;
+					pn->m_weight -= dw;
 				}
 			}
 		}
@@ -186,15 +186,15 @@ void Panel::update_kid(Panel *pk, int dx1, int dy1, int dx2, int dy2)
 			if(m_kids[i] == pk) {
 				if(dy1 != 0 && i > 0) {
 					Panel *pp = m_kids[i-1];
-					float weight_delta = (float)dy1 / m_last_h;
-					pk->m_weight -= weight_delta;
-					pp->m_weight += weight_delta;
+					float dw = (float)dy1 / m_last_h;
+					pk->m_weight -= dw;
+					pp->m_weight += dw;
 				}
 				if(i < (nkids - 1)) {
 					Panel *pn = m_kids[i+1];
-					float weight_delta = (float)dy2 / m_last_h;
-					pk->m_weight += weight_delta;
-					pn->m_weight -= weight_delta;
+					float dw = (float)dy2 / m_last_h;
+					pk->m_weight += dw;
+					pn->m_weight -= dw;
 				}
 			}
 		}
@@ -239,16 +239,16 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 
 	if(m_type == Type::Widget) {
 
+		// setup window
 		ImGuiWindowFlags flags = 0;
 		flags |= ImGuiWindowFlags_NoCollapse;
 		flags |= ImGuiWindowFlags_NoMove;
-		//flags |= ImGuiWindowFlags_NoTitleBar;
+		flags |= ImGuiWindowFlags_NoTitleBar;
 		flags |= ImGuiWindowFlags_NoSavedSettings;
 		flags |= ImGuiWindowFlags_NoNavInputs;
 
 		ImGui::SetNextWindowPos(ImVec2((float)x, (float)y));
 		ImGui::SetNextWindowSize(ImVec2((float)w, (float)h));
-
 
 		if(m_widget->has_focus()) {
 			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
@@ -265,7 +265,8 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 		   !ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
 			ImGui::SetWindowFocus();
 		}
-	
+
+		// Handle keyboard shortcuts
 		if(ImGui::IsWindowFocused()) {
 			if(ImGui::IsKeyPressed(ImGuiKey_V)) {
 				if(m_parent->get_type() == Type::SplitV) {
@@ -297,28 +298,21 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 			}
 		}
 
+		// Handle window move/resize
 		ImVec2 pos = ImGui::GetWindowPos();
 		ImVec2 size = ImGui::GetWindowSize();
-
 		if(pos.x != x || pos.y != y || size.x != w || size.y != h) {
 			int dx1 = pos.x - x;
 			int dy1 = pos.y - y;
 			int dx2 = (pos.x + size.x) - (x + w);
 			int dy2 = (pos.y + size.y) - (y + h);
-
 			m_parent->update_kid(this, dx1, dy1, dx2, dy2);
 		}
-		
+	
+		// draw widget
 		ImVec2 cursor = ImGui::GetCursorScreenPos();
 		ImVec2 avail = ImGui::GetContentRegionAvail();
-
-		SDL_Rect r = {
-			(int)cursor.x,
-			(int)cursor.y,
-			(int)avail.x,
-			(int)avail.y
-		};
-
+		SDL_Rect r = { (int)cursor.x, (int)cursor.y, (int)avail.x, (int)avail.y };
 		SDL_SetRenderClipRect(rend, &r);
 		m_widget->draw(view, streams, rend, r);
 		SDL_SetRenderClipRect(rend, nullptr);

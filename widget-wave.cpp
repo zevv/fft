@@ -46,14 +46,14 @@ void Widget::Waveform::copy_to(Waveform &w)
 
 void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
-	ImGui::SameLine();
-	ImGui::Checkbox("AGC", &m_agc);
-	ImGui::SameLine();
-	ImGui::Text("| %d..%d @%d", (int)view.wave_from, (int)view.wave_to, (int)view.cursor);
-	ImGui::SameLine();
-	ImGui::Text("| peak: %.2f", m_peak);
-		   
 	if(ImGui::IsWindowFocused()) {
+		//ImGui::SameLine();
+		ImGui::Checkbox("AGC", &m_agc);
+		ImGui::SameLine();
+		ImGui::Text("| %d..%d @%d", (int)view.wave_from, (int)view.wave_to, (int)view.cursor);
+		ImGui::SameLine();
+		ImGui::Text("| peak: %.2f", m_peak);
+		   
 		auto pos = ImGui::GetIO().MousePos;
 		if(pos.x >= 0) {
 			view.cursor = x_to_idx(pos.x, r);
@@ -64,6 +64,13 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 			zoom(ImGui::GetIO().MouseDelta.y / 100.0);
 		}
 	}
+	
+	ImVec2 cursor = ImGui::GetCursorScreenPos();
+	ImVec2 avail = ImGui::GetContentRegionAvail();
+	r.x = (int)cursor.x;
+	r.y = (int)cursor.y;
+	r.w = (int)avail.x;
+	r.h = (int)avail.y;
 
 	if(m_idx_to < m_idx_from + 16) {
 		m_idx_from = m_idx_to - 16;
