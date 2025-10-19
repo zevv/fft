@@ -217,11 +217,10 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 	}
 
 	if(m_type == Type::SplitH) {
-
 		int kx = x;
 		for(auto &pk : m_kids) {
 			bool last = (&pk == &m_kids.back());
-			int kw = pk->m_weight * w;
+			int kw = pk->m_weight * (w-1);
 			pk->draw(view, streams, rend, kx, y, kw, h);
 			kx += kw + 1;
 		}
@@ -229,24 +228,21 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 	} 
 
 	if(m_type == Type::SplitV) {
-		
 		int ky = y;
 		for(auto &pk : m_kids) {
 			bool last = (&pk == &m_kids.back());
-			int kh = pk->m_weight * h;
+			int kh = pk->m_weight * (h-1);
 			pk->draw(view, streams, rend, x, ky, w, kh);
 			ky += kh + 1;
 		}
-
 	}
-
 
 	if(m_type == Type::Widget) {
 
 		ImGuiWindowFlags flags = 0;
 		flags |= ImGuiWindowFlags_NoCollapse;
 		flags |= ImGuiWindowFlags_NoMove;
-		flags |= ImGuiWindowFlags_NoTitleBar;
+		//flags |= ImGuiWindowFlags_NoTitleBar;
 		flags |= ImGuiWindowFlags_NoSavedSettings;
 		flags |= ImGuiWindowFlags_NoNavInputs;
 

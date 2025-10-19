@@ -153,6 +153,10 @@ void Corrie::init()
 	init_video();
 	init_audio();
 
+	ImGuiIO& io = ImGui::GetIO();
+	io.IniFilename = NULL;
+	io.LogFilename = NULL;
+
 #if 1
 	m_capture = true;
 #else
