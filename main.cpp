@@ -166,9 +166,12 @@ void Corrie::init()
 	}
 #endif
 
-	m_root_panel = new Panel(Panel::Type::Root);
+	Panel *tmp_root_panel = new Panel(Panel::Type::Root);
+	m_root_panel = tmp_root_panel;
 
 	load("config.txt");
+
+	//m_root_panel->dump();
 
 	if(m_root_panel->nkids() == 0) {
 		Panel *p2 = new Panel(Panel::Type::SplitH);

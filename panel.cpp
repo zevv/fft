@@ -58,6 +58,11 @@ void Panel::load(ConfigReader::Node *node)
 		
 		if(const char *type = node->read_str("type")) {
 
+			if(strcmp(type, "root") == 0) {
+				printf("%p loading root panel\n", this);
+				m_type = Type::Root;
+			}
+
 			if(strcmp(type, "split_v") == 0) {
 				m_type = Type::SplitV;
 			}
@@ -76,7 +81,8 @@ void Panel::load(ConfigReader::Node *node)
 				for(auto &k : kids->kids) {
 					Panel *p = new Panel(Type::None);
 					p->load(k.second);
-					add(p);
+					m_kids.push_back(p);
+					p->m_parent = this;
 				}
 			}
 		}
@@ -86,23 +92,23 @@ void Panel::load(ConfigReader::Node *node)
 
 void Panel::save(ConfigWriter &cw)
 {
+	if(m_type == Type::Root) {
+		cw.write("type", "root");
+	}
 	if(m_type == Type::Widget) {
 		cw.write("type", "widget");
 		cw.write("weight", m_weight);
 		m_widget->save(cw);
-	} else if(m_type == Type::SplitH) {
+	} 
+	if(m_type == Type::SplitH) {
 		cw.write("type", "split_h");
 		cw.write("weight", m_weight);
-		cw.push("kids");
-		for(size_t i=0; i<m_kids.size(); i++) {
-			cw.push(i);
-			m_kids[i]->save(cw);
-			cw.pop();
-		}
-		cw.pop();
-	} else if(m_type == Type::SplitV) {
+	} 
+	if(m_type == Type::SplitV) {
 		cw.write("type", "split_v");
 		cw.write("weight", m_weight);
+	}
+	if(m_kids.size() > 0) {
 		cw.push("kids");
 		for(size_t i=0; i<m_kids.size(); i++) {
 			cw.push(i);
@@ -254,7 +260,7 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 			ImGui::Begin(m_title, nullptr, flags);
 			ImGui::PopStyleColor();
 		} else {
-			ImGui::SetNextWindowBgAlpha(0.1f);
+			ImGui::SetNextWindowBgAlpha(0.25f);
 			ImGui::Begin(m_title, nullptr, flags);
 		}
 

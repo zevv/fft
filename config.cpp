@@ -301,7 +301,6 @@ bool ConfigReader::Node::read(const char *key, char *val, size_t maxlen, const c
 		return true;
 	} else {
 		snprintf(val, maxlen, "%s", defval);
-		val[maxlen - 1] = 0;
 		return false;
 	}
 }
