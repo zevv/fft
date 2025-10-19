@@ -102,7 +102,7 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 	SDL_SetRenderDrawColor(rend, 64, 64, 64, 255);
 	ImDrawList* dl = ImGui::GetWindowDrawList();
 	for(float dB=-100.0f; dB<=0.0f; dB+=10.0f) {
-		int y = view.db_to_y(dB, r);
+		int y = r.y - dB * r.h / 100.0f;
 		SDL_RenderLine(rend, r.x, y, r.x + r.w, y);
 		char buf[32];
 		snprintf(buf, sizeof(buf), "%+.0f", dB);

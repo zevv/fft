@@ -134,7 +134,6 @@ void Corrie::resize_window(int w, int h)
 
 void Corrie::draw()
 {
-	m_view.clamp();
     SDL_SetRenderTarget(m_rend, m_tex);
 	SDL_SetRenderDrawColor(m_rend, 10, 10, 10, 255);
 	SDL_RenderClear(m_rend);

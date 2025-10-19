@@ -22,27 +22,6 @@ public:
 		cursor = 512;
 	}
 
-	void clamp() {
-		float a1 = 0.9;
-		float a2 = 0.1;
-		float span = wave_to - wave_from;
-		if(span < m_width_min) {
-			wave_from = a1 * wave_from + a2 * (wave_to - m_width_min);
-			wave_to   = a1 * wave_to   + a2 * (wave_from + m_width_min);
-		}
-	};
-
-	float db_to_y(float db, SDL_Rect &r)
-	{
-		return r.y - r.h * db / 100.0f;
-	}
-	
-	float y_to_db(float y, SDL_Rect &r)
-	{
-		return 100.0f * (y - r.y) / r.h;
-	}
-
-
 	void load(ConfigReader::Node *n)
 	{
 		n->read("cursor", cursor);
