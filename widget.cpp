@@ -94,28 +94,30 @@ Widget *Widget::copy(void)
 
 void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r)
 {
+	m_has_focus = ImGui::IsWindowFocused();
+
 	ImGui::SetNextItemWidth(100);
 	ImGui::Combo("type", (int *)&m_type, 
 			Widget::type_names(), Widget::type_count());
 
-	// Channel enable buttons
-	for(size_t i=0; i<8; i++) {
-		ImGui::SameLine();
-		ImVec4 col = m_channel_map[i] ? channel_color(i) : ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
-		ImGui::PushStyleColor(ImGuiCol_Button, col);
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, col);
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, col);
-		char label[2] = { (char)('1' + i), 0 };
-		ImGuiKey key = (ImGuiKey)(ImGuiKey_1 + i);
-		if(ImGui::SmallButton(label) || (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(key))) {
-			// with shift: solo, otherwise toggle
-			if(ImGui::GetIO().KeyShift) for(int j=0; j<8; j++) m_channel_map[j] = 0;
-			m_channel_map[i] = !m_channel_map[i];
+	if(m_has_focus) {
+		// Channel enable buttons
+		for(size_t i=0; i<8; i++) {
+			ImGui::SameLine();
+			ImVec4 col = m_channel_map[i] ? channel_color(i) : ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_Button, col);
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, col);
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, col);
+			char label[2] = { (char)('1' + i), 0 };
+			ImGuiKey key = (ImGuiKey)(ImGuiKey_1 + i);
+			if(ImGui::SmallButton(label) || (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(key))) {
+				// with shift: solo, otherwise toggle
+				if(ImGui::GetIO().KeyShift) for(int j=0; j<8; j++) m_channel_map[j] = 0;
+				m_channel_map[i] = !m_channel_map[i];
+			}
+			ImGui::PopStyleColor(3);
 		}
-		ImGui::PopStyleColor(3);
 	}
-
-	m_has_focus = ImGui::IsWindowFocused();
 
 	if(ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey_0)) {
 		for(int i=0; i<8; i++) m_channel_map[i] ^= 1;

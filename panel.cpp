@@ -157,19 +157,17 @@ void Panel::update_kid(Panel *pk, int dx1, int dy1, int dx2, int dy2)
 	}
 
 	if(m_type == Type::SplitH) {
-		float ppw = (float)m_last_w / total_weight;
-
 		for(size_t i=0; i<m_kids.size(); i++) {
 			if(m_kids[i] == pk) {
 				if(dx1 != 0 && i > 0) {
 					Panel *pp = m_kids[i-1];
-					float weight_delta = (float)dx1 / ppw;
+					float weight_delta = (float)dx1 / m_last_w;
 					pk->m_weight -= weight_delta;
 					pp->m_weight += weight_delta;
 				}
 				if(i < (nkids - 1)) {
 					Panel *pn = m_kids[i+1];
-					float weight_delta = (float)dx2 / ppw;
+					float weight_delta = (float)dx2 / m_last_w;
 					pk->m_weight += weight_delta;
 					pn->m_weight -= weight_delta;
 				}
@@ -181,19 +179,17 @@ void Panel::update_kid(Panel *pk, int dx1, int dy1, int dx2, int dy2)
 	}
 
 	if(m_type == Type::SplitV) {
-		float ppw = (float)m_last_h / total_weight;
-
 		for(size_t i=0; i<m_kids.size(); i++) {
 			if(m_kids[i] == pk) {
 				if(dy1 != 0 && i > 0) {
 					Panel *pp = m_kids[i-1];
-					float weight_delta = (float)dy1 / ppw;
+					float weight_delta = (float)dy1 / m_last_h;
 					pk->m_weight -= weight_delta;
 					pp->m_weight += weight_delta;
 				}
 				if(i < (nkids - 1)) {
 					Panel *pn = m_kids[i+1];
-					float weight_delta = (float)dy2 / ppw;
+					float weight_delta = (float)dy2 / m_last_h;
 					pk->m_weight += weight_delta;
 					pn->m_weight -= weight_delta;
 				}
@@ -207,10 +203,8 @@ void Panel::update_kid(Panel *pk, int dx1, int dy1, int dx2, int dy2)
 }
 
 
-int Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h)
+void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h)
 {
-	int rv = 0;
-
 	m_last_w = w;
 	m_last_h = h;
 
@@ -248,26 +242,22 @@ int Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y, 
 				if(m_parent->get_type() == Type::SplitV) {
 					Panel *pn = new Panel(m_widget->copy());
 					m_parent->add(pn, this);
-					pn->m_weight *= 0.5f;
-					m_weight *= 0.5f;
 				} else {
 					Panel *pnew = new Panel(Type::SplitV);
 					m_parent->replace(this, pnew);
 					pnew->add(this);
-					pnew->add(new Panel(m_widget->copy()));
+					pnew->add(new Panel(m_widget->copy()), this);
 				}
 			}
 			if(ImGui::IsKeyPressed(ImGuiKey_H)) {
 				if(m_parent->get_type() == Type::SplitH) {
 					Panel *pn = new Panel(m_widget->copy());
 					m_parent->add(pn, this);
-					pn->m_weight *= 0.5f;
-					m_weight *= 0.5f;
 				} else {
 					Panel *pnew = new Panel(Type::SplitH);
 					m_parent->replace(this, pnew);
 					pnew->add(this);
-					pnew->add(new Panel(m_widget->copy()));
+					pnew->add(new Panel(m_widget->copy()), this);
 				}
 			}
 			if(ImGui::IsKeyPressed(ImGuiKey_X)) {
@@ -307,34 +297,22 @@ int Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y, 
 		ImGui::End();
 
 	} else if(m_type == Type::SplitH) {
-	
-		float total_weight = 0.0f;
-		for(auto &pk : m_kids) {
-			total_weight += pk->m_weight;
-		}
 
 		int kx = x;
 		for(auto &pk : m_kids) {
 			bool last = (&pk == &m_kids.back());
-			int kw = (pk->m_weight / total_weight) * w;
-			rv += kw;
-			pk->draw(view, streams, rend, kx, y, kw, h);
+			int kw = pk->m_weight * w;
+			pk->draw(view, streams, rend, kx + 5, y + 5, kw - 10, h - 10);
 			kx += kw + 1;
 		}
 
 	} else if(m_type == Type::SplitV) {
 		
-		float total_weight = 0.0f;
-		for(auto &pk : m_kids) {
-			total_weight += pk->m_weight;
-		}
-
 		int ky = y;
 		for(auto &pk : m_kids) {
 			bool last = (&pk == &m_kids.back());
-			int kh = (pk->m_weight / total_weight) * h;
-			rv += kh;
-			pk->draw(view, streams, rend, x, ky, w, kh);
+			int kh = pk->m_weight * h;
+			pk->draw(view, streams, rend, x + 5, ky + 5, w - 10, kh - 10);
 			ky += kh + 1;
 		}
 
@@ -359,6 +337,9 @@ int Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y, 
 				if(m_kids[i] == req.p_after) {
 					m_kids.insert(m_kids.begin() + i + 1, req.p_new);
 					req.p_new->m_parent = this;
+					// take half the weight of the panel after which we are inserting
+					req.p_after->m_weight *= 0.5f;
+					req.p_new->m_weight = req.p_after->m_weight;
 				}
 			}
 		} else {
@@ -368,6 +349,21 @@ int Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y, 
 	}
 	m_add_requests.clear();
 
+	// normalize weights
+	float total_weight = 0.0f;
+	for(auto &k : m_kids) total_weight += k->m_weight;
+	for(auto &k : m_kids) k->m_weight /= total_weight;
 
-	return rv;
+#if 0
+	// if only one kid, collapse this panel into the parent
+	if(m_kids.size() == 1 && m_parent) {
+		Panel *only_kid = m_kids[0];
+		m_parent->replace(this, only_kid);
+		only_kid->m_parent = m_parent;
+		m_kids.clear();
+		m_parent = nullptr;
+		delete this;
+	}
+#endif
+
 }

@@ -29,7 +29,7 @@ public:
 	void replace(Panel *kid_old, Panel *kid_new);
 	void remove(Panel *kid);
 	void update_kid(Panel *pk, int dx, int dy, int dw, int dh);
-	int draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h);
+	void draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y, int w, int h);
 
 	Type get_type() { return m_type; }
 

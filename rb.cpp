@@ -47,8 +47,6 @@ void Rb::set_size(size_t size)
 	assert(m_map1 != MAP_FAILED);
 	m_map2 = (uint8_t *)mmap(addr2, size, PROT_READ | PROT_WRITE, MAP_FIXED | MAP_SHARED, m_fd, 0);
 	assert(m_map2 != MAP_FAILED);
-
-	memset(m_map1, 0, size);
 }
 	
 
