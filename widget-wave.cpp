@@ -24,7 +24,6 @@ void Widget::Waveform::load(ConfigReader::Node *node)
 	node->read("agc", m_agc);
 	node->read("idx_from", m_idx_from);
 	node->read("idx_to", m_idx_to);
-	node->read("idx_cursor", m_idx_cursor);
 }
 
 
@@ -34,7 +33,6 @@ void Widget::Waveform::save(ConfigWriter &cw)
 	cw.write("agc", m_agc);
 	cw.write("idx_from", m_idx_from);
 	cw.write("idx_to", m_idx_to);
-	cw.write("idx_cursor", m_idx_cursor);
 	cw.pop();
 }
 
@@ -51,13 +49,16 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 	ImGui::SameLine();
 	ImGui::Checkbox("AGC", &m_agc);
 	ImGui::SameLine();
-	ImGui::Text("| %d..%d @%d", (int)view.wave_from, (int)view.wave_to, (int)m_idx_cursor);
+	ImGui::Text("| %d..%d @%d", (int)view.wave_from, (int)view.wave_to, (int)view.cursor);
 	ImGui::SameLine();
 	ImGui::Text("| peak: %.2f", m_peak);
 		   
 	if(ImGui::IsWindowFocused()) {
 		auto pos = ImGui::GetIO().MousePos;
-		if(pos.x >= 0) m_idx_cursor = x_to_idx(pos.x, r);
+		if(pos.x >= 0) {
+			view.cursor = x_to_idx(pos.x, r);
+			m_idx_cursor = view.cursor;
+		}
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
 			pan(-dx_to_didx(ImGui::GetIO().MouseDelta.x, r));
 			zoom(ImGui::GetIO().MouseDelta.y / 100.0);
@@ -89,7 +90,7 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 
 	// cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
-	int cx = idx_to_x(m_idx_cursor, r);
+	int cx = idx_to_x(view.cursor, r);
 	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
 
 	// zero Y
@@ -110,13 +111,13 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		size_t wsize = view.window->size();
 		const float *wdata = view.window->data();
 		SDL_FPoint p[66];
-		p[0].x = idx_to_x(m_idx_cursor, r);
+		p[0].x = idx_to_x(view.cursor, r);
 		p[0].y = r.y + r.h - 1;
-		p[65].x = idx_to_x(m_idx_cursor - wsize, r);
+		p[65].x = idx_to_x(view.cursor - wsize, r);
 		p[65].y = r.y + r.h - 1;
 		for(int i=0; i<64; i++) {
 			int n = wsize * i / 64;
-			p[i+1].x = idx_to_x(m_idx_cursor - wsize * i / 63.0, r);
+			p[i+1].x = idx_to_x(view.cursor - wsize * i / 63.0, r);
 			p[i+1].y = r.y + (r.h-1) * (1.0f - wdata[n]);
 		}
 
