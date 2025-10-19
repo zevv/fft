@@ -65,6 +65,10 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		}
 	}
 
+	if(m_idx_to < m_idx_from + 16) {
+		m_idx_from = m_idx_to - 16;
+	}
+
 	float scale = 1.0;
 	if(m_agc && m_peak > 0.0f) {
 		scale = m_peak / 0.9;
