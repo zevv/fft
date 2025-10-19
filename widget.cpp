@@ -146,8 +146,8 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r
 
 float Widget::graph(SDL_Renderer *rend, SDL_Rect &r, 
 					 ImVec4 &col, float *data, size_t stride,
-					 int idx_from, int idx_to,
-					 int idx_min, int idx_max,
+					 float idx_from, float idx_to,
+					 float idx_min, float idx_max,
 					 float y_min, float y_max)
 {
 	assert(r.w < 2048);

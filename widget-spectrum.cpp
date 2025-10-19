@@ -74,14 +74,17 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 	update |= ImGui::Combo("##window", (int *)&m_window_type, 
 			Window::type_names(), Window::type_count());
 	
+	ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
+	ImGui::Text("f=%.7gHz", m_freq_cursor * view.srate * 0.5);
 	ImGui::SameLine();
-	ImGui::Text("f=%.7g", m_freq_cursor * view.srate * 0.5);
+	ImGui::Text("amp=%.2fdB", m_amp_cursor);
 
 	if(widget.has_focus()) {
 
 		auto pos = ImGui::GetIO().MousePos;
 		if(pos.x >= 0) {
 			m_freq_cursor = x_to_freq(pos.x, r);
+			m_amp_cursor = (r.y - pos.y) * 100.0f / r.h;
 		}
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
 			pan(-dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r));
@@ -93,6 +96,9 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 			m_freq_to = 1.0;
 		}
 	}
+
+	if(m_freq_from < 0.0f) m_freq_from = 0.0f;
+	if(m_freq_to > 1.0f) m_freq_to = 1.0f;
 
 	if(ImGui::IsWindowFocused()) {
 		view.window = &m_window;

@@ -37,6 +37,9 @@ void Widget::Waveform::copy_to(Waveform &w)
 {
 	w.m_agc = m_agc;
 	w.m_peak = m_peak;
+	w.m_idx_from = m_idx_from;
+	w.m_idx_to = m_idx_to;
+	w.m_idx_cursor = m_idx_cursor;
 }
 
 
@@ -44,8 +47,9 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 {
 	ImGui::SameLine();
 	ImGui::Checkbox("AGC", &m_agc);
-	ImGui::SameLine();
-	ImGui::Text("| t:%.4gs", m_idx_cursor / view.srate);
+
+	ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
+	ImGui::Text("t=%.4gs", m_idx_cursor / view.srate);
 		   
 	if(ImGui::IsWindowFocused()) {
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
@@ -65,13 +69,6 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		m_idx_cursor = view.cursor;
 	}
 	
-	ImVec2 cursor = ImGui::GetCursorScreenPos();
-	ImVec2 avail = ImGui::GetContentRegionAvail();
-	r.x = (int)cursor.x;
-	r.y = (int)cursor.y;
-	r.w = (int)avail.x;
-	r.h = (int)avail.y;
-
 	if(m_idx_to < m_idx_from + 16) {
 		m_idx_from = m_idx_to - 16;
 	}
@@ -94,8 +91,8 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 
 		float peak = widget.graph(rend, r, col, data, stride,
 				idx_from, idx_to, 
-				-depth, 0,
-				-scale, +scale);
+				-(float)depth, 0.0,
+				-(float)scale, +(float)scale);
 		if(peak > m_peak) {
 			m_peak = peak;
 		}

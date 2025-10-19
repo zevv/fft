@@ -40,8 +40,8 @@ private:
 
 	float graph(SDL_Renderer *rend, SDL_Rect &r, 
 					 ImVec4 &col, float *data, size_t stride,
-					 int idx_from, int idx_to,
-					 int idx_min, int idx_max,
+					 float idx_from, float idx_to,
+					 float idx_min, float idx_max,
 					 float y_min, float y_max);
 	
 
@@ -123,6 +123,7 @@ private:
 		float m_freq_from{0.0};
 		float m_freq_to{1.0};
 		float m_freq_cursor{0.0};
+		float m_amp_cursor{0.0};
 		Window::Type m_window_type{Window::Type::Hanning};
 		float m_window_beta{5.0f};
 		fftwf_plan m_plan{nullptr};
