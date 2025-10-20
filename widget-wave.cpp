@@ -68,7 +68,11 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		}
 
 		auto pos = ImGui::GetIO().MousePos;
-		view.cursor = x_to_t(pos.x, r);
+		if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+			view.cursor += dx_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
+		} else {
+			view.cursor = x_to_t(pos.x, r);
+		}
 		m_t_cursor = view.cursor;
 	}
 	

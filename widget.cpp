@@ -150,12 +150,6 @@ Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r, ImVec4 &col,
 					 int idx_min, int idx_max,
 					 Sample y_min, Sample y_max)
 {
-	assert(r.w < 2048);
-
-	SDL_FPoint p_max[2048];
-	SDL_FPoint p_min[2048];
-	SDL_FRect rects[2048];
-
 	float y_scale = (r.h - 2) / ((float)y_min - (float)y_max);
 	float y_off = r.y - (float)y_max * (float)y_scale;
 	Sample v_peak = 0;
@@ -163,12 +157,17 @@ Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r, ImVec4 &col,
 	int npoints = 0;
 	int nrects = 0;
 	int step = 2;
+	float idx_scale = (idx_to - idx_from) / r.w;
+	int max_points = r.w / step + 1;
+
+	std::vector<SDL_FPoint> p_max(max_points);
+	std::vector<SDL_FPoint> p_min(max_points);
+	std::vector<SDL_FRect> rects(max_points);
 
 	for(int x=0; x<r.w; x+=step) {
-	
-		float s = (idx_to - idx_from) / r.w;
-		int idx_start = idx_from + (x + 0   ) * s;
-		int idx_end   = idx_from + (x + step) * s;
+
+		int idx_start = idx_from + (x + 0   ) * idx_scale;
+		int idx_end   = idx_from + (x + step) * idx_scale;
 
 		if(idx_end   >= idx_max) break;
 		if(idx_start <  idx_min) continue;
@@ -181,8 +180,8 @@ Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r, ImVec4 &col,
 			if(idx >= idx_min && idx < idx_max) {
 				v = data[stride * idx];
 			}
-			vmin = (idx == idx_start || v < vmin) ? v : vmin;
-			vmax = (idx == idx_start || v > vmax) ? v : vmax;
+			if(v < vmin) vmin = v;
+			if(v > vmax) vmax = v;
 		}
 
 		float px = r.x + x;
@@ -208,10 +207,10 @@ Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r, ImVec4 &col,
 	}
 
 	SDL_SetRenderDrawColor(rend, col.x * 255, col.y * 255, col.z * 255, col.w * 255);
-	SDL_RenderLines(rend, p_max, npoints);
-	SDL_RenderLines(rend, p_min, npoints);
+	SDL_RenderLines(rend, p_max.data(), npoints);
+	SDL_RenderLines(rend, p_min.data(), npoints);
 	SDL_SetRenderDrawColor(rend, col.x * 48, col.y * 48, col.z * 48, col.w * 255);
-	SDL_RenderFillRects(rend, rects, nrects);
+	SDL_RenderFillRects(rend, rects.data(), nrects);
 
 	return v_peak;
 }

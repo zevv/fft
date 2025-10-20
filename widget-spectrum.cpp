@@ -92,7 +92,11 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 
 		auto pos = ImGui::GetIO().MousePos;
 		if(pos.x >= 0) {
-			m_freq_cursor = x_to_freq(pos.x, r);
+			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+				m_freq_cursor += dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
+			} else {
+				m_freq_cursor = x_to_freq(pos.x, r);
+			}
 			m_amp_cursor = (r.y - pos.y) * 100.0f / r.h;
 		}
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {

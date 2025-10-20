@@ -57,7 +57,7 @@ private:
 	bool m_resize;
 	int m_w, m_h;
 
-    int m_srate;
+    float m_srate;
 	bool m_capture;
 	SDL_AudioStream *m_sdl_audiostream;
 
@@ -72,7 +72,7 @@ Corrie::Corrie(SDL_Window *window, SDL_Renderer *renderer)
 	, m_resize(true)
 	, m_w(800)
 	, m_h(600)
-    , m_srate(48000)
+    , m_srate(48000.0)
 	, m_capture(false)
 	, m_view()
 {
@@ -164,21 +164,21 @@ void Corrie::init()
 	double phase = 0.0;
 	double t = 0.0;
 	for(int i=0; i<m_srate; i++) {
-		float ampl = i / (float)m_srate;
 		// exponential from -100dB to 0dB
-		float ampe = powf(10.0f, 5.0f * (ampl - 1.0f));
+		float ampe = powf(10.0f, 5.0f * ((i / m_srate) - 1.0f));
 		Sample data[8];
 		data[0] = k_sample_max * (       sin(t * 2.0 * M_PI * 4000.0)); // tone @ 0dB
 		data[1] = k_sample_max * (0.1  * sin(t * 2.0 * M_PI * 5000.0)); // tone @ -20dB
 		data[2] = k_sample_max * (0.1  * sin(t * 2.0 * M_PI * 6000.0) + 0.1f); // tone @ -20dB + DC @ -20dB
-		data[3] = k_sample_max * (0.1  * sin(t * 2.0 * M_PI * 7000.0) + rand() / (float)RAND_MAX * 0.1f - 0.05f); // tone @ -20dB + noise @ -60dB
-		data[4] = k_sample_max * (ampl * sin(t * 2.0 * M_PI * 8000.0)); // tone ramp from -inf to 0dB, linear
-		data[5] = k_sample_max * (ampe * sin(t * 2.0 * M_PI * 9000.0)); // tone ramp from -inf to 0dB, exp
-		data[6] = k_sample_max * (1.0f * cos(    2.0 * M_PI * phase));      // sweep @ 0dB
+		data[3] = k_sample_max * (0.1  * sin(t * 2.0 * M_PI * 7000.0) + rand() / (float)RAND_MAX * 0.001f - 0.0005f); // tone @ -20dB + noise @ -60dB
+		data[4] = k_sample_max * (ampe * sin(t * 2.0 * M_PI * 9000.0)); // tone ramp from -inf to 0dB, exp
+		data[5] = k_sample_max * (1.0f * cos(    2.0 * M_PI * phase));      // sweep @ 0dB
+		data[6] = k_sample_max * (phase - 0.5f);                     // saw ramp @ 0dB
 		data[7] = k_sample_max * (rand() / (float)RAND_MAX * 2.0f - 1.0f); // full scale noise
 		m_streams.write(data, 1);
 		Frequency f = i / 2.0;
 		phase += f / m_srate;
+		if(phase >= 1.0) phase -= 1.0;
 		t += 1.0 / m_srate;
 	}
 #endif
