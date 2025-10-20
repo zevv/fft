@@ -76,6 +76,13 @@ void ConfigWriter::write(const char *key, float val)
 }
 
 
+void ConfigWriter::write(const char *key, double val)
+{
+	char buf[32];
+	snprintf(buf, sizeof(buf), "%.7g", val);
+	write(key, buf);
+}
+
 void ConfigWriter::write(const char *key, const char *val)
 {
 	if(m_f) {
@@ -267,6 +274,33 @@ bool ConfigReader::Node::read(const char *key, float &val)
 
 
 bool ConfigReader::Node::read(const char *key, float &val, float defval)
+{
+	char buf[32];
+
+	if(read(key, buf, sizeof(buf))) {
+		val = atof(buf);
+		return true;
+	} else {
+		val = defval;
+		return false;
+	}
+}
+
+
+bool ConfigReader::Node::read(const char *key, double &val)
+{
+	char buf[32];
+
+	if(read(key, buf, sizeof(buf))) {
+		val = atof(buf);
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
+bool ConfigReader::Node::read(const char *key, double &val, double defval)
 {
 	char buf[32];
 

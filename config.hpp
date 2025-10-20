@@ -22,6 +22,7 @@ public:
 	void write(const char *key, bool val);
 	void write(const char *key, int val);
 	void write(const char *key, float val);
+	void write(const char *key, double val);
 	void write(const char *key, const char *val);
 	
 private:
@@ -50,6 +51,8 @@ struct ConfigReader {
 		bool read(const char *key, int &val, int defval);
 		bool read(const char *key, float &val);
 		bool read(const char *key, float &val, float defval);
+		bool read(const char *key, double &val);
+		bool read(const char *key, double &val, double defval);
 		bool read(const char *key, char *val, size_t maxlen);
 		bool read(const char *key, char *val, size_t maxlen, const char *defval);
 		const char *read_str(const char *key);

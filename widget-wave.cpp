@@ -8,6 +8,7 @@
 #include <imgui.h>
 
 #include "widget.hpp"
+#include "config.hpp"
 
 Widget::Waveform::Waveform()
 {
@@ -85,7 +86,7 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		if(!widget.channel_enabled(ch)) continue;
 		size_t stride;
 		size_t depth;
-		float *data = streams.peek(ch, 0, stride, &depth);
+		Sample *data = streams.peek(ch, 0, stride, &depth);
 		ImVec4 col = widget.channel_color(ch);
 
 		float t_from = view.srate * x_to_t(r.x, r) - 1.0;

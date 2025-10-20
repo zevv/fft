@@ -20,7 +20,7 @@ Widget::Spectrum::Spectrum()
 Widget::Spectrum::~Spectrum()
 {
 	if(m_plan) {
-		fftwf_destroy_plan(m_plan);
+		FFTW_DESTROY_PLAN(m_plan);
 		m_plan = nullptr;
 	}
 }
@@ -138,7 +138,7 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		if(!widget.channel_enabled(ch)) continue;
 
 		size_t stride = 0;
-		float *data = streams.peek(ch, -(view.srate * view.cursor) + m_size, stride);
+		Sample *data = streams.peek(ch, -(view.srate * view.cursor) + m_size, stride);
 
 		const float *w = m_window.data();
 		float gain = m_window.gain();
@@ -146,26 +146,24 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 			m_in[i] = data[stride * i] * w[i] * gain;
 		}
 
-		fftwf_execute(m_plan);
+		FFTW_EXECUTE(m_plan);
 		float scale = 2.0f / m_size;
 
-		float vmax = -100000;
 		for(int i=0; i<m_size; i++) {
 			float v = 0.0;
 			if(i == 0) {
 				v = m_out[0] / m_size;
 			} else if(i < m_size / 2) {
-				v = hypotf(m_out[i], m_out[m_size - i]) * scale;
+				v = hypot(m_out[i], m_out[m_size - i]) * scale;
 			} else if(i == m_size / 2) {
-				v = fabsf(m_out[m_size / 2]) / m_size;
+				v = fabs(m_out[m_size / 2]) / m_size;
 			} 
-			m_out[i] = (v >= 1e-20f) ? 20.0f * log10f(v) : -100.0f;
-			if(m_out[i] > vmax) vmax = m_out[i];
+			m_out_graph[i] = (v >= 1e-20f) ? 20.0f * log10f(v) : -100.0f;
 		}
 
 		size_t npoints = m_size / 2 + 1;
 		ImVec4 col = widget.channel_color(ch);
-		widget.graph(rend, r, col, m_out.data(), 1,
+		widget.graph(rend, r, col, m_out_graph.data(), 1,
 				m_freq_from * npoints, m_freq_to * npoints,
 				0, npoints,
 				-100.0, 0.0);
@@ -185,20 +183,15 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 void Widget::Spectrum::configure_fft(int size, Window::Type window_type)
 {
 	if(m_plan) {
-		fftwf_destroy_plan(m_plan);
+		FFTW_DESTROY_PLAN(m_plan);
 		m_plan = nullptr;
 	}
 	m_size = size;
 	m_in.resize(size);
 	m_out.resize(size);
+	m_out_graph.resize(size);
 
-	int sizes[] = {size};
-	fftwf_r2r_kind kinds[] = { FFTW_R2HC };
-	m_plan = fftwf_plan_many_r2r(
-			1, sizes, 1, 
-			m_in.data(), NULL, 1, 0, 
-			m_out.data(), NULL, 1, 0, 
-			kinds, FFTW_ESTIMATE);
+	m_plan = FFTW_PLAN_R2R_1D(size, m_in.data(), m_out.data(), FFTW_R2HC, FFTW_ESTIMATE);
 
 	m_window.configure(window_type, size);
 }

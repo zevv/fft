@@ -7,6 +7,7 @@
 #include "window.hpp"
 #include "view.hpp"
 #include "config.hpp"
+#include "types.hpp"
 
 
 class Widget {
@@ -38,11 +39,11 @@ public:
 
 private:
 
-	float graph(SDL_Renderer *rend, SDL_Rect &r, 
-					 ImVec4 &col, float *data, size_t stride,
+	Sample graph(SDL_Renderer *rend, SDL_Rect &r, 
+					 ImVec4 &col, Sample *data, size_t stride,
 					 float idx_from, float idx_to,
 					 int idx_min, int idx_max,
-					 float y_min, float y_max);
+					 Sample y_min, Sample y_max);
 	
 
 	Type m_type;
@@ -57,15 +58,15 @@ private:
 		void draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 	private:
 
-		float x_to_t(float x, SDL_Rect &r) {
+		Time x_to_t(float x, SDL_Rect &r) {
 			return m_t_from - (m_t_from - m_t_to) * (x - r.x) / r.w;
 		}
 
-		float t_to_x(float t, SDL_Rect &r) {
+		float t_to_x(Time t, SDL_Rect &r) {
 			return r.x + r.w * (m_t_from - t) / (m_t_from - m_t_to);
 		}
 
-		float dx_to_dt(float dx, SDL_Rect &r) {
+		Time dx_to_dt(float dx, SDL_Rect &r) {
 			return dx * (m_t_to - m_t_from) / r.w;
 		}
 
@@ -80,10 +81,10 @@ private:
 		};
 
 		bool m_agc{true};
-		float m_peak{0.0};
-		float m_t_from{0.0};
-		float m_t_to{0.0};
-		float m_t_cursor{0.0};
+		Sample m_peak{0.0};
+		Time m_t_from{0.0};
+		Time m_t_to{0.0};
+		Time m_t_cursor{0.0};
 	} m_waveform;
 
 	struct Spectrum {
@@ -97,15 +98,15 @@ private:
 	private:
 		void configure_fft(int size, Window::Type window_type);
 
-		float x_to_freq(float x, SDL_Rect &r) {
+		Frequency x_to_freq(float x, SDL_Rect &r) {
 			return m_freq_from + (m_freq_to - m_freq_from) * (x - r.x) / r.w;
 		}
 
-		float freq_to_x(float freq, SDL_Rect &r) {
+		float freq_to_x(Frequency freq, SDL_Rect &r) {
 			return r.x + r.w * (freq - m_freq_from) / (m_freq_to - m_freq_from);
 		}
 
-		float dx_to_dfreq(float dx, SDL_Rect &r) {
+		Frequency dx_to_dfreq(float dx, SDL_Rect &r) {
 			return dx * (m_freq_to - m_freq_from) / r.w;
 		}
 
@@ -120,16 +121,17 @@ private:
 		};
 
 		int m_size{256};
-		float m_freq_from{0.0};
-		float m_freq_to{1.0};
-		float m_freq_cursor{0.0};
+		Frequency m_freq_from{0.0};
+		Frequency m_freq_to{1.0};
+		Frequency m_freq_cursor{0.0};
 		float m_amp_cursor{0.0};
 		Window::Type m_window_type{Window::Type::Hanning};
 		float m_window_beta{5.0f};
-		fftwf_plan m_plan{nullptr};
+		FFTW_PLAN m_plan{nullptr};
 
-		std::vector<float> m_in;
-		std::vector<float> m_out;
+		std::vector<SampleFFTW> m_in;
+		std::vector<SampleFFTW> m_out;
+		std::vector<Sample> m_out_graph;
 		Window m_window;
 	} m_spectrum;
 

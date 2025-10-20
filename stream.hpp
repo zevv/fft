@@ -6,6 +6,7 @@
 #include <mutex>
 
 #include "rb.hpp"
+#include "types.hpp"
 
 
 class Streams {
@@ -16,12 +17,12 @@ public:
 		, m_used(0)
 		, m_channels(8)
 	{
-		m_rb.set_size(m_channels * m_depth * sizeof(float));
+		m_rb.set_size(m_channels * m_depth * sizeof(Sample));
 	}
 
 	void write(void *data, size_t nframes)
 	{
-		size_t n = nframes * m_channels * sizeof(float);
+		size_t n = nframes * m_channels * sizeof(Sample);
 		m_rb.write(data, n);
 		m_used += nframes;
 		if(m_used > m_depth - 1) {
@@ -29,11 +30,11 @@ public:
 		}
 	}
 
-	float *peek(size_t channel, size_t idx, size_t &stride, size_t *used = nullptr)
+	Sample *peek(size_t channel, size_t idx, size_t &stride, size_t *used = nullptr)
 	{
 		stride = m_channels;
 		if(used) *used = m_used;
-		return (float *)m_rb.peek(sizeof(float) * ((idx + 1) * m_channels - channel));
+		return (Sample *)m_rb.peek(sizeof(Sample) * ((idx + 1) * m_channels - channel));
 	}
 
 private:

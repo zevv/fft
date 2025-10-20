@@ -167,7 +167,7 @@ void Corrie::init()
 		float ampl = i / (float)m_srate;
 		// exponential from -100dB to 0dB
 		float ampe = powf(10.0f, 5.0f * (ampl - 1.0f));
-		float data[8];
+		Sample data[8];
 		data[0] =        sin(t * 2.0 * M_PI * 5000.0); // tone @ 0dB
 		data[1] = 0.1f * sin(t * 2.0 * M_PI * 6000.0); // tone @ -20dB
 		data[2] = 0.1f * sin(t * 2.0 * M_PI * 7000.0) + 0.1f; // tone @ -20dB + DC @ -20dB
