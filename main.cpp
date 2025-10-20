@@ -174,10 +174,9 @@ void Corrie::init()
 		    0.1f * sinf(t * 2.0 * M_PI * 8000.0) + rand() / (float)RAND_MAX * 0.1f - 0.05f, // tone @ -20dB + noise @ -60dB
 			ampl * sinf(t * 2.0 * M_PI * 9000.0), // tone ramp from -inf to 0dB, linear
 			ampe * sinf(t * 2.0 * M_PI *10000.0), // tone ramp from -inf to 0dB, exp
-		    1.0f * sinf(2.0 * M_PI * phase),      // sweep @ 0dB
-			0.0f
+		    1.0f * cosf(2.0 * M_PI * phase),      // sweep @ 0dB
+			rand() / (float)RAND_MAX * 2.0f - 1.0f // full scale noise
 		};
-		data[7] = data[0] + data[1] + data[2] + data[3] + data[4] + data[5] + data[6];
 		m_streams.write(data, 1);
 		float f = i / 2.0;
 		phase += f / m_srate;

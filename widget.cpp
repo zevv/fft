@@ -184,17 +184,21 @@ float Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
 			vmax = (idx == idx_start || v > vmax) ? v : vmax;
 		}
 
-		p_min[npoints].x = r.x + x;
-		p_min[npoints].y = vmin  * y_scale + y_off;
-		p_max[npoints].x = r.x + x;
-		p_max[npoints].y = vmax  * y_scale + y_off;
+		float px = r.x + x;
+		float py_min = vmin  * y_scale + y_off;
+		float py_max = vmax  * y_scale + y_off;
+
+		p_min[npoints].x = px;
+		p_min[npoints].y = py_min;
+		p_max[npoints].x = px;
+		p_max[npoints].y = py_max;
 		npoints++;
 
-		if(vmax > vmin) {
-			rects[nrects].x = r.x + x;
-			rects[nrects].y = p_max[npoints - 1].y;
-			rects[nrects].w = 2;
-			rects[nrects].h = p_min[npoints - 1].y - p_max[npoints - 1].y;
+		if(py_max < py_min - 4) {
+			rects[nrects].x = px;
+			rects[nrects].y = py_max + 1;
+			rects[nrects].w = step;
+			rects[nrects].h = py_min - py_max - 1;
 			nrects++;
 		}
 
