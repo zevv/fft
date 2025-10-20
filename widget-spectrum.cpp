@@ -138,7 +138,7 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		if(!widget.channel_enabled(ch)) continue;
 
 		size_t stride = 0;
-		float *data = streams.peek(ch, -view.cursor + m_size, stride);
+		float *data = streams.peek(ch, -(view.srate * view.cursor) + m_size, stride);
 
 		const float *w = m_window.data();
 		float gain = m_window.gain();

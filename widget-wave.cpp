@@ -18,8 +18,8 @@ void Widget::Waveform::load(ConfigReader::Node *node)
 {
 	if(!node) return;
 	node->read("agc", m_agc);
-	node->read("idx_from", m_idx_from);
-	node->read("idx_to", m_idx_to);
+	node->read("t_from", m_t_from);
+	node->read("t_to", m_t_to);
 }
 
 
@@ -27,8 +27,8 @@ void Widget::Waveform::save(ConfigWriter &cw)
 {
 	cw.push("waveform");
 	cw.write("agc", m_agc);
-	cw.write("idx_from", m_idx_from);
-	cw.write("idx_to", m_idx_to);
+	cw.write("t_from", m_t_from);
+	cw.write("t_to", m_t_to);
 	cw.pop();
 }
 
@@ -37,9 +37,9 @@ void Widget::Waveform::copy_to(Waveform &w)
 {
 	w.m_agc = m_agc;
 	w.m_peak = m_peak;
-	w.m_idx_from = m_idx_from;
-	w.m_idx_to = m_idx_to;
-	w.m_idx_cursor = m_idx_cursor;
+	w.m_t_from = m_t_from;
+	w.m_t_to = m_t_to;
+	w.m_t_cursor = m_t_cursor;
 }
 
 
@@ -51,10 +51,10 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 	if(ImGui::IsWindowFocused()) {
 	
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
-		ImGui::Text("idx=%.1f t=%.4gs", m_idx_cursor, m_idx_cursor / view.srate);
+		ImGui::Text("t=%.4gs", m_t_cursor);
 
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			pan(-dx_to_didx(ImGui::GetIO().MouseDelta.x, r));
+			pan(-dx_to_dt(ImGui::GetIO().MouseDelta.x, r));
 			zoom(ImGui::GetIO().MouseDelta.y / 100.0);
 		}
 
@@ -62,17 +62,17 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 			size_t used;
 			size_t stride;
 			streams.peek(0, 0, stride, &used);
-			m_idx_from = -(float)(used - 1);
-			m_idx_to   = 0;
+			m_t_from = -view.srate / used;
+			m_t_to   = 0;
 		}
 
 		auto pos = ImGui::GetIO().MousePos;
-		view.cursor = x_to_idx(pos.x, r);
-		m_idx_cursor = view.cursor;
+		view.cursor = x_to_t(pos.x, r);
+		m_t_cursor = view.cursor;
 	}
 	
-	if(m_idx_to < m_idx_from + 5) {
-		m_idx_from = m_idx_to - 5;
+	if(m_t_to < m_t_from + 0.0001) { // TODO
+		m_t_from = m_t_to - 0.0001;
 	}
 
 	float scale = 1.0;
@@ -88,11 +88,11 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		float *data = streams.peek(ch, 0, stride, &depth);
 		ImVec4 col = widget.channel_color(ch);
 
-		float idx_from = x_to_idx(r.x, r) - 1.0;
-		float idx_to   = x_to_idx(r.x + r.w, r);
+		float t_from = view.srate * x_to_t(r.x, r) - 1.0;
+		float t_to   = view.srate * x_to_t(r.x + r.w, r);
 
 		float peak = widget.graph(rend, r, col, data, stride,
-				idx_from, idx_to, 
+				t_from, t_to, 
 				-(float)depth, 0.0,
 				-(float)scale, +(float)scale);
 
@@ -103,7 +103,7 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 
 	// cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
-	int cx = idx_to_x(view.cursor, r);
+	int cx = t_to_x(view.cursor, r);
 	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
 
 	// zero Y
@@ -111,7 +111,7 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 	SDL_RenderLine(rend, r.x, r.y + r.h / 2, r.x + r.w, r.y + r.h / 2);
 
 	// zero X
-	float x = idx_to_x(0.0f, r);
+	float x = t_to_x(0.0f, r);
 	if(x >= r.x && x <= r.x + r.w) {
 		SDL_SetRenderDrawColor(rend, 0, 255, 255, 128);
 		SDL_RenderLine(rend, x, r.y, x, r.y + r.h);
@@ -124,13 +124,13 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		size_t wsize = view.window->size();
 		const float *wdata = view.window->data();
 		SDL_FPoint p[66];
-		p[0].x = idx_to_x(view.cursor, r);
+		p[0].x = t_to_x(view.cursor, r);
 		p[0].y = r.y + r.h - 1;
-		p[65].x = idx_to_x(view.cursor - wsize, r);
+		p[65].x = t_to_x(view.cursor - wsize, r);
 		p[65].y = r.y + r.h - 1;
 		for(int i=0; i<64; i++) {
 			int n = wsize * i / 64;
-			p[i+1].x = idx_to_x(view.cursor - wsize * i / 63.0, r);
+			p[i+1].x = t_to_x(view.cursor - wsize * i / 63.0, r);
 			p[i+1].y = r.y + (r.h-1) * (1.0f - wdata[n]);
 		}
 

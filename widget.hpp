@@ -57,33 +57,33 @@ private:
 		void draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 	private:
 
-		float x_to_idx(float x, SDL_Rect &r) {
-			return m_idx_from - (m_idx_from - m_idx_to) * (x - r.x) / r.w;
+		float x_to_t(float x, SDL_Rect &r) {
+			return m_t_from - (m_t_from - m_t_to) * (x - r.x) / r.w;
 		}
 
-		float idx_to_x(float idx, SDL_Rect &r) {
-			return r.x + r.w * (m_idx_from - 1.0 - idx) / (m_idx_from - 1.0 - m_idx_to);
+		float t_to_x(float t, SDL_Rect &r) {
+			return r.x + r.w * (m_t_from - t) / (m_t_from - m_t_to);
 		}
 
-		float dx_to_didx(float dx, SDL_Rect &r) {
-			return dx * (m_idx_to - m_idx_from) / r.w;
+		float dx_to_dt(float dx, SDL_Rect &r) {
+			return dx * (m_t_to - m_t_from) / r.w;
 		}
 
 		void pan(float delta) {
-			m_idx_from += delta;
-			m_idx_to += delta;
+			m_t_from += delta;
+			m_t_to += delta;
 		};
 
 		void zoom(float f) {
-			m_idx_from += (m_idx_cursor - m_idx_from) * f;
-			m_idx_to   -= (m_idx_to - m_idx_cursor) * f;
+			m_t_from += (m_t_cursor - m_t_from) * f;
+			m_t_to   -= (m_t_to - m_t_cursor) * f;
 		};
 
 		bool m_agc{true};
 		float m_peak{0.0};
-		float m_idx_from{0.0};
-		float m_idx_to{0.0};
-		float m_idx_cursor{0.0};
+		float m_t_from{0.0};
+		float m_t_to{0.0};
+		float m_t_cursor{0.0};
 	} m_waveform;
 
 	struct Spectrum {
