@@ -41,7 +41,7 @@ private:
 	float graph(SDL_Renderer *rend, SDL_Rect &r, 
 					 ImVec4 &col, float *data, size_t stride,
 					 float idx_from, float idx_to,
-					 float idx_min, float idx_max,
+					 int idx_min, int idx_max,
 					 float y_min, float y_max);
 	
 
