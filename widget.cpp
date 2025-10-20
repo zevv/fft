@@ -144,8 +144,8 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r
 }
 
 
-Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r, 
-					 ImVec4 &col, Sample *data, size_t stride,
+Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r, ImVec4 &col,
+					 Sample *data, size_t stride,
 					 float idx_from, float idx_to,
 					 int idx_min, int idx_max,
 					 Sample y_min, Sample y_max)
@@ -156,9 +156,9 @@ Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
 	SDL_FPoint p_min[2048];
 	SDL_FRect rects[2048];
 
-	float y_scale = (r.h - 2) / (y_min - y_max);
-	float y_off = r.y - y_max * y_scale;
-	float v_peak = 0.0;
+	float y_scale = (r.h - 2) / ((float)y_min - (float)y_max);
+	float y_off = r.y - (float)y_max * (float)y_scale;
+	Sample v_peak = 0;
 
 	int npoints = 0;
 	int nrects = 0;
@@ -173,11 +173,11 @@ Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
 		if(idx_end   >= idx_max) break;
 		if(idx_start <  idx_min) continue;
 
-		float vmin = data[stride * idx_start];
-		float vmax = data[stride * idx_start];
+		Sample vmin = data[stride * idx_start];
+		Sample vmax = data[stride * idx_start];
 
 		for(int idx=idx_start; idx<idx_end; idx++) {
-			float v = 0;
+			Sample v = 0;
 			if(idx >= idx_min && idx < idx_max) {
 				v = data[stride * idx];
 			}

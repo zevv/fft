@@ -168,16 +168,16 @@ void Corrie::init()
 		// exponential from -100dB to 0dB
 		float ampe = powf(10.0f, 5.0f * (ampl - 1.0f));
 		Sample data[8];
-		data[0] =        sin(t * 2.0 * M_PI * 5000.0); // tone @ 0dB
-		data[1] = 0.1f * sin(t * 2.0 * M_PI * 6000.0); // tone @ -20dB
-		data[2] = 0.1f * sin(t * 2.0 * M_PI * 7000.0) + 0.1f; // tone @ -20dB + DC @ -20dB
-		data[3] = 0.1f * sin(t * 2.0 * M_PI * 8000.0) + rand() / (float)RAND_MAX * 0.1f - 0.05f; // tone @ -20dB + noise @ -60dB
-		data[4] = ampl * sin(t * 2.0 * M_PI * 9000.0); // tone ramp from -inf to 0dB, linear
-		data[5] = ampe * sin(t * 2.0 * M_PI *10000.0); // tone ramp from -inf to 0dB, exp
-		data[6] = 1.0f * cos(2.0 * M_PI * phase);      // sweep @ 0dB
-		data[7] = rand() / (float)RAND_MAX * 2.0f - 1.0f; // full scale noise
+		data[0] = k_sample_max * (       sin(t * 2.0 * M_PI * 4000.0)); // tone @ 0dB
+		data[1] = k_sample_max * (0.1  * sin(t * 2.0 * M_PI * 5000.0)); // tone @ -20dB
+		data[2] = k_sample_max * (0.1  * sin(t * 2.0 * M_PI * 6000.0) + 0.1f); // tone @ -20dB + DC @ -20dB
+		data[3] = k_sample_max * (0.1  * sin(t * 2.0 * M_PI * 7000.0) + rand() / (float)RAND_MAX * 0.1f - 0.05f); // tone @ -20dB + noise @ -60dB
+		data[4] = k_sample_max * (ampl * sin(t * 2.0 * M_PI * 8000.0)); // tone ramp from -inf to 0dB, linear
+		data[5] = k_sample_max * (ampe * sin(t * 2.0 * M_PI * 9000.0)); // tone ramp from -inf to 0dB, exp
+		data[6] = k_sample_max * (1.0f * cos(    2.0 * M_PI * phase));      // sweep @ 0dB
+		data[7] = k_sample_max * (rand() / (float)RAND_MAX * 2.0f - 1.0f); // full scale noise
 		m_streams.write(data, 1);
-		float f = i / 2.0;
+		Frequency f = i / 2.0;
 		phase += f / m_srate;
 		t += 1.0 / m_srate;
 	}

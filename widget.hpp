@@ -81,10 +81,10 @@ private:
 		};
 
 		bool m_agc{true};
-		Sample m_peak{0.0};
-		Time m_t_from{0.0};
-		Time m_t_to{0.0};
-		Time m_t_cursor{0.0};
+		Sample m_peak{};
+		Time m_t_from{};
+		Time m_t_to{};
+		Time m_t_cursor{};
 	} m_waveform;
 
 	struct Spectrum {

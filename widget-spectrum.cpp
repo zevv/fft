@@ -119,11 +119,13 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 
 	
 	// grid
+	
+	float db_range = -120.0;
 
 	SDL_SetRenderDrawColor(rend, 64, 64, 64, 255);
 	ImDrawList* dl = ImGui::GetWindowDrawList();
-	for(float dB=-100.0f; dB<=0.0f; dB+=10.0f) {
-		int y = r.y - dB * r.h / 100.0f;
+	for(float dB=db_range; dB<=0.0f; dB+=10.0f) {
+		int y = r.y - dB * r.h / -db_range;
 		SDL_RenderLine(rend, r.x, y, r.x + r.w, y);
 		char buf[32];
 		snprintf(buf, sizeof(buf), "%+.0f", dB);
@@ -147,18 +149,18 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		}
 
 		FFTW_EXECUTE(m_plan);
-		float scale = 2.0f / m_size;
+		float scale = 2.0f / m_size / k_sample_max;
 
 		for(int i=0; i<m_size; i++) {
-			float v = 0.0;
+			SampleFFTW v = 0.0;
 			if(i == 0) {
-				v = m_out[0] / m_size;
+				v = m_out[0] * scale / 2;
 			} else if(i < m_size / 2) {
 				v = hypot(m_out[i], m_out[m_size - i]) * scale;
 			} else if(i == m_size / 2) {
-				v = fabs(m_out[m_size / 2]) / m_size;
+				v = fabs(m_out[m_size / 2]) * scale / 2;
 			} 
-			m_out_graph[i] = (v >= 1e-20f) ? 20.0f * log10f(v) : -100.0f;
+			m_out_graph[i] = (v >= 1e-20f) ? 20.0f * log10f(v) : db_range;
 		}
 
 		size_t npoints = m_size / 2 + 1;
@@ -166,7 +168,7 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		widget.graph(rend, r, col, m_out_graph.data(), 1,
 				m_freq_from * npoints, m_freq_to * npoints,
 				0, npoints,
-				-100.0, 0.0);
+				db_range, 0.0);
 	}
 	
 	// cursor

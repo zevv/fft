@@ -76,11 +76,11 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		m_t_from = m_t_to - 0.0001;
 	}
 
-	float scale = 1.0;
+	Sample scale = k_sample_max;
 	if(m_agc && m_peak > 0.0f) {
 		scale = m_peak / 0.9;
 	}
-	
+
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 	for(int ch=0; ch<8; ch++) {
 		if(!widget.channel_enabled(ch)) continue;
@@ -95,7 +95,7 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		float peak = widget.graph(rend, r, col, data, stride,
 				t_from, t_to, 
 				-(float)depth, 0.0,
-				-(float)scale, +(float)scale);
+				-scale, +scale);
 
 		if(peak > m_peak) {
 			m_peak = peak;
