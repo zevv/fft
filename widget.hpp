@@ -62,7 +62,7 @@ private:
 		}
 
 		float idx_to_x(float idx, SDL_Rect &r) {
-			return r.x + r.w * (m_idx_from - idx) / (m_idx_from - m_idx_to);
+			return r.x + r.w * (m_idx_from - 1.0 - idx) / (m_idx_from - 1.0 - m_idx_to);
 		}
 
 		float dx_to_didx(float dx, SDL_Rect &r) {

@@ -48,21 +48,21 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 	ImGui::SameLine();
 	ImGui::Checkbox("AGC", &m_agc);
 
-		   
 	if(ImGui::IsWindowFocused()) {
 	
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
-		ImGui::Text("t=%.4gs", m_idx_cursor / view.srate);
+		ImGui::Text("idx=%.1f t=%.4gs", m_idx_cursor, m_idx_cursor / view.srate);
 
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
 			pan(-dx_to_didx(ImGui::GetIO().MouseDelta.x, r));
 			zoom(ImGui::GetIO().MouseDelta.y / 100.0);
 		}
+
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
 			size_t used;
 			size_t stride;
 			streams.peek(0, 0, stride, &used);
-			m_idx_from = -(float)used;
+			m_idx_from = -(float)(used - 1);
 			m_idx_to   = 0;
 		}
 
@@ -71,8 +71,8 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		m_idx_cursor = view.cursor;
 	}
 	
-	if(m_idx_to < m_idx_from + 16) {
-		m_idx_from = m_idx_to - 16;
+	if(m_idx_to < m_idx_from + 5) {
+		m_idx_from = m_idx_to - 5;
 	}
 
 	float scale = 1.0;
@@ -88,13 +88,14 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		float *data = streams.peek(ch, 0, stride, &depth);
 		ImVec4 col = widget.channel_color(ch);
 
-		int idx_from = x_to_idx(r.x, r) - 1;
-		int idx_to   = x_to_idx(r.x + r.w, r) + 1;
+		float idx_from = x_to_idx(r.x, r) - 1.0;
+		float idx_to   = x_to_idx(r.x + r.w, r);
 
 		float peak = widget.graph(rend, r, col, data, stride,
 				idx_from, idx_to, 
 				-(float)depth, 0.0,
 				-(float)scale, +(float)scale);
+
 		if(peak > m_peak) {
 			m_peak = peak;
 		}
