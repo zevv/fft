@@ -158,17 +158,28 @@ void Corrie::init()
 	io.IniFilename = NULL;
 	io.LogFilename = NULL;
 
-#if 1
+#if 0
 	m_capture = true;
 #else
 	float phase = 0.0;
 	float t = 0.0;
 	for(int i=0; i<m_srate; i++) {
-		float f = i / 2.0;
-		float v = sinf(2.0 * M_PI * phase);
-		float v2 = 0.01 * sinf(t * 2.0 * M_PI * 8000.0) + rand() / (float)RAND_MAX * 0.1f - 0.05f;
-		float data[8] = { v, v * i/m_srate, v2, 0.0, 0.0, 0.0, 0.0, 0.0 };
+		float ampl = i / (float)m_srate;
+		// exponential from -100dB to 0dB
+		float ampe = powf(10.0f, 5.0f * (ampl - 1.0f));
+		float data[8] = { 
+			       sinf(t * 2.0 * M_PI * 5000.0), // tone @ 0dB
+			0.1f * sinf(t * 2.0 * M_PI * 6000.0), // tone @ -20dB
+			0.1f * sinf(t * 2.0 * M_PI * 7000.0) + 0.1f, // tone @ -20dB + DC @ -20dB
+		    0.1f * sinf(t * 2.0 * M_PI * 8000.0) + rand() / (float)RAND_MAX * 0.1f - 0.05f, // tone @ -20dB + noise @ -60dB
+			ampl * sinf(t * 2.0 * M_PI * 9000.0), // tone ramp from -inf to 0dB, linear
+			ampe * sinf(t * 2.0 * M_PI *10000.0), // tone ramp from -inf to 0dB, exp
+		    1.0f * sinf(2.0 * M_PI * phase),      // sweep @ 0dB
+			0.0f
+		};
+		data[7] = data[0] + data[1] + data[2] + data[3] + data[4] + data[5] + data[6];
 		m_streams.write(data, 1);
+		float f = i / 2.0;
 		phase += f / m_srate;
 		t += 1.0 / m_srate;
 	}

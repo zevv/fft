@@ -48,15 +48,17 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 	ImGui::SameLine();
 	ImGui::Checkbox("AGC", &m_agc);
 
-	ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
-	ImGui::Text("t=%.4gs", m_idx_cursor / view.srate);
 		   
 	if(ImGui::IsWindowFocused()) {
+	
+		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
+		ImGui::Text("t=%.4gs", m_idx_cursor / view.srate);
+
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
 			pan(-dx_to_didx(ImGui::GetIO().MouseDelta.x, r));
 			zoom(ImGui::GetIO().MouseDelta.y / 100.0);
 		}
-		if(ImGui::IsKeyPressed(ImGuiKey_R)) {
+		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
 			size_t used;
 			size_t stride;
 			streams.peek(0, 0, stride, &used);

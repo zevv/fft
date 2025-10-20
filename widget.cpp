@@ -156,8 +156,8 @@ float Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
 	SDL_FPoint p_min[2048];
 	SDL_FRect rects[2048];
 
-	float y_off = r.y + r.h / 2.0f;
-	float y_scale = (r.h - 2) / (y_max - y_min);
+	float y_scale = (r.h - 2) / (y_min - y_max);
+	float y_off = r.y - y_max * y_scale;
 	float v_peak = 0.0;
 
 	int npoints = 0;
@@ -170,7 +170,7 @@ float Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
 		int idx_end   = idx_from + ((x + step) * (idx_to - idx_from)) / r.w;
 
 		if(idx_end   >= idx_max) break;
-		if(idx_start <= idx_min) continue;
+		if(idx_start <  idx_min) continue;
 
 		float vmin = data[stride * idx_start];
 		float vmax = data[stride * idx_start];
@@ -185,9 +185,9 @@ float Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
 		}
 
 		p_min[npoints].x = r.x + x;
-		p_min[npoints].y = vmin * y_scale + y_off;
+		p_min[npoints].y = vmin  * y_scale + y_off;
 		p_max[npoints].x = r.x + x;
-		p_max[npoints].y = vmax * y_scale + y_off;
+		p_max[npoints].y = vmax  * y_scale + y_off;
 		npoints++;
 
 		if(vmax > vmin) {

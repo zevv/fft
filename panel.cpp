@@ -157,11 +157,6 @@ void Panel::update_kid(Panel *pk, int dx1, int dy1, int dx2, int dy2)
 {
 	size_t nkids = m_kids.size();
 
-	float total_weight = 0.0f;
-	for(auto &k : m_kids) {
-		total_weight += k->m_weight;
-	}
-
 	if(m_type == Type::SplitH) {
 		for(size_t i=0; i<m_kids.size(); i++) {
 			if(m_kids[i] == pk) {
@@ -219,7 +214,6 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 	if(m_type == Type::SplitH) {
 		int kx = x;
 		for(auto &pk : m_kids) {
-			bool last = (&pk == &m_kids.back());
 			int kw = pk->m_weight * (w-1);
 			pk->draw(view, streams, rend, kx, y, kw, h);
 			kx += kw + 1;
@@ -230,7 +224,6 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 	if(m_type == Type::SplitV) {
 		int ky = y;
 		for(auto &pk : m_kids) {
-			bool last = (&pk == &m_kids.back());
 			int kh = pk->m_weight * (h-1);
 			pk->draw(view, streams, rend, x, ky, w, kh);
 			ky += kh + 1;
@@ -259,6 +252,8 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 			ImGui::SetNextWindowBgAlpha(0.25f);
 			ImGui::Begin(m_title, nullptr, flags);
 		}
+
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
 
 		if(ImGui::IsWindowHovered() && 
 		   !ImGui::IsMouseDragging(ImGuiMouseButton_Left) && 
@@ -292,7 +287,6 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 			}
 			if(ImGui::IsKeyPressed(ImGuiKey_X)) {
 				if(m_parent && m_parent->get_type() != Type::Root) {
-					Panel *pp = m_parent;
 					m_parent->remove(this);
 				}
 			}
@@ -317,6 +311,7 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 		m_widget->draw(view, streams, rend, r);
 		SDL_SetRenderClipRect(rend, nullptr);
 
+		ImGui::PopStyleVar();
 		ImGui::End();
 
 	} 

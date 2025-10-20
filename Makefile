@@ -13,11 +13,12 @@ SRC += stream.cpp
 SRC += config.cpp
 SRC += rb.cpp
 SRC += $(IMGUI_DIR)/imgui.cpp 
-SRC += $(IMGUI_DIR)/imgui_demo.cpp
+#SRC += $(IMGUI_DIR)/imgui_demo.cpp
 SRC += $(IMGUI_DIR)/imgui_draw.cpp 
 SRC += $(IMGUI_DIR)/imgui_tables.cpp
 SRC += $(IMGUI_DIR)/imgui_widgets.cpp
-SRC += $(IMGUI_DIR)/backends/imgui_impl_sdl3.cpp $(IMGUI_DIR)/backends/imgui_impl_sdlrenderer3.cpp
+SRC += $(IMGUI_DIR)/backends/imgui_impl_sdl3.cpp
+SRC += $(IMGUI_DIR)/backends/imgui_impl_sdlrenderer3.cpp
 
 OBJS = $(SRC:.cpp=.o)
 DEPS = $(OBJS:.o=.d)
@@ -25,18 +26,29 @@ DEPS = $(OBJS:.o=.d)
 CXXFLAGS += -std=c++17 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 CXXFLAGS += -g 
 CXXFLAGS += -Wall -Wformat -Werror
-CXXFLAGS += -Wno-unused-but-set-variable
-CXXFLAGS += -Wno-unused-variable
+#CXXFLAGS += -Wno-unused-but-set-variable -Wno-unused-variable
 CXXFLAGS += -O3
 CXXFLAGS += -MMD
-CXXFLAGS += -ffast-math
+#CXXFLAGS += -ffast-math
 
 CXXFLAGS += `pkg-config sdl3 fftw3 fftw3f --cflags`
 LIBS += -ldl `pkg-config sdl3 fftw3 fftw3f --libs`
 
+ifdef clang
+CXX=clang++-19
+LD=clang++-19
+endif
+
 ifdef asan
-CXXFLAGS += -fsanitize=address
-LDFLAGS += -fsanitize=address
+CXXFLAGS += -fsanitize=address -fsanitize-memory-track-origins=2
+LDFLAGS += -fsanitize=address -fsanitize-memory-track-origins=2
+endif
+
+ifdef smem
+CXX=clang++-19
+LD=clang++-19
+CXXFLAGS += -fsanitize=memory -fsanitize-memory-track-origins=2
+LDFLAGS += -fsanitize=memory -fsanitize-memory-track-origins=2
 endif
 
 CFLAGS = $(CXXFLAGS)

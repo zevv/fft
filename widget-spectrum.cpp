@@ -74,12 +74,21 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 	update |= ImGui::Combo("##window", (int *)&m_window_type, 
 			Window::type_names(), Window::type_count());
 	
-	ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
-	ImGui::Text("f=%.7gHz", m_freq_cursor * view.srate * 0.5);
-	ImGui::SameLine();
-	ImGui::Text("amp=%.2fdB", m_amp_cursor);
+	if(m_window_type == Window::Type::Gauss || 
+	   m_window_type == Window::Type::Kaiser) {
+		ImGui::SameLine();
+		ImGui::SetNextItemWidth(100);
+		bool changed = ImGui::SliderFloat("beta", &m_window_beta, 
+				0.0f, 5.0f, "%.2f", ImGuiSliderFlags_Logarithmic);
+		if(changed) {
+			m_window.configure(m_window_type, m_size, m_window_beta);
+		}
+	}
 
 	if(widget.has_focus()) {
+	
+		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
+		ImGui::Text("f=%.6gHz amp=%.2fdB", m_freq_cursor * view.srate * 0.5, m_amp_cursor);
 
 		auto pos = ImGui::GetIO().MousePos;
 		if(pos.x >= 0) {
@@ -91,7 +100,7 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 			zoom(ImGui::GetIO().MouseDelta.y / 100.0f);
 		}
 	
-		if(ImGui::IsKeyPressed(ImGuiKey_R)) {
+		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
 			m_freq_from = 0.0f;
 			m_freq_to = 1.0;
 		}
@@ -108,18 +117,6 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		configure_fft(m_size, m_window_type);
 	}
 
-	if(m_window_type == Window::Type::Gauss) {
-		ImGui::SameLine();
-		ImGui::SetNextItemWidth(100);
-		bool changed = ImGui::SliderFloat("beta", &m_window_beta, 
-				0.0f, 40.0f, "%.2f", ImGuiSliderFlags_Logarithmic);
-		if(changed) {
-			m_window.configure(m_window_type, 
-					                    m_size, m_window_beta);
-		}
-	}
-
-	size_t npoints = m_size / 2 + 1;
 	
 	// grid
 
@@ -150,21 +147,28 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		}
 
 		fftwf_execute(m_plan);
+		float scale = 2.0f / m_size;
 
-		float scale = 2.0f / (float)m_size * m_window.gain();
+		float vmax = -100000;
 		for(int i=0; i<m_size; i++) {
-			float v;
-			     if(i == 0) v = fabsf(m_out[0]);
-			else if(i < m_size / 2) v = hypotf(fabsf(m_out[i]), fabsf(m_out[m_size - i]));
-			else if(i == m_size / 2) v = fabsf(m_out[m_size / 2]);
-			else v = 0.0f;
+			float v = 0.0;
+			if(i == 0) {
+				v = m_out[0] / m_size;
+			} else if(i < m_size / 2) {
+				v = hypotf(m_out[i], m_out[m_size - i]) * scale;
+			} else if(i == m_size / 2) {
+				v = fabsf(m_out[m_size / 2]) / m_size;
+			} 
 			m_out[i] = (v >= 1e-20f) ? 20.0f * log10f(v) : -100.0f;
+			if(m_out[i] > vmax) vmax = m_out[i];
 		}
 
+		size_t npoints = m_size / 2 + 1;
 		ImVec4 col = widget.channel_color(ch);
 		widget.graph(rend, r, col, m_out.data(), 1,
-				m_freq_from * npoints, m_freq_to * npoints, 0, npoints,
-				0, -100);
+				m_freq_from * npoints, m_freq_to * npoints,
+				0, npoints,
+				-100.0, 0.0);
 	}
 	
 	// cursor

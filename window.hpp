@@ -6,7 +6,7 @@ class Window {
 
 public:
 	enum class Type : int {
-		Square, Hamming, Hanning, Blackman, Gauss
+		Square, Hamming, Hanning, Blackman, Gauss, Kaiser
 	};
 
 	static const char **type_names();

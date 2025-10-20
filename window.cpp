@@ -3,6 +3,32 @@
 #include <stdio.h>
 #include "window.hpp"
 
+float kaiser(float x, float beta)
+{
+	float I0_beta = 1.0f;
+	float factorial = 1.0f;
+	float beta_over_2 = beta / 2.0f;
+	float x_pow_2n = 1.0f;
+	const int N = 25;
+	for(int n=1; n<=N; n++) {
+		factorial *= (float)n;
+		x_pow_2n *= (beta_over_2 * beta_over_2);
+		I0_beta += x_pow_2n / (factorial * factorial);
+	}
+
+	float arg = beta * sqrtf(1.0f - 4.0f * (x - 0.5f) * (x - 0.5f));
+	float I0_arg = 1.0f;
+	factorial = 1.0f;
+	x_pow_2n = 1.0f;
+	for(int n=1; n<=N; n++) {
+		factorial *= (float)n;
+		x_pow_2n *= (arg * arg);
+		I0_arg += x_pow_2n / (factorial * factorial);
+	}
+
+	return I0_arg / I0_beta;
+}
+
 
 void Window::configure(Window::Type type, size_t size, float beta)
 {
@@ -23,6 +49,9 @@ void Window::configure(Window::Type type, size_t size, float beta)
 		float y = 1.0f;
 
 		switch(type) {
+		case Type::Square:
+			y = 1.0f;
+			break;
 		case Type::Hamming:
 			y = 0.54f - 0.46f * cosf(2.0f * M_PI * x);
 			break;
@@ -35,8 +64,8 @@ void Window::configure(Window::Type type, size_t size, float beta)
 		case Type::Gauss:
 			y = exp(-2.0f * beta * beta * (x - 0.5f) * (x - 0.5f));
 			break;
-		case Type::Square:
-			y = 1.0f;
+		case Type::Kaiser:
+			y = kaiser(x, beta);
 			break;
 		}
 		m_data[i] = y;
@@ -48,7 +77,7 @@ void Window::configure(Window::Type type, size_t size, float beta)
 
 
 static const char *k_window_str[] = { 
-	"square", "hanning", "hamming", "blackman", "gauss" 
+	"square", "hanning", "hamming", "blackman", "gauss", "kaiser"
 };
 
 

@@ -10,7 +10,6 @@ class View {
 
 public:
 	View()
-		: m_width_min(100)
 	{
 		reset();
 	}
@@ -42,7 +41,4 @@ public:
 	float srate;
 	Window *window;
 
-private:
-
-	float m_width_min;
 };
