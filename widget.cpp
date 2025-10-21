@@ -104,8 +104,13 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r
 		ImGui::PopStyleColor(3);
 	}
 
-	if(ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey_0)) {
-		for(int i=0; i<8; i++) m_channel_map[i] ^= 1;
+	if(ImGui::IsWindowFocused()) {
+		if(ImGui::IsKeyPressed(ImGuiKey_0)) {
+			for(int i=0; i<8; i++) m_channel_map[i] ^= 1;
+		}
+		if(ImGui::IsKeyPressed(ImGuiKey_F1)) m_type = Type::Waveform;
+		if(ImGui::IsKeyPressed(ImGuiKey_F2)) m_type = Type::Spectrum;
+		if(ImGui::IsKeyPressed(ImGuiKey_F3)) m_type = Type::Waterfall;
 	}
 
 	ImVec2 cursor = ImGui::GetCursorScreenPos();

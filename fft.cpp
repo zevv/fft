@@ -47,8 +47,12 @@ std::vector<Sample> &Fft::run(std::vector<Sample> &input)
 	assert(m_in.size() == input.size());
 	assert(m_window.size() == input.size());
 
-	void *p = (void *)input.data();
-	auto it = m_cache.find(p);
+	Sample key = 0;
+	for(auto v : input) {
+		key += v;
+	}
+
+	auto it = m_cache.find(key);
 	if(it != m_cache.end()) {
 		return it->second;
 	}
@@ -76,7 +80,7 @@ std::vector<Sample> &Fft::run(std::vector<Sample> &input)
 		m_out[i] = (v >= 1e-20f) ? 20.0f * log10f(v) : db_range;
 	}
 
-	m_cache[p] = m_out;
+	m_cache[key] = m_out;
 
 	return m_out;
 }

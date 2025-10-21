@@ -24,5 +24,5 @@ private:
 	Window m_window{};
 	std::vector<float> m_in;
 	std::vector<Sample> m_out;
-	std::map<void *p, std::vector<Sample>> m_cache;
+	std::map<Sample, std::vector<Sample>> m_cache;
 };

@@ -147,7 +147,7 @@ void Waterfall::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer 
 	SDL_LockTexture(tex, nullptr, (void **)&pixels, &pitch);
 	memset(pixels, 0, pitch * r.h);
 
-	float db_range = -80.0;
+	float db_range = -100.0;
 	if(0) {
 		widget.grid_time_v(rend, r, y_to_t(r.y, r), y_to_t(r.y + r.h, r));
 	}
