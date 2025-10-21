@@ -65,7 +65,7 @@ std::vector<Sample> &Fft::run(std::vector<Sample> &input)
 	}
 	fftwf_execute(m_plan);
 
-	float scale = 2.0f / size;
+	float scale = m_window.gain() * 2.0f / size;
 	float db_range = -120.0;
 
 	for(size_t i=0; i<size; i++) {

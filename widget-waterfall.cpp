@@ -147,7 +147,7 @@ void Waterfall::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer 
 	SDL_LockTexture(tex, nullptr, (void **)&pixels, &pitch);
 	memset(pixels, 0, pitch * r.h);
 
-	float db_range = -100.0;
+	float db_range = -80.0;
 	if(0) {
 		widget.grid_time_v(rend, r, y_to_t(r.y, r), y_to_t(r.y + r.h, r));
 	}
@@ -198,12 +198,17 @@ void Waterfall::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer 
 		}
 
 		for(int x=0; x<fft_w; x++) {
-			uint8_t r = std::min(row[x].r, 255.0f);
-			uint8_t g = std::min(row[x].g, 255.0f);
-			uint8_t b = std::min(row[x].b, 255.0f);
+			if(row[x].r > m_peak) m_peak = row[x].r;
+			if(row[x].g > m_peak) m_peak = row[x].g;
+			if(row[x].b > m_peak) m_peak = row[x].b;
+			uint8_t r = std::min(row[x].r / m_peak * 255, 255.0f);
+			uint8_t g = std::min(row[x].g / m_peak * 255, 255.0f);
+			uint8_t b = std::min(row[x].b / m_peak * 255, 255.0f);
 			pixels[y * (pitch / 4) + x] = (0xff << 24) | (b << 16) | (g << 8) | r;
 		}
 	}
+
+	m_peak *= 0.95;
 
 	SDL_UnlockTexture(tex);
 	SDL_FRect dest;

@@ -70,11 +70,7 @@ void Window::configure(Window::Type type, size_t size, float beta)
 		sum += y;
 	}
 
-	Sample m_gain = (float)size / sum;
-
-	for(size_t i=0; i<size; i++) {
-		m_data[i] *= m_gain;
-	}
+	m_gain = (float)size / sum;
 }
 
 

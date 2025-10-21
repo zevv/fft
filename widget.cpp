@@ -55,8 +55,8 @@ void Widget::save(ConfigWriter &cw)
 	cw.write("channel_map", channel_map);
 
 	if(m_type == Type::Waveform) m_waveform.save(cw);
-	if(m_type == Type::Spectrum) { m_spectrum.save(cw);
-	if(m_type == Type::Waterfall) m_spectrum.save(cw); }
+	if(m_type == Type::Spectrum) m_spectrum.save(cw);
+	if(m_type == Type::Waterfall) m_waterfall.save(cw);
 
 	cw.pop();
 

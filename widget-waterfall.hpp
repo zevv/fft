@@ -76,5 +76,6 @@ private:
 	std::vector<Sample> m_out_graph;
 	Window m_window;
 	Fft m_fft{};
+	Sample m_peak{};
 };
 
