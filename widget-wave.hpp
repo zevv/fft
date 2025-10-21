@@ -10,12 +10,14 @@
 class Widget;
 
 class Waveform {
+
 public:
 	Waveform();
 	void load(ConfigReader::Node *node);
 	void save(ConfigWriter &cfg);
 	void copy_to(Waveform &w);
 	void draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
+
 private:
 
 	Time x_to_t(float x, SDL_Rect &r) {

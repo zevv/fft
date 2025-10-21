@@ -8,7 +8,7 @@
 #include <imgui.h>
 
 #include "widget.hpp"
-		
+#include "widget-spectrum.hpp"
 
 
 Spectrum::Spectrum()
@@ -24,6 +24,7 @@ Spectrum::~Spectrum()
 		m_plan = nullptr;
 	}
 }
+
 
 void Spectrum::load(ConfigReader::Node *node)
 {
@@ -121,21 +122,10 @@ void Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 		configure_fft(m_size, m_window_type);
 	}
 
-	
-	// grid
-	
-	float db_range = -120.0;
 
-	SDL_SetRenderDrawColor(rend, 64, 64, 64, 255);
-	ImDrawList* dl = ImGui::GetWindowDrawList();
-	for(float dB=db_range; dB<=0.0f; dB+=10.0f) {
-		int y = r.y - dB * r.h / -db_range;
-		SDL_RenderLine(rend, r.x, y, r.x + r.w, y);
-		char buf[32];
-		snprintf(buf, sizeof(buf), "%+.0f", dB);
-		dl->AddText(ImVec2((float)r.x + 4, y), ImColor(64, 64, 64, 255), buf);
-	}
-	
+	float db_range = -120.0;
+	widget.grid_vertical(rend, r, db_range, 0);
+
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
 	// spectograms

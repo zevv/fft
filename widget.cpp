@@ -1,6 +1,7 @@
 
 #include <math.h>
 #include <assert.h>
+#include <algorithm>
 
 #include <SDL3/SDL.h>
 #include <imgui.h>
@@ -130,6 +131,51 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r
 
 	SDL_SetRenderClipRect(rend, nullptr);
 }
+
+void Widget::grid_time(SDL_Renderer *rend, SDL_Rect &r, Time t_min, Time t_max)
+{
+	for(int n=6; n>=-9; n--) {
+		Time base = pow(10.0f, n);
+		float dx = r.w * base / (t_max - t_min);
+		if(dx < 10) break;
+
+		int col = std::clamp((int)(dx-10) * 4, 0, 64);
+		SDL_SetRenderDrawColor(rend, col, col, col, 255);
+
+		Time t_start = ceilf(t_min / base) * base;
+		Time t_end   = floorf(t_max / base) * base;
+		Time t = t_start;
+		while(t <= t_end) {
+			int x = r.x + (int)((t - t_min) / (t_max - t_min) * r.w);
+			SDL_RenderLine(rend, x, r.y, x, r.y + r.h);
+			t += base;
+		}
+	}
+}
+
+void Widget::grid_vertical(SDL_Renderer *rend, SDL_Rect &r, Sample v_min, Sample v_max)
+{
+	for(int n=6; n>=-6; n--) {
+		Sample base = pow(10.0f, n);
+
+		float dy = (base / (v_max - v_min)) * r.h;
+		if(dy < 10) break;
+
+		int col = std::clamp((int)(dy-10) * 4, 0, 64);
+		SDL_SetRenderDrawColor(rend, col, col, col, 255);
+
+		Sample v_start = ceilf(v_min / base) * base;
+		Sample v_end   = floorf(v_max / base) * base;
+		Sample v = v_start;
+		while(v <= v_end) {
+			int y = r.y + r.h - (int)((v - v_min) / (v_max - v_min) * r.h);
+			SDL_RenderLine(rend, r.x, y, r.x + r.w, y);
+			v += base;
+		}
+	}
+
+}
+	
 
 
 Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r, ImVec4 &col,

@@ -9,7 +9,6 @@
 
 #include "widget.hpp"
 #include "widget-wave.hpp"
-#include "config.hpp"
 
 Waveform::Waveform()
 {
@@ -76,9 +75,10 @@ void Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 		}
 		m_t_cursor = view.cursor;
 	}
-	
-	if(m_t_to < m_t_from + 0.0001) { // TODO
-		m_t_from = m_t_to - 0.0001;
+
+	Time dt_min = 16.0 / view.srate;
+	if(m_t_to - m_t_from < dt_min) {
+		m_t_from = m_t_to - dt_min;
 	}
 
 	Sample scale = k_sample_max;
@@ -106,6 +106,8 @@ void Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 			m_peak = peak;
 		}
 	}
+
+	widget.grid_time(rend, r, x_to_t(r.x, r), x_to_t(r.x + r.w, r));
 
 	// cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
