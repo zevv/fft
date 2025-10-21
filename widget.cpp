@@ -37,6 +37,7 @@ void Widget::load(ConfigReader::Node *n)
 		}
 		if(m_type == Type::Waveform) m_waveform.load(n->find("waveform"));
 		if(m_type == Type::Spectrum) m_spectrum.load(n->find("spectrum"));
+		if(m_type == Type::Waterfall) m_spectrum.load(n->find("waterfall"));
 	}
 }
 
@@ -53,13 +54,9 @@ void Widget::save(ConfigWriter &cw)
 	cw.write("type", Widget::type_to_string(m_type));
 	cw.write("channel_map", channel_map);
 
-	if(m_type == Type::Waveform) {
-		m_waveform.save(cw);
-	}
-
-	if(m_type == Type::Spectrum) {
-		m_spectrum.save(cw);
-	}
+	if(m_type == Type::Waveform) m_waveform.save(cw);
+	if(m_type == Type::Spectrum) { m_spectrum.save(cw);
+	if(m_type == Type::Waterfall) m_spectrum.save(cw); }
 
 	cw.pop();
 
@@ -74,6 +71,7 @@ Widget *Widget::copy(void)
 	}
 	m_waveform.copy_to(w->m_waveform);
 	m_spectrum.copy_to(w->m_spectrum);
+	m_waterfall.copy_to(w->m_waterfall);
 	return w;
 }
 
@@ -121,15 +119,11 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r
 	};
 
 	SDL_SetRenderClipRect(rend, &r);
-	if(m_type == Type::None) {
 
-	} else if(m_type == Type::Spectrum) {
-		m_spectrum.draw(*this, view, streams, rend, r);
-	} else if(m_type == Type::Waterfall) {
-		ImGui::ShowStyleEditor();
-	} else if(m_type == Type::Waveform) {
-		m_waveform.draw(*this, view, streams, rend, r);
-	}
+	if(m_type == Type::Waveform) m_waveform.draw(*this, view, streams, rend, r);
+	if(m_type == Type::Spectrum) m_spectrum.draw(*this, view, streams, rend, r);
+	if(m_type == Type::Waterfall) m_waterfall.draw(*this, view, streams, rend, r);
+	
 
 	SDL_SetRenderClipRect(rend, nullptr);
 }
@@ -176,6 +170,31 @@ void Widget::grid_time(SDL_Renderer *rend, SDL_Rect &r, Time t_min, Time t_max)
 		}
 	}
 }
+
+void Widget::grid_time_v(SDL_Renderer *rend, SDL_Rect &r, Time t_min, Time t_max)
+{
+	ImDrawList* dl = ImGui::GetWindowDrawList();
+	for(auto &u : units) {
+		double dy = r.h * u.base / (t_max - t_min);
+		if(dy < 10) break;
+		int col = std::clamp((int)(dy-10) * 4, 0, 64);
+		SDL_SetRenderDrawColor(rend, col, col, col, 255);
+		Time t_start = ceilf(t_min / u.base) * u.base;
+		Time t_end   = floorf(t_max / u.base) * u.base;
+		Time t = t_start;
+		while(t <= t_end) {
+			int y = r.y + (int)((t - t_min) / (t_max - t_min) * r.h);
+			SDL_RenderLine(rend, r.x, y, r.x + r.w, y);
+			if(dy > 50) {
+				char buf[32];
+				snprintf(buf, sizeof(buf), u.fmt, fabs(t * u.scale));
+				dl->AddText(ImVec2(r.x + 2, y - 3), 0xFF808080, buf);
+			}
+			t += u.base;
+		}
+	}
+}
+
 
 void Widget::grid_vertical(SDL_Renderer *rend, SDL_Rect &r, Sample v_min, Sample v_max)
 {

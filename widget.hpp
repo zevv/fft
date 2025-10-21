@@ -10,6 +10,7 @@
 #include "types.hpp"
 #include "widget-wave.hpp"
 #include "widget-spectrum.hpp"
+#include "widget-waterfall.hpp"
 
 
 class Widget {
@@ -39,6 +40,7 @@ private:
 
 	friend class Waveform;
 	friend class Spectrum;
+	friend class Waterfall;
 
 	bool channel_enabled(int channel) const { return m_channel_map[channel]; }
 	SDL_Color channel_color(int channel);
@@ -50,11 +52,13 @@ private:
 
 	void grid_vertical(SDL_Renderer *rend, SDL_Rect &r, Sample v_from, Sample v_to);
 	void grid_time(SDL_Renderer *rend, SDL_Rect &r, Time t_from, Time t_to);
+	void grid_time_v(SDL_Renderer *rend, SDL_Rect &r, Time t_from, Time t_to);
 
 	Type m_type;
 	bool m_channel_map[8];
 	class Waveform m_waveform;
 	class Spectrum m_spectrum;
+	class Waterfall m_waterfall;
 
 	bool m_has_focus;
 };
