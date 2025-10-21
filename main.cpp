@@ -144,7 +144,7 @@ void Corrie::init()
 	io.IniFilename = NULL;
 	io.LogFilename = NULL;
 
-#if 0
+#if 1
 	m_capture = true;
 #else
 	double phase = 0.0;
@@ -352,7 +352,6 @@ void Corrie::exit()
 
 int main(int, char**)
 {
-	SDL_SetHint(SDL_HINT_RENDER_LINE_METHOD, "3");
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 
 	Corrie cor = Corrie(nullptr, nullptr);
