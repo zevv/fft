@@ -58,7 +58,7 @@ private:
 	}
 
 	Time dy_to_dt(float dy, SDL_Rect &r) {
-		return dy * (m_t_to - m_t_from) / r.w;
+		return dy * (m_t_to - m_t_from) / r.h;
 	}
 
 	int m_size{256};
