@@ -19,10 +19,6 @@ Spectrum::Spectrum()
 
 Spectrum::~Spectrum()
 {
-	if(m_plan) {
-		FFTW_DESTROY_PLAN(m_plan);
-		m_plan = nullptr;
-	}
 }
 
 
@@ -75,6 +71,10 @@ void Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 	update |= ImGui::Combo("##window", (int *)&m_window_type, 
 			Window::type_names(), Window::type_count());
 	
+	if(update) {
+		configure_fft(m_size, m_window_type);
+	}
+
 	if(m_window_type == Window::Type::Gauss || 
 	   m_window_type == Window::Type::Kaiser) {
 		ImGui::SameLine();
@@ -82,7 +82,7 @@ void Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 		bool changed = ImGui::SliderFloat("beta", &m_window_beta, 
 				0.0f, 5.0f, "%.2f", ImGuiSliderFlags_Logarithmic);
 		if(changed) {
-			m_window.configure(m_window_type, m_size, m_window_beta);
+			m_fft.set_window(m_window_type, m_size, m_window_beta);
 		}
 	}
 
@@ -114,13 +114,7 @@ void Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 	if(m_freq_from < 0.0f) m_freq_from = 0.0f;
 	if(m_freq_to > 1.0f) m_freq_to = 1.0f;
 
-	if(ImGui::IsWindowFocused()) {
-		view.window = &m_window;
-	}
 	
-	if(update) {
-		configure_fft(m_size, m_window_type);
-	}
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
@@ -130,39 +124,26 @@ void Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 
 	// spectograms
 		
-	const Sample *w = m_window.data();
-
 	for(int ch=0; ch<8; ch++) {
 		if(!widget.channel_enabled(ch)) continue;
 
 		size_t stride = 0;
 		size_t avail = 0;
 		Sample *data = streams.peek(ch, 0, stride, &avail);
-		int idx = ((int)(view.srate * view.cursor) - m_window.size() / 2) * stride;;
+		//int idx = ((int)(view.srate * view.cursor) - m_window.size() / 2) * stride;; TODO
+		int idx = ((int)(view.srate * view.cursor)) * stride;;
 
 		for(int i=0; i<m_size; i++) {
 			Sample v = 0;
 			if(idx >= 0 && idx < (int)(avail * stride)) {
 				v = data[idx];
 			}
-			m_in[i] = v * w[i];
+			m_in[i] = v;
 			idx += stride;;
 		}
 
-		FFTW_EXECUTE(m_plan);
-		float scale = 2.0f / m_size / k_sample_max;
-
-		for(int i=0; i<m_size; i++) {
-			SampleFFTW v = 0.0;
-			if(i == 0) {
-				v = m_out[0] * scale / 2;
-			} else if(i < m_size / 2) {
-				v = hypot(m_out[i], m_out[m_size - i]) * scale;
-			} else if(i == m_size / 2) {
-				v = fabs(m_out[m_size / 2]) * scale / 2;
-			} 
-			m_out_graph[i] = (v >= 1e-20f) ? 20.0f * log10f(v) : db_range;
-		}
+		auto m_out_graph = m_fft.run(m_in);
+		// float scale = 2.0f / m_size / k_sample_max; TODO
 
 		size_t npoints = m_size / 2 + 1;
 		SDL_Color col = widget.channel_color(ch);
@@ -186,17 +167,12 @@ void Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 
 void Spectrum::configure_fft(int size, Window::Type window_type)
 {
-	if(m_plan) {
-		FFTW_DESTROY_PLAN(m_plan);
-		m_plan = nullptr;
-	}
 	m_size = size;
 	m_in.resize(size);
-	m_out.resize(size);
 	m_out_graph.resize(size);
 
-	m_plan = FFTW_PLAN_R2R_1D(size, m_in.data(), m_out.data(), FFTW_R2HC, FFTW_ESTIMATE);
+	m_fft.set_size(size);
+	m_fft.set_window(window_type, size, m_window_beta);
 
-	m_window.configure(window_type, size);
 }
 

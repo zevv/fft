@@ -19,10 +19,6 @@ Waterfall::Waterfall()
 
 Waterfall::~Waterfall()
 {
-	if(m_plan) {
-		FFTW_DESTROY_PLAN(m_plan);
-		m_plan = nullptr;
-	}
 }
 
 
@@ -60,6 +56,9 @@ void Waterfall::copy_to(Waterfall &w)
 	w.configure_fft(w.m_size, w.m_window_type);
 };
 
+struct Pixel {
+	float r, g, b;
+};
 
 void Waterfall::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
@@ -133,19 +132,20 @@ void Waterfall::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer 
 	if(m_freq_from < 0.0f) m_freq_from = 0.0f;
 	if(m_freq_to > 1.0f) m_freq_to = 1.0f;
 
-	if(ImGui::IsWindowFocused()) {
-		view.window = &m_window;
-	}
 	
 	if(update) {
 		configure_fft(m_size, m_window_type);
 	}
 
-	int fft_w = m_window.size() / 2 + 1;
+	auto window = m_window.data();
+
+	int fft_w = window.size() / 2 + 1;
 	SDL_Texture *tex = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA32,
 			SDL_TEXTUREACCESS_STREAMING, fft_w, r.h);
-
-	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
+	uint32_t *pixels;
+	int pitch;
+	SDL_LockTexture(tex, nullptr, (void **)&pixels, &pitch);
+	memset(pixels, 0, pitch * r.h);
 
 	float db_range = -80.0;
 	if(0) {
@@ -156,10 +156,14 @@ void Waterfall::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer 
 	size_t stride = 0;
 	size_t avail = 0;
 	Sample *data = streams.peek(ch, 0, stride, &avail);
-	const Sample *window = m_window.data();
+
+	std::vector<Pixel> row(m_fft.out_size());
+
+	std::vector<Sample> m_in(m_size);
 
 	for(int y=0; y<r.h; y++) {
 		Time t = y_to_t(r.y + y, r);
+		memset(row.data(), 0, sizeof(Pixel) * row.size());
 
 		for(int ch=0; ch<8; ch++) {
 			if(!widget.channel_enabled(ch)) continue;
@@ -176,43 +180,35 @@ void Waterfall::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer 
 				idx += stride;
 			}
 
-			FFTW_EXECUTE(m_plan);
-			float scale = 2.0f / m_size / k_sample_max;
-			for(int i=0; i<m_size; i++) {
-				SampleFFTW v = 0.0;
-				if(i == 0) {
-					v = m_out[0] * scale / 2;
-				} else if(i < m_size / 2) {
-					v = hypot(m_out[i], m_out[m_size - i]) * scale;
-				} else if(i == m_size / 2) {
-					v = fabs(m_out[m_size / 2]) * scale / 2;
-				} 
-				m_out_graph[i] = (v >= 1e-20f) ? 20.0f * log10f(v) : db_range;
-			}
+			auto m_out_graph = m_fft.run(m_in);
 
-			uint32_t *pixels;
-			int pitch;
-			SDL_LockTexture(tex, nullptr, (void **)&pixels, &pitch);
-			memset(pixels, 0, pitch * r.h);
 
 			for(int x=0; x<fft_w; x++) {
 				float db = m_out_graph[x];
-				uint8_t intensity = 0;
+				float intensity = 0.0;
 				if(db > db_range) {
-					intensity = (uint8_t)(255.0f * (db - db_range) / -db_range);
+					intensity = (db - db_range) / -db_range;
 				}
 				SDL_Color col2 = col;
 				col2.a = intensity;
-				pixels[y * (pitch / 4) + x] = *(uint32_t *)&col2;
+				row[x].r += col2.r * intensity;
+				row[x].g += col2.g * intensity;
+				row[x].b += col2.b * intensity;
 			}
+		}
 
-			SDL_UnlockTexture(tex);
-			SDL_FRect dest;
-			SDL_RectToFRect(&r, &dest);
-			SDL_RenderTexture(rend, tex, nullptr, &dest);
+		for(int x=0; x<fft_w; x++) {
+			uint8_t r = std::min(row[x].r, 255.0f);
+			uint8_t g = std::min(row[x].g, 255.0f);
+			uint8_t b = std::min(row[x].b, 255.0f);
+			pixels[y * (pitch / 4) + x] = (0xff << 24) | (b << 16) | (g << 8) | r;
 		}
 	}
 
+	SDL_UnlockTexture(tex);
+	SDL_FRect dest;
+	SDL_RectToFRect(&r, &dest);
+	SDL_RenderTexture(rend, tex, nullptr, &dest);
 	SDL_DestroyTexture(tex);
 	
 	// cursor
@@ -230,16 +226,12 @@ void Waterfall::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer 
 
 void Waterfall::configure_fft(int size, Window::Type window_type)
 {
-	if(m_plan) {
-		FFTW_DESTROY_PLAN(m_plan);
-		m_plan = nullptr;
-	}
+	m_fft.set_window(m_window_type, m_window_beta);
+	m_fft.set_size(size);
+
 	m_size = size;
 	m_in.resize(size);
-	m_out.resize(size);
 	m_out_graph.resize(size);
-
-	m_plan = FFTW_PLAN_R2R_1D(size, m_in.data(), m_out.data(), FFTW_R2HC, FFTW_ESTIMATE);
 
 	m_window.configure(window_type, size);
 }

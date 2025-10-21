@@ -125,6 +125,7 @@ void Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
 	// window
+	#if 0
 	if(0 && view.window) {
 		size_t wsize = view.window->size();
 		const Sample *wdata = view.window->data();
@@ -142,6 +143,7 @@ void Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 		SDL_SetRenderDrawColor(rend, 255, 255, 255, 128);
 		SDL_RenderLines(rend, p, 66);
 	}
+#endif
 
 	m_peak *= 0.9f;
 }

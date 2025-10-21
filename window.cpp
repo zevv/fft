@@ -32,14 +32,13 @@ float kaiser(float x, float beta)
 
 void Window::configure(Window::Type type, size_t size, float beta)
 {
-	if(m_type == type && m_size == size && m_beta == beta) {
+	if(m_type == type && m_data.size() == size && m_beta == beta) {
 		return;
 	}
 
 	m_type = type;
 	m_beta = beta;
 	m_data.resize(size);
-	m_size = size;
 
 	Sample sum = 0.0f;
 
@@ -76,6 +75,12 @@ void Window::configure(Window::Type type, size_t size, float beta)
 	for(size_t i=0; i<size; i++) {
 		m_data[i] *= m_gain;
 	}
+}
+
+
+void Window::set_size(size_t size)
+{
+	configure(m_type, size, m_beta);
 }
 
 

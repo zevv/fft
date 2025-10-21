@@ -13,6 +13,7 @@ SRC += widget-waterfall.cpp
 SRC += stream.cpp
 SRC += config.cpp
 SRC += rb.cpp
+SRC += fft.cpp
 SRC += $(IMGUI_DIR)/imgui.cpp 
 SRC += $(IMGUI_DIR)/imgui_demo.cpp
 SRC += $(IMGUI_DIR)/imgui_draw.cpp 
@@ -28,7 +29,7 @@ CXXFLAGS += -std=c++17 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 CXXFLAGS += -g 
 CXXFLAGS += -Wall -Wformat -Werror
 CXXFLAGS += -Wno-unused-but-set-variable -Wno-unused-variable
-CXXFLAGS += -O0
+CXXFLAGS += -O3
 CXXFLAGS += -MMD
 #CXXFLAGS += -ffast-math
 
@@ -41,8 +42,8 @@ LD=clang++-19
 endif
 
 ifdef asan
-CXXFLAGS += -fsanitize=address -fsanitize-memory-track-origins=2
-LDFLAGS += -fsanitize=address -fsanitize-memory-track-origins=2
+CXXFLAGS += -fsanitize=address 
+LDFLAGS += -fsanitize=address 
 endif
 
 ifdef smem

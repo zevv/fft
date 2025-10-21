@@ -1,12 +1,12 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-#include <fftw3.h>
 
 #include "config.hpp"
 #include "types.hpp"
 #include "stream.hpp"
 #include "view.hpp"
+#include "fft.hpp"
 
 class Widget;
 
@@ -71,11 +71,10 @@ private:
 	float m_amp_cursor{0.0};
 	Window::Type m_window_type{Window::Type::Hanning};
 	float m_window_beta{5.0f};
-	FFTW_PLAN m_plan{nullptr};
 
-	std::vector<SampleFFTW> m_in;
-	std::vector<SampleFFTW> m_out;
+	std::vector<Sample> m_in;
 	std::vector<Sample> m_out_graph;
 	Window m_window;
+	Fft m_fft{};
 };
 
