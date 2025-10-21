@@ -122,11 +122,11 @@ void Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 		configure_fft(m_size, m_window_type);
 	}
 
+	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
 	float db_range = -120.0;
 	widget.grid_vertical(rend, r, db_range, 0);
 
-	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
 	// spectograms
 		

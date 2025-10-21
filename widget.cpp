@@ -179,21 +179,24 @@ void Widget::grid_time(SDL_Renderer *rend, SDL_Rect &r, Time t_min, Time t_max)
 
 void Widget::grid_vertical(SDL_Renderer *rend, SDL_Rect &r, Sample v_min, Sample v_max)
 {
+	ImDrawList* dl = ImGui::GetWindowDrawList();
 	for(int n=6; n>=-6; n--) {
 		Sample base = pow(10.0f, n);
-
 		float dy = (base / (v_max - v_min)) * r.h;
 		if(dy < 10) break;
-
 		int col = std::clamp((int)(dy-10) * 4, 0, 64);
 		SDL_SetRenderDrawColor(rend, col, col, col, 255);
-
 		Sample v_start = ceilf(v_min / base) * base;
 		Sample v_end   = floorf(v_max / base) * base;
 		Sample v = v_start;
 		while(v <= v_end) {
 			int y = r.y + r.h - (int)((v - v_min) / (v_max - v_min) * r.h);
 			SDL_RenderLine(rend, r.x, y, r.x + r.w, y);
+			if(dy > 20) {
+				char buf[32];
+				snprintf(buf, sizeof(buf), "%.0f", v);
+				dl->AddText(ImVec2(r.x + 2, y), 0xFF808080, buf);
+			}
 			v += base;
 		}
 	}
