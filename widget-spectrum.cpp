@@ -129,16 +129,24 @@ void Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
 	// spectograms
+		
+	const Sample *w = m_window.data();
 
 	for(int ch=0; ch<8; ch++) {
 		if(!widget.channel_enabled(ch)) continue;
 
 		size_t stride = 0;
-		Sample *data = streams.peek(ch, -(view.srate * view.cursor) + m_size, stride);
+		size_t avail = 0;
+		Sample *data = streams.peek(ch, 0, stride, &avail);
+		int idx = ((int)(view.srate * view.cursor) - m_window.size() / 2) * stride;;
 
-		const Sample *w = m_window.data();
 		for(int i=0; i<m_size; i++) {
-			m_in[i] = data[stride * i] * w[i];
+			Sample v = 0;
+			if(idx >= 0 && idx < (int)(avail * stride)) {
+				v = data[idx];
+			}
+			m_in[i] = v * w[i];
+			idx += stride;;
 		}
 
 		FFTW_EXECUTE(m_plan);
@@ -158,9 +166,9 @@ void Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 
 		size_t npoints = m_size / 2 + 1;
 		ImVec4 col = widget.channel_color(ch);
-		widget.graph(rend, r, col, m_out_graph.data(), 1,
+		widget.graph(rend, r, col,
+				m_out_graph.data(), m_out_graph.size(), 1,
 				m_freq_from * npoints, m_freq_to * npoints,
-				0, npoints,
 				db_range, 0.0);
 	}
 	

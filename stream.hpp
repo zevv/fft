@@ -34,7 +34,8 @@ public:
 	{
 		stride = m_channels;
 		if(used) *used = m_used;
-		return (Sample *)m_rb.peek(sizeof(Sample) * ((idx + 1) * m_channels - channel));
+		Sample *data = (Sample *)m_rb.peek();
+		return &data[channel];
 	}
 
 private:

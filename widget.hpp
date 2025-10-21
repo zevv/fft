@@ -39,15 +39,14 @@ private:
 
 	friend class Waveform;
 	friend class Spectrum;
-	
+
 	bool channel_enabled(int channel) const { return m_channel_map[channel]; }
 	ImVec4 channel_color(int channel);
 
-	Sample graph(SDL_Renderer *rend, SDL_Rect &r, 
-					 ImVec4 &col, Sample *data, size_t stride,
-					 float idx_from, float idx_to,
-					 int idx_min, int idx_max,
-					 Sample y_min, Sample y_max);
+	Sample graph(SDL_Renderer *rend, SDL_Rect &r, ImVec4 &col,
+					Sample *data, size_t data_count, size_t stride,
+					float idx_from, float idx_to,
+					Sample y_min, Sample y_max);
 
 	void grid_vertical(SDL_Renderer *rend, SDL_Rect &r, Sample v_from, Sample v_to);
 	void grid_time(SDL_Renderer *rend, SDL_Rect &r, Time t_from, Time t_to);

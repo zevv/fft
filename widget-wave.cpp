@@ -63,8 +63,8 @@ void Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 			size_t used;
 			size_t stride;
 			streams.peek(0, 0, stride, &used);
-			m_t_from = -(Time)used / view.srate;
-			m_t_to   = 0;
+			m_t_from = 0;
+			m_t_to   = used / view.srate;
 		}
 
 		auto pos = ImGui::GetIO().MousePos;
@@ -86,20 +86,23 @@ void Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 		scale = m_peak / 0.9;
 	}
 
+	Sample data2[] = { 0, 1, 2, 3, 4, 3, 2, 1, 0 };
+
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 	for(int ch=0; ch<8; ch++) {
 		if(!widget.channel_enabled(ch)) continue;
 		size_t stride;
-		size_t depth;
-		Sample *data = streams.peek(ch, 0, stride, &depth);
+		size_t avail;
+		Sample *data = streams.peek(ch, 0, stride, &avail);
 		ImVec4 col = widget.channel_color(ch);
 
-		float t_from = view.srate * x_to_t(r.x, r) - 1.0;
-		float t_to   = view.srate * x_to_t(r.x + r.w, r);
+		float idx_from = x_to_t(r.x,       r) * view.srate;
+		float idx_to   = x_to_t(r.x + r.w, r) * view.srate;
 
-		float peak = widget.graph(rend, r, col, data, stride,
-				t_from, t_to, 
-				-(float)depth, 0.0,
+		float peak = widget.graph(rend, r, col,
+				//data, depth, stride,
+				data, avail, stride,
+				idx_from, idx_to,
 				-scale, +scale);
 
 		if(peak > m_peak) {

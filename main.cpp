@@ -144,7 +144,7 @@ void Corrie::init()
 	io.IniFilename = NULL;
 	io.LogFilename = NULL;
 
-#if 1
+#if 0
 	m_capture = true;
 #else
 	double phase = 0.0;

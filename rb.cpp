@@ -11,11 +11,6 @@
 #include "rb.hpp"
 
 Rb::Rb()
-	: m_fd(-1)
-	, m_size(0)
-	, m_head(0)
-	, m_map1(nullptr)
-	, m_map2(nullptr)
 {}
 
 Rb::~Rb()
@@ -48,7 +43,7 @@ void Rb::set_size(size_t size)
 	m_map2 = (uint8_t *)mmap(addr2, size, PROT_READ | PROT_WRITE, MAP_FIXED | MAP_SHARED, m_fd, 0);
 	assert(m_map2 != MAP_FAILED);
 }
-	
+
 
 void Rb::clear()
 {
@@ -76,15 +71,15 @@ void Rb::write(void *data, size_t len)
 	assert(len < m_size);
 	memcpy(m_map1 + m_head, data, len);
 	m_head = (m_head + len) % m_size;
+	m_used += len;
+	if(m_used > m_size) m_used = m_size;
 }
 
 
-void *Rb::peek(size_t idx)
+void *Rb::peek()
 {
-	idx = idx % m_size;
-	size_t off = m_head + m_size - idx;
-	void *rv = m_map1 + off;
-	return rv;
+	size_t off = m_head + m_size - m_used;
+	return m_map1 + off;
 }
 
 

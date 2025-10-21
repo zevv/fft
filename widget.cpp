@@ -174,7 +174,7 @@ void Widget::grid_time(SDL_Renderer *rend, SDL_Rect &r, Time t_min, Time t_max)
 		}
 	}
 }
-	
+
 void Widget::grid_vertical(SDL_Renderer *rend, SDL_Rect &r, Sample v_min, Sample v_max)
 {
 	for(int n=6; n>=-6; n--) {
@@ -197,13 +197,12 @@ void Widget::grid_vertical(SDL_Renderer *rend, SDL_Rect &r, Sample v_min, Sample
 	}
 
 }
-	
+
 
 
 Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r, ImVec4 &col,
-					 Sample *data, size_t stride,
+					 Sample *data, size_t data_count, size_t stride,
 					 float idx_from, float idx_to,
-					 int idx_min, int idx_max,
 					 Sample y_min, Sample y_max)
 {
 	float y_scale = (r.h - 2) / ((float)y_min - (float)y_max);
@@ -215,6 +214,9 @@ Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r, ImVec4 &col,
 	int step = 2;
 	float idx_scale = (idx_to - idx_from) / r.w;
 	int max_points = r.w / step + 1;
+
+	int idx_min = 0;
+	int idx_max = data_count;
 
 	std::vector<SDL_FPoint> p_max(max_points);
 	std::vector<SDL_FPoint> p_min(max_points);
