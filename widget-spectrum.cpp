@@ -11,13 +11,13 @@
 		
 
 
-Widget::Spectrum::Spectrum()
+Spectrum::Spectrum()
 {
 	configure_fft(m_size, m_window_type);
 }
 
 
-Widget::Spectrum::~Spectrum()
+Spectrum::~Spectrum()
 {
 	if(m_plan) {
 		FFTW_DESTROY_PLAN(m_plan);
@@ -25,7 +25,7 @@ Widget::Spectrum::~Spectrum()
 	}
 }
 
-void Widget::Spectrum::load(ConfigReader::Node *node)
+void Spectrum::load(ConfigReader::Node *node)
 {
 	if(!node) return;
 	if(const char *window_type = node->read_str("window_type")) {
@@ -39,7 +39,7 @@ void Widget::Spectrum::load(ConfigReader::Node *node)
 }
 
 
-void Widget::Spectrum::save(ConfigWriter &cw)
+void Spectrum::save(ConfigWriter &cw)
 {
 	cw.push("spectrum");
 	cw.write("fft_size", (int)m_size);
@@ -51,7 +51,7 @@ void Widget::Spectrum::save(ConfigWriter &cw)
 }
 
 
-void Widget::Spectrum::copy_to(Spectrum &w)
+void Spectrum::copy_to(Spectrum &w)
 {
 	w.m_size = m_size;
 	w.m_window_type = m_window_type;
@@ -60,7 +60,7 @@ void Widget::Spectrum::copy_to(Spectrum &w)
 };
 
 
-void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+void Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	bool update = false;
 	
@@ -185,7 +185,7 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 }
 
 
-void Widget::Spectrum::configure_fft(int size, Window::Type window_type)
+void Spectrum::configure_fft(int size, Window::Type window_type)
 {
 	if(m_plan) {
 		FFTW_DESTROY_PLAN(m_plan);

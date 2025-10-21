@@ -8,14 +8,15 @@
 #include <imgui.h>
 
 #include "widget.hpp"
+#include "widget-wave.hpp"
 #include "config.hpp"
 
-Widget::Waveform::Waveform()
+Waveform::Waveform()
 {
 }
 
 
-void Widget::Waveform::load(ConfigReader::Node *node)
+void Waveform::load(ConfigReader::Node *node)
 {
 	if(!node) return;
 	node->read("agc", m_agc);
@@ -24,7 +25,7 @@ void Widget::Waveform::load(ConfigReader::Node *node)
 }
 
 
-void Widget::Waveform::save(ConfigWriter &cw)
+void Waveform::save(ConfigWriter &cw)
 {
 	cw.push("waveform");
 	cw.write("agc", m_agc);
@@ -34,7 +35,7 @@ void Widget::Waveform::save(ConfigWriter &cw)
 }
 
 
-void Widget::Waveform::copy_to(Waveform &w)
+void Waveform::copy_to(Waveform &w)
 {
 	w.m_agc = m_agc;
 	w.m_peak = m_peak;
@@ -44,7 +45,7 @@ void Widget::Waveform::copy_to(Waveform &w)
 }
 
 
-void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+void Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	ImGui::SameLine();
 	ImGui::Checkbox("AGC", &m_agc);

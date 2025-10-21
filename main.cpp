@@ -6,23 +6,15 @@
 #include <math.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <array>
-#include <string.h>
-#include <memory>
 #include <stdio.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_audio.h>
-#include <vector>
-#include <functional>
-#include <memory>
-
 #include <fftw3.h>
 
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
 
-#include "window.hpp"
 #include "panel.hpp"
 #include "widget.hpp"
 #include "stream.hpp"
