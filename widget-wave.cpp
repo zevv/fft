@@ -127,7 +127,7 @@ void Widget::Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 	// window
 	if(0 && view.window) {
 		size_t wsize = view.window->size();
-		const float *wdata = view.window->data();
+		const Sample *wdata = view.window->data();
 		SDL_FPoint p[66];
 		p[0].x = t_to_x(view.cursor, r);
 		p[0].y = r.y + r.h - 1;
