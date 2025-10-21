@@ -63,7 +63,7 @@ void Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 			size_t used;
 			size_t stride;
 			streams.peek(0, 0, stride, &used);
-			m_t_from = -view.srate / used;
+			m_t_from = -(Time)used / view.srate;
 			m_t_to   = 0;
 		}
 
@@ -118,13 +118,6 @@ void Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 	SDL_SetRenderDrawColor(rend, 100, 100, 100, 255);
 	SDL_RenderLine(rend, r.x, r.y + r.h / 2, r.x + r.w, r.y + r.h / 2);
 
-	// zero X
-	float x = t_to_x(0.0f, r);
-	if(x >= r.x && x <= r.x + r.w) {
-		SDL_SetRenderDrawColor(rend, 0, 255, 255, 128);
-		SDL_RenderLine(rend, x, r.y, x, r.y + r.h);
-	}
-	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
 	// window

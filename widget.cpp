@@ -132,27 +132,49 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r
 	SDL_SetRenderClipRect(rend, nullptr);
 }
 
+
+struct Unit {
+	double base;
+	const char *unit;
+	double scale;
+	const char *fmt;
+} units[] = {
+	{ 1e5,   "k", 1e-3, "%.0fk" },
+	{ 1e4,   "k", 1e-3, "%.0fk" },
+	{ 1e3,   "k", 1e-3, "%.0fk" },
+	{ 1e2,   "",  1e0,  "%.0f"  },
+	{ 1e1,   "",  1e0,  "%.0f"  },
+	{ 1e0,   "",  1e0,  "%.0f"  },
+	{ 1e-1,  "",  1e0,  "%.1f" },
+	{ 1e-2,  "",  1e3,  "%.0fm" },
+	{ 1e-3,  "",  1e3,  "%.0fm" },
+	{ 1e-4,  "",  1e3,  "%.1fm" },
+};
+
 void Widget::grid_time(SDL_Renderer *rend, SDL_Rect &r, Time t_min, Time t_max)
 {
-	for(int n=6; n>=-9; n--) {
-		Time base = pow(10.0f, n);
-		float dx = r.w * base / (t_max - t_min);
+	ImDrawList* dl = ImGui::GetWindowDrawList();
+	for(auto &u : units) {
+		double dx = r.w * u.base / (t_max - t_min);
 		if(dx < 10) break;
-
 		int col = std::clamp((int)(dx-10) * 4, 0, 64);
 		SDL_SetRenderDrawColor(rend, col, col, col, 255);
-
-		Time t_start = ceilf(t_min / base) * base;
-		Time t_end   = floorf(t_max / base) * base;
+		Time t_start = ceilf(t_min / u.base) * u.base;
+		Time t_end   = floorf(t_max / u.base) * u.base;
 		Time t = t_start;
 		while(t <= t_end) {
 			int x = r.x + (int)((t - t_min) / (t_max - t_min) * r.w);
 			SDL_RenderLine(rend, x, r.y, x, r.y + r.h);
-			t += base;
+			if(dx > 50) {
+				char buf[32];
+				snprintf(buf, sizeof(buf), u.fmt, fabs(t * u.scale));
+				dl->AddText(ImVec2(x + 2, r.y - 3), 0xFF808080, buf);
+			}
+			t += u.base;
 		}
 	}
 }
-
+	
 void Widget::grid_vertical(SDL_Renderer *rend, SDL_Rect &r, Sample v_min, Sample v_max)
 {
 	for(int n=6; n>=-6; n--) {
