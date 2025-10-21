@@ -47,7 +47,7 @@ std::vector<Sample> &Fft::run(std::vector<Sample> &input)
 	assert(m_in.size() == input.size());
 	assert(m_window.size() == input.size());
 
-	Sample key = 0;
+	double key = 0;
 	for(auto v : input) {
 		key += v;
 	}
