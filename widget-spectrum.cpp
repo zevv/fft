@@ -147,9 +147,8 @@ void Widget::Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Re
 		Sample *data = streams.peek(ch, -(view.srate * view.cursor) + m_size, stride);
 
 		const float *w = m_window.data();
-		float gain = m_window.gain();
 		for(int i=0; i<m_size; i++) {
-			m_in[i] = data[stride * i] * w[i] * gain;
+			m_in[i] = data[stride * i] * w[i];
 		}
 
 		FFTW_EXECUTE(m_plan);

@@ -173,7 +173,7 @@ void Corrie::init()
 		data[3] = k_sample_max * (0.1  * sin(t * 2.0 * M_PI * 7000.0) + rand() / (float)RAND_MAX * 0.001f - 0.0005f); // tone @ -20dB + noise @ -60dB
 		data[4] = k_sample_max * (ampe * sin(t * 2.0 * M_PI * 9000.0)); // tone ramp from -inf to 0dB, exp
 		data[5] = k_sample_max * (1.0f * cos(    2.0 * M_PI * phase));      // sweep @ 0dB
-		data[6] = k_sample_max * (phase - 0.5f);                     // saw ramp @ 0dB
+		data[6] = k_sample_max * (phase - 0.5f) * 0.01;                    // saw ramp @ 0dB
 		data[7] = k_sample_max * (rand() / (float)RAND_MAX * 2.0f - 1.0f); // full scale noise
 		m_streams.write(data, 1);
 		Frequency f = i / 2.0;

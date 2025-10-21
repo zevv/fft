@@ -41,12 +41,12 @@ void Window::configure(Window::Type type, size_t size, float beta)
 	m_data.resize(size);
 	m_size = size;
 
-	float sum = 0.0f;
+	Sample sum = 0.0f;
 
 	for(size_t i=0; i<size; i++) {
 		float x = (float)i / (float)(size - 1);
 
-		float y = 1.0f;
+		Sample y = 1.0f;
 
 		switch(type) {
 		case Type::Square:
@@ -72,7 +72,11 @@ void Window::configure(Window::Type type, size_t size, float beta)
 		sum += y;
 	}
 
-	m_gain = (float)size / sum;
+	Sample m_gain = (float)size / sum;
+
+	for(size_t i=0; i<size; i++) {
+		m_data[i] *= m_gain;
+	}
 }
 
 
