@@ -32,49 +32,43 @@
 
 class Corrie {
 public:
-    Corrie(SDL_Window *window, SDL_Renderer *renderer);
-	
+	Corrie(SDL_Window *window, SDL_Renderer *renderer);
+
 	void load(const char *fname);
 	void save(const char *fname);
 
 	void init();
 	void run();
 	void exit();
-    
-	void init_audio();
-    void init_video();
 
-    void poll_audio();
-    void draw();
-    void resize_window(int w, int h);
+	void init_audio();
+	void init_video();
+
+	void poll_audio();
+	void draw();
+	void resize_window(int w, int h);
 
 private:
 	Panel *m_root_panel;
 
-    SDL_Window *m_win;
-    SDL_Texture *m_tex;
-    SDL_Renderer *m_rend;
-	bool m_resize;
-	int m_w, m_h;
-
-    float m_srate;
-	bool m_capture;
-	SDL_AudioStream *m_sdl_audiostream;
-
-	Streams m_streams;
-	View m_view;
+	SDL_Window *m_win{};
+	SDL_Texture *m_tex{};
+	SDL_Renderer *m_rend{};
+	bool m_resize{true};
+	int m_w = 800;
+	int m_h = 600;
+	Time m_srate{48000.0};
+	bool m_capture{false};
+	SDL_AudioStream *m_sdl_audiostream{};
+	Streams m_streams{};
+	View m_view{};
+	ImFont *m_font{};
 };
 
 
 Corrie::Corrie(SDL_Window *window, SDL_Renderer *renderer)
     : m_win(window)
     , m_rend(renderer)
-	, m_resize(true)
-	, m_w(800)
-	, m_h(600)
-    , m_srate(48000.0)
-	, m_capture(false)
-	, m_view()
 {
     resize_window(800, 600);
 }
@@ -227,6 +221,7 @@ void Corrie::init_video(void)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	//m_font = io.Fonts->AddFontFromFileTTF("font.ttf");
 
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer3_Init(renderer);
@@ -275,7 +270,7 @@ void Corrie::poll_audio()
 		int nbytes = frames_avail * sizeof(float) * 6;
 		int r2 = read(0, buf_stdin, nbytes);
 		assert(r2 == nbytes);
-		
+
 		float buf[256][8];
 		for(int i=0; i<frames_avail; i++) {
 			buf[i][0] = buf_audio[i * 2 + 0];
@@ -295,9 +290,9 @@ void Corrie::poll_audio()
 
 void Corrie::run()
 {
-    bool done = false;
-    while (!done)
-    {
+	bool done = false;
+	while (!done)
+	{
 		if(ImGui::IsKeyPressed(ImGuiKey_Space)) {
 			m_capture ^= 1;
 		}
@@ -305,42 +300,44 @@ void Corrie::run()
 			poll_audio();
 		}
 
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
-        {
-            ImGui_ImplSDL3_ProcessEvent(&event);
-            if (event.type == SDL_EVENT_QUIT)
-                done = true;
-            if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == SDL_GetWindowID(m_win))
-                done = true;
-            if(event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_Q)
-                done = true;
-            if(event.type == SDL_EVENT_WINDOW_RESIZED && event.window.windowID == SDL_GetWindowID(m_win))
-                resize_window(event.window.data1, event.window.data2);
-        }
+		SDL_Event event;
+		while (SDL_PollEvent(&event))
+		{
+			ImGui_ImplSDL3_ProcessEvent(&event);
+			if (event.type == SDL_EVENT_QUIT)
+				done = true;
+			if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == SDL_GetWindowID(m_win))
+				done = true;
+			if(event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_Q)
+				done = true;
+			if(event.type == SDL_EVENT_WINDOW_RESIZED && event.window.windowID == SDL_GetWindowID(m_win))
+				resize_window(event.window.data1, event.window.data2);
+		}
 
-        if (SDL_GetWindowFlags(m_win) & SDL_WINDOW_MINIMIZED)
-        {
-            SDL_Delay(10);
-            continue;
-        }
+		if (SDL_GetWindowFlags(m_win) & SDL_WINDOW_MINIMIZED)
+		{
+			SDL_Delay(10);
+			continue;
+		}
 
-        ImGui_ImplSDLRenderer3_NewFrame();
-        ImGui_ImplSDL3_NewFrame();
-        ImGui::NewFrame();
+		ImGui_ImplSDLRenderer3_NewFrame();
+		ImGui_ImplSDL3_NewFrame();
+		ImGui::NewFrame();
 
+		if(m_font) ImGui::PushFont(m_font, 14);
 		draw();
+		if(m_font) ImGui::PopFont();
 		//ImGui::ShowDemoWindow(nullptr);
 
-        ImGui::Render();
+		ImGui::Render();
 		ImGuiIO& io = ImGui::GetIO();
-        SDL_SetRenderScale(m_rend, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
-        SDL_SetRenderDrawColor(m_rend, 0, 0, 0, 255);
-        SDL_RenderClear(m_rend);
-        SDL_RenderTexture(m_rend, m_tex, nullptr, nullptr);
-        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_rend);
-        SDL_RenderPresent(m_rend);
-    }
+		SDL_SetRenderScale(m_rend, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+		SDL_SetRenderDrawColor(m_rend, 0, 0, 0, 255);
+		SDL_RenderClear(m_rend);
+		SDL_RenderTexture(m_rend, m_tex, nullptr, nullptr);
+		ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_rend);
+		SDL_RenderPresent(m_rend);
+	}
 
 }
 
@@ -351,21 +348,21 @@ void Corrie::exit()
 
 	delete m_root_panel;
 
-    ImGui_ImplSDLRenderer3_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
-    ImGui::DestroyContext();
+	ImGui_ImplSDLRenderer3_Shutdown();
+	ImGui_ImplSDL3_Shutdown();
+	ImGui::DestroyContext();
 
-    SDL_DestroyRenderer(m_rend);
-    SDL_DestroyWindow(m_win);
-    SDL_Quit();
+	SDL_DestroyRenderer(m_rend);
+	SDL_DestroyWindow(m_win);
+	SDL_Quit();
 }
 
 
 int main(int, char**)
 {
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 
-    Corrie cor = Corrie(nullptr, nullptr);
+	Corrie cor = Corrie(nullptr, nullptr);
 	cor.init();
 	cor.run();
 	cor.exit();

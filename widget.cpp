@@ -27,27 +27,15 @@ Widget::~Widget()
 void Widget::load(ConfigReader::Node *n)
 {
 	if(const char *type = n->read_str("type")) {
-
+		m_type = Widget::string_to_type(type);
 		int channel_map = 0;
 		if(n->read("channel_map", channel_map)) {
 			for(int i=0; i<8; i++) {
 				m_channel_map[i] = (channel_map & (1 << i)) ? true : false;
 			}
 		}
-
-		if(strcmp(type, "none") == 0) {
-			m_type = Type::None;
-		}
-
-		if(strcmp(type, "wave") == 0) {
-			m_type = Type::Waveform;
-			m_waveform.load(n->find("waveform"));
-		}
-
-		if(strcmp(type, "spectrum") == 0) {
-			m_type = Type::Spectrum;
-			m_spectrum.load(n->find("spectrum"));
-		}
+		if(m_type == Type::Waveform) m_waveform.load(n->find("waveform"));
+		if(m_type == Type::Spectrum) m_spectrum.load(n->find("spectrum"));
 	}
 }
 
@@ -135,7 +123,7 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r
 	} else if(m_type == Type::Spectrum) {
 		m_spectrum.draw(*this, view, streams, rend, r);
 	} else if(m_type == Type::Waterfall) {
-
+		ImGui::ShowStyleEditor();
 	} else if(m_type == Type::Waveform) {
 		m_waveform.draw(*this, view, streams, rend, r);
 	}
