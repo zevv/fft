@@ -165,8 +165,9 @@ void Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 		}
 
 		size_t npoints = m_size / 2 + 1;
-		ImVec4 col = widget.channel_color(ch);
-		widget.graph(rend, r, col,
+		SDL_Color col = widget.channel_color(ch);
+		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
+		widget.graph(rend, r,
 				m_out_graph.data(), m_out_graph.size(), 1,
 				m_freq_from * npoints, m_freq_to * npoints,
 				db_range, 0.0);

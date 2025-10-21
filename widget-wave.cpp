@@ -94,13 +94,14 @@ void Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 		size_t stride;
 		size_t avail;
 		Sample *data = streams.peek(ch, 0, stride, &avail);
-		ImVec4 col = widget.channel_color(ch);
 
 		float idx_from = x_to_t(r.x,       r) * view.srate;
 		float idx_to   = x_to_t(r.x + r.w, r) * view.srate;
 
-		float peak = widget.graph(rend, r, col,
-				//data, depth, stride,
+		SDL_Color col = widget.channel_color(ch);
+		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
+
+		float peak = widget.graph(rend, r,
 				data, avail, stride,
 				idx_from, idx_to,
 				-scale, +scale);

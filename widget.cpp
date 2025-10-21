@@ -90,7 +90,9 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &_r
 	// Channel enable buttons
 	for(size_t i=0; i<8; i++) {
 		ImGui::SameLine();
-		ImVec4 col = m_channel_map[i] ? channel_color(i) : ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
+		SDL_Color c = channel_color(i);
+		ImVec4 col = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
+		if(channel_enabled(i)) col = ImVec4(c.r / 255.0f, c.g / 255.0f, c.b / 255.0f, 1.0f);
 		ImGui::PushStyleColor(ImGuiCol_Button, col);
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, col);
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, col);
@@ -200,7 +202,7 @@ void Widget::grid_vertical(SDL_Renderer *rend, SDL_Rect &r, Sample v_min, Sample
 
 
 
-Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r, ImVec4 &col,
+Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
 					 Sample *data, size_t data_count, size_t stride,
 					 float idx_from, float idx_to,
 					 Sample y_min, Sample y_max)
@@ -264,33 +266,34 @@ Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r, ImVec4 &col,
 		if(x == 0 || vmin < -v_peak) v_peak = -vmin;
 	}
 
-	SDL_SetRenderDrawColor(rend, col.x * 255, col.y * 255, col.z * 255, col.w * 255);
 	SDL_RenderLines(rend, p_max.data(), npoints);
 	SDL_RenderLines(rend, p_min.data(), npoints);
-	SDL_SetRenderDrawColor(rend, col.x * 48, col.y * 48, col.z * 48, col.w * 255);
+	uint8_t cr, cg, cb, ca;
+	SDL_GetRenderDrawColor(rend, &cr, &cg, &cb, &ca);
+	SDL_SetRenderDrawColor(rend, cr/5, cg/5, cb/5, ca);
 	SDL_RenderFillRects(rend, rects.data(), nrects);
 
 	return v_peak;
 }
 
 
-ImVec4 Widget::channel_color(int channel)
+SDL_Color Widget::channel_color(int channel)
 {
 	// https://medialab.github.io/iwanthue/
-	static const ImVec4 color[] = {
-		{  82.0/255, 202.0/255,  59.0/255, 1.0f },
-		{ 222.0/255,  85.0/255, 231.0/255, 1.0f },
-		{  68.0/255, 124.0/255, 254.0/255, 1.0f },
-		{ 244.0/255,  74.0/255,  54.0/255, 1.0f },
-		{ 175.0/255, 198.0/255,  31.0/255, 1.0f },
-		{ 163.0/255, 102.0/255, 248.0/255, 1.0f },
-		{ 242.0/255,  62.0/255, 173.0/255, 1.0f },
-		{ 239.0/255, 157.0/255,  22.0/255, 1.0f },
+	static const SDL_Color color[] = {
+		{  82, 202,  59, 255 },
+		{ 222,  85, 231, 255 },
+		{  68, 124, 254, 255 },
+		{ 244,  74,  54, 255 },
+		{ 175, 198,  31, 255 },
+		{ 163, 102, 248, 255 },
+		{ 242,  62, 173, 255 },
+		{ 239, 157,  22, 255 },
 	};
 	if(channel >= 0 && channel < 8) {
 		return color[channel];
 	} else {
-		return ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+		return SDL_Color{ 255, 255, 255, 255 };
 	}
 }
 

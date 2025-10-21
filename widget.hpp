@@ -41,9 +41,9 @@ private:
 	friend class Spectrum;
 
 	bool channel_enabled(int channel) const { return m_channel_map[channel]; }
-	ImVec4 channel_color(int channel);
+	SDL_Color channel_color(int channel);
 
-	Sample graph(SDL_Renderer *rend, SDL_Rect &r, ImVec4 &col,
+	Sample graph(SDL_Renderer *rend, SDL_Rect &r,
 					Sample *data, size_t data_count, size_t stride,
 					float idx_from, float idx_to,
 					Sample y_min, Sample y_max);
