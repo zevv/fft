@@ -25,12 +25,14 @@ void Fft::set_size(size_t size)
 	m_out.resize(size);
 	m_plan = fftwf_plan_r2r_1d(size, m_in.data(), m_in.data(), FFTW_R2HC, FFTW_ESTIMATE);
 	m_window.set_size(size);
+	m_cache.clear();
 }
 
 
 void Fft::set_window(Window::Type type, size_t size, float beta)
 {
 	m_window.configure(type, size, beta);
+	m_cache.clear();
 }
 
 
@@ -44,6 +46,12 @@ std::vector<Sample> &Fft::run(std::vector<Sample> &input)
 {
 	assert(m_in.size() == input.size());
 	assert(m_window.size() == input.size());
+
+	void *p = (void *)input.data();
+	auto it = m_cache.find(p);
+	if(it != m_cache.end()) {
+		return it->second;
+	}
 
 	size_t size = m_in.size();
 
@@ -67,6 +75,8 @@ std::vector<Sample> &Fft::run(std::vector<Sample> &input)
 		} 
 		m_out[i] = (v >= 1e-20f) ? 20.0f * log10f(v) : db_range;
 	}
+
+	m_cache[p] = m_out;
 
 	return m_out;
 }

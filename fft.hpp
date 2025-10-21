@@ -3,6 +3,7 @@
 
 #include <fftw3.h>
 #include <math.h>
+#include <map>
 
 #include "window.hpp"
 
@@ -23,4 +24,5 @@ private:
 	Window m_window{};
 	std::vector<float> m_in;
 	std::vector<Sample> m_out;
+	std::map<void *p, std::vector<Sample>> m_cache;
 };
