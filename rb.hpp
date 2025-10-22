@@ -11,7 +11,6 @@ public:
 	void set_size(size_t size);
 	void write(void *data, size_t len);
 	void *peek(size_t *used = nullptr);
-	void dump();
 
 private:
 
