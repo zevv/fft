@@ -129,7 +129,7 @@ void Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 
 		size_t stride = 0;
 		size_t avail = 0;
-		Sample *data = streams.peek(ch, stride, &avail);
+		Sample *data = streams.peek(ch, &stride, &avail);
 		//int idx = ((int)(view.srate * view.cursor) - m_window.size() / 2) * stride;; TODO
 		int idx = ((int)(view.srate * view.cursor)) * stride;;
 

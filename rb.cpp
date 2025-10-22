@@ -76,8 +76,9 @@ void Rb::write(void *data, size_t len)
 }
 
 
-void *Rb::peek()
+void *Rb::peek(size_t *used)
 {
+	if(used) *used = m_used;
 	size_t off = m_head + m_size - m_used;
 	return m_map1 + off;
 }

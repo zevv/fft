@@ -14,11 +14,10 @@ public:
 
 	Streams();
 	void write(void *data, size_t nframes);
-	Sample *peek(size_t channel, size_t &stride, size_t *used = nullptr);
+	Sample *peek(size_t channel, size_t *stride, size_t *used = nullptr);
 
 private:
 	size_t m_depth;
-	size_t m_used;
 	size_t m_channels;
 	Rb m_rb;
 };

@@ -62,7 +62,7 @@ void Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
 			size_t used;
 			size_t stride;
-			streams.peek(0, stride, &used);
+			streams.peek(0, &stride, &used);
 			m_t_from = 0;
 			m_t_to   = used / view.srate;
 		}
@@ -93,7 +93,7 @@ void Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *
 		if(!widget.channel_enabled(ch)) continue;
 		size_t stride;
 		size_t avail;
-		Sample *data = streams.peek(ch, stride, &avail);
+		Sample *data = streams.peek(ch, &stride, &avail);
 
 		float idx_from = x_to_t(r.x,       r) * view.srate;
 		float idx_to   = x_to_t(r.x + r.w, r) * view.srate;
