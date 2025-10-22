@@ -127,7 +127,7 @@ void Waterfall::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer 
 
 			size_t used;
 			size_t stride;
-			streams.peek(0, 0, stride, &used);
+			streams.peek(0, stride, &used);
 			m_t_from = 0;
 			m_t_to   = used / view.srate;
 		}
@@ -157,7 +157,7 @@ void Waterfall::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer 
 	int ch = 0;
 	size_t stride = 0;
 	size_t avail = 0;
-	Sample *data = streams.peek(ch, 0, stride, &avail);
+	Sample *data = streams.peek(ch, stride, &avail);
 
 	std::vector<Pixel> row(m_fft.out_size());
 
