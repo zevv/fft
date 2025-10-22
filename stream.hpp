@@ -17,8 +17,9 @@ public:
 	Sample *peek(size_t channel, size_t *stride, size_t *used = nullptr);
 
 private:
-	size_t m_depth;
-	size_t m_channels;
+	size_t m_depth{};
+	size_t m_channels{};
+	size_t m_frame_size{};
 	Rb m_rb;
 };
 
