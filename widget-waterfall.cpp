@@ -32,18 +32,22 @@ void Waterfall::load(ConfigReader::Node *node)
 	node->read("fft_size", m_size);
 	node->read("freq_from", m_freq_from);
 	node->read("freq_to", m_freq_to);
+	node->read("t_from", m_t_from);
+	node->read("t_to", m_t_to);
 	configure_fft(m_size, m_window_type);
 }
 
 
 void Waterfall::save(ConfigWriter &cw)
 {
-	cw.push("spectrum");
+	cw.push("waterfall");
 	cw.write("fft_size", (int)m_size);
 	cw.write("window_type", Window::type_to_str(m_window_type));
 	cw.write("window_beta", m_window_beta);
 	cw.write("freq_from", m_freq_from);
 	cw.write("freq_to", m_freq_to);
+	cw.write("t_from", m_t_from);
+	cw.write("t_to", m_t_to);
 	cw.pop();
 }
 
@@ -148,9 +152,7 @@ void Waterfall::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer 
 	memset(pixels, 0, pitch * r.h);
 
 	float db_range = -80.0;
-	if(0) {
-		widget.grid_time_v(rend, r, y_to_t(r.y, r), y_to_t(r.y + r.h, r));
-	}
+	widget.grid_time_v(rend, r, y_to_t(r.y, r), y_to_t(r.y + r.h, r));
 	
 	int ch = 0;
 	size_t stride = 0;
@@ -169,7 +171,7 @@ void Waterfall::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer 
 			if(!widget.channel_enabled(ch)) continue;
 			SDL_Color col = widget.channel_color(ch);
 		
-			int idx = (int)(view.srate * t) * stride + ch;
+			int idx = (int)(view.srate * t - window.size() / 2) * stride + ch;
 
 			for(int i=0; i<m_size; i++) {
 				Sample v = 0;

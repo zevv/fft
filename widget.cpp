@@ -37,7 +37,7 @@ void Widget::load(ConfigReader::Node *n)
 		}
 		if(m_type == Type::Waveform) m_waveform.load(n->find("waveform"));
 		if(m_type == Type::Spectrum) m_spectrum.load(n->find("spectrum"));
-		if(m_type == Type::Waterfall) m_spectrum.load(n->find("waterfall"));
+		if(m_type == Type::Waterfall) m_waterfall.load(n->find("waterfall"));
 	}
 }
 
@@ -190,7 +190,7 @@ void Widget::grid_time_v(SDL_Renderer *rend, SDL_Rect &r, Time t_min, Time t_max
 		while(t <= t_end) {
 			int y = r.y + (int)((t - t_min) / (t_max - t_min) * r.h);
 			SDL_RenderLine(rend, r.x, y, r.x + r.w, y);
-			if(dy > 50) {
+			if(dy > 20) {
 				char buf[32];
 				snprintf(buf, sizeof(buf), u.fmt, fabs(t * u.scale));
 				dl->AddText(ImVec2(r.x + 2, y - 3), 0xFF808080, buf);
