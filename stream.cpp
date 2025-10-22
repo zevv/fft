@@ -5,7 +5,7 @@
 Streams::Streams()
 	: m_depth(1024 * 1024 * 1024)
 	, m_used(0)
-	  , m_channels(8)
+	, m_channels(8)
 {
 	m_rb.set_size(m_channels * m_depth * sizeof(Sample));
 }
