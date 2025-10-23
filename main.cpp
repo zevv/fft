@@ -33,10 +33,8 @@ public:
 	void run();
 	void exit();
 
-	void init_audio();
 	void init_video();
 
-	void poll_audio();
 	void draw();
 	void resize_window(int w, int h);
 
@@ -51,7 +49,6 @@ private:
 	int m_h = 600;
 	Time m_srate{48000.0};
 	bool m_capture{false};
-	SDL_AudioStream *m_sdl_audiostream{};
 	Streams m_streams{};
 	View m_view{};
 	ImFont *m_font{};
@@ -128,13 +125,18 @@ void Corrie::init()
 	fcntl(0, F_SETFL, O_NONBLOCK);
 
 	init_video();
-	init_audio();
 
 	m_view.srate = m_srate;
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
 	io.LogFilename = NULL;
+
+	int fd = open("/etc/services", O_RDONLY);
+	m_streams.add_reader(new StreamReaderAudio(0, 2, m_srate));
+	m_streams.add_reader(new StreamReaderGenerator(2, 1, m_srate, 1));
+	//m_streams.add_reader(new StreamReaderFd(3, 1, fd));
+	//m_streams.add_reader(new StreamReaderFd(3, 1, 0));
 
 #if 1
 	m_capture = true;
@@ -216,62 +218,6 @@ void Corrie::init_video(void)
 }
 
 
-void Corrie::init_audio(void)
-{
-    SDL_AudioSpec want;
-
-    SDL_memset(&want, 0, sizeof(want));
-    want.freq = m_srate;
-    want.format = SDL_AUDIO_F32;
-    want.channels = 2;
-
-    m_sdl_audiostream = SDL_OpenAudioDeviceStream(
-            SDL_AUDIO_DEVICE_DEFAULT_RECORDING,
-            &want,
-            nullptr,
-            (void *)this);
-
-    SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audiostream));
-}
-
-
-void Corrie::poll_audio()
-{
-	for(;;) {
-		int frames_avail_audio = SDL_GetAudioStreamAvailable(m_sdl_audiostream) / (sizeof(float) * 2);
-		int n = 0;
-		ioctl(0, FIONREAD, &n);
-		int frames_avail_stdin = n / (sizeof(float) * 6);
-		int frames_avail = std::min(frames_avail_audio, frames_avail_stdin);
-		frames_avail = std::min(frames_avail, 256);
-		if(frames_avail == 0) break;
-
-		float buf_audio[256 * 2];
-		int r1 = SDL_GetAudioStreamData(m_sdl_audiostream, buf_audio, frames_avail * sizeof(float) * 2);
-		assert(r1 == (int)(frames_avail * sizeof(float) * 2));
-
-		float buf_stdin[256 * 6];
-		int nbytes = frames_avail * sizeof(float) * 6;
-		int r2 = read(0, buf_stdin, nbytes);
-		assert(r2 == nbytes);
-
-		float buf[256][8];
-		for(int i=0; i<frames_avail; i++) {
-			buf[i][0] = buf_audio[i * 2 + 0];
-			buf[i][1] = buf_audio[i * 2 + 1];
-			buf[i][2] = buf_stdin[i * 6 + 0];
-			buf[i][3] = buf_stdin[i * 6 + 1];
-			buf[i][4] = buf_stdin[i * 6 + 2];
-			buf[i][5] = buf_stdin[i * 6 + 3];
-			buf[i][6] = buf_stdin[i * 6 + 4];
-			buf[i][7] = buf_stdin[i * 6 + 5];
-		}
-
-		m_streams.write(buf, frames_avail);
-	}
-}
-
-
 void Corrie::run()
 {
 	bool done = false;
@@ -281,7 +227,8 @@ void Corrie::run()
 			m_capture ^= 1;
 		}
 		if(m_capture) {
-			poll_audio();
+			m_streams.capture();
+			//poll_audio();
 		}
 
 		SDL_Event event;
@@ -298,8 +245,7 @@ void Corrie::run()
 				resize_window(event.window.data1, event.window.data2);
 		}
 
-		if (SDL_GetWindowFlags(m_win) & SDL_WINDOW_MINIMIZED)
-		{
+		if (SDL_GetWindowFlags(m_win) & SDL_WINDOW_MINIMIZED) {
 			SDL_Delay(10);
 			continue;
 		}

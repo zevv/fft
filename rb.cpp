@@ -11,7 +11,9 @@
 #include "rb.hpp"
 
 Rb::Rb()
-{}
+{
+}
+
 
 Rb::~Rb()
 {
@@ -47,9 +49,6 @@ void Rb::set_size(size_t size)
 
 void Rb::clear()
 {
-	m_size = 0;
-	m_head = 0;
-	m_tail = 0;
 	if(m_fd != -1) {
 		close(m_fd);
 		m_fd = -1;
@@ -62,12 +61,16 @@ void Rb::clear()
 		munmap(m_map2, m_size);
 		m_map2 = nullptr;
 	}
+	m_size = 0;
+	m_head = 0;
+	m_tail = 0;
 }
 
 
 size_t Rb::bytes_used()
 {
-	return (m_head + m_size - m_tail) % m_size;
+	assert(m_head >= m_tail && "rb underflow");
+	return m_head - m_tail;
 }
 
 
@@ -77,33 +80,39 @@ size_t Rb::bytes_free()
 }
 
 
-void Rb::write(void *data, size_t len)
+void *Rb::get_write_ptr(size_t *bytes_max)
 {
-	size_t used = bytes_used();
-	size_t capacity = m_size - 1; 
-	if(used + len > capacity) {
-		size_t bytes_to_discard = (used + len) - capacity;
-		m_tail = (m_tail + bytes_to_discard) % m_size;
-	}
-	memcpy(m_map1 + m_head, data, len);
-	m_head = (m_head + len) % m_size;
+	assert(m_head >= m_tail && "rb underflow");
+	if(bytes_max) *bytes_max = bytes_free();
+	size_t write_idx = m_head % m_size;
+	return m_map1 + write_idx;
+}
+
+
+void Rb::write_done(size_t len)
+{
+	assert(len <= bytes_free() && "write xrun");
+	m_head += len;
 }
 
 
 void *Rb::read(size_t len)
 {
-	m_tail = (m_tail + len) % m_size;
-	return peek();
+	assert(len <= bytes_used() && "read xrun");
+	void *ptr = peek(nullptr);
+	m_tail += len;
+	return ptr;
 }
 
 
 void *Rb::peek(size_t *used)
 {
-	size_t off = m_tail;
-	if(used) {
+	assert(m_head >= m_tail && "rb underflow");
+	if (used) {
 		*used = bytes_used();
 	}
-	return m_map1 + off;
+	size_t read_idx = m_tail % m_size;
+	return m_map1 + read_idx;
 }
 
 

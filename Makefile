@@ -29,7 +29,7 @@ CXXFLAGS += -std=c++17 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 CXXFLAGS += -g 
 CXXFLAGS += -Wall -Wformat -Werror
 CXXFLAGS += -Wno-unused-but-set-variable -Wno-unused-variable
-CXXFLAGS += -O3
+CXXFLAGS += -O0
 CXXFLAGS += -MMD
 #CXXFLAGS += -ffast-math
 
@@ -37,8 +37,8 @@ CXXFLAGS += `pkg-config sdl3 fftw3 fftw3f --cflags`
 LIBS += -ldl `pkg-config sdl3 fftw3 fftw3f --libs`
 
 ifdef clang
-CXX=clang++-19
-LD=clang++-19
+CXX=clang++
+LD=clang++
 endif
 
 ifdef asan
