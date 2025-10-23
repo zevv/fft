@@ -28,7 +28,7 @@ void Rb::set_size(size_t size)
 	size = (size + page_size - 1) & ~(page_size - 1);
 	m_size = size;
 
-	// create memfd and set its size
+	// create memfd with enough space for two copies of the buffer
 	m_fd = memfd_create("rb", MFD_CLOEXEC);
 	assert(m_fd != -1);
 	int r = ftruncate(m_fd, size * 2);
@@ -49,6 +49,7 @@ void Rb::clear()
 {
 	m_size = 0;
 	m_head = 0;
+	m_tail = 0;
 	if(m_fd != -1) {
 		close(m_fd);
 		m_fd = -1;
@@ -64,22 +65,44 @@ void Rb::clear()
 }
 
 
+size_t Rb::bytes_used()
+{
+	return (m_head + m_size - m_tail) % m_size;
+}
+
+
+size_t Rb::bytes_free()
+{
+	return m_size - bytes_used();
+}
+
+
 void Rb::write(void *data, size_t len)
 {
-	assert(m_map1 != nullptr);
-	assert(m_size > 0);
-	assert(len < m_size);
+	size_t used = bytes_used();
+	size_t capacity = m_size - 1; 
+	if(used + len > capacity) {
+		size_t bytes_to_discard = (used + len) - capacity;
+		m_tail = (m_tail + bytes_to_discard) % m_size;
+	}
 	memcpy(m_map1 + m_head, data, len);
 	m_head = (m_head + len) % m_size;
-	m_used += len;
-	if(m_used > m_size) m_used = m_size;
+}
+
+
+void *Rb::read(size_t len)
+{
+	m_tail = (m_tail + len) % m_size;
+	return peek();
 }
 
 
 void *Rb::peek(size_t *used)
 {
-	if(used) *used = m_used;
-	size_t off = m_head + m_size - m_used;
+	size_t off = m_tail;
+	if(used) {
+		*used = bytes_used();
+	}
 	return m_map1 + off;
 }
 
