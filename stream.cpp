@@ -82,7 +82,6 @@ StreamReader::StreamReader(const char *name, size_t ch_start, size_t ch_count)
 
 StreamReader::~StreamReader()
 {
-	printf("StreamReader %s destroyed\n", m_name);
 }
 
 
@@ -121,7 +120,6 @@ StreamReaderFd::~StreamReaderFd()
 		::close(m_fd);
 		m_fd = -1;
 	}
-	printf("StreamReaderFd destroyed\n");
 }
 
 
@@ -160,17 +158,15 @@ StreamReaderAudio::StreamReaderAudio(size_t ch_start, size_t ch_count, float sra
             &want, nullptr, (void *)this);
 
     SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audiostream));
-	fprintf(stderr, "StreamReaderAudio::StreamReaderAudio %p\n", m_sdl_audiostream);
 }
 
 
 StreamReaderAudio::~StreamReaderAudio()
 {
-	fprintf(stderr, "StreamReaderAudio::~StreamReaderAudio %p\n", m_sdl_audiostream);
-	//if(m_sdl_audiostream) {
-	//	SDL_DestroyAudioStream(m_sdl_audiostream);
-	//	m_sdl_audiostream = nullptr;
-	//}
+	if(m_sdl_audiostream) {
+		SDL_DestroyAudioStream(m_sdl_audiostream);
+	}
+	m_sdl_audiostream = nullptr;
 }
 
 
@@ -202,7 +198,6 @@ StreamReaderGenerator::StreamReaderGenerator(size_t ch_start, size_t ch_count, f
 
 StreamReaderGenerator::~StreamReaderGenerator()
 {
-	printf("StreamReaderGenerator destroyed\n");
 }
 
 

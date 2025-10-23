@@ -135,7 +135,7 @@ void Corrie::init()
 	int fd = open("/etc/services", O_RDONLY);
 	m_streams.add_reader(new StreamReaderAudio(0, 2, m_srate));
 	m_streams.add_reader(new StreamReaderGenerator(2, 1, m_srate, 1));
-	//m_streams.add_reader(new StreamReaderFd(3, 1, fd));
+	m_streams.add_reader(new StreamReaderFd(3, 1, fd));
 	//m_streams.add_reader(new StreamReaderFd(3, 1, 0));
 
 #if 1
@@ -284,7 +284,6 @@ void Corrie::exit()
 
 	SDL_DestroyRenderer(m_rend);
 	SDL_DestroyWindow(m_win);
-	SDL_Quit();
 }
 
 
@@ -292,12 +291,16 @@ int main(int, char**)
 {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 
+	// scope to ensure Corrie destructor called before SDL_Quit
+	{
 	Corrie cor = Corrie(nullptr, nullptr);
 	cor.init();
 	cor.run();
 	cor.exit();
+	}
 
 	fftwf_cleanup();
+	SDL_Quit();
 
 	return 0;
 }
