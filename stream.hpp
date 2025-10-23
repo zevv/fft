@@ -18,7 +18,7 @@ public:
 	~Streams();
 	Sample *peek(size_t channel, size_t *stride, size_t *used = nullptr);
 	void add_reader(StreamReader *reader);
-	void capture();
+	bool capture();
 
 private:
 	size_t m_depth{};

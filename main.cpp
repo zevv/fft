@@ -200,12 +200,15 @@ void Corrie::run()
 	bool done = false;
 	while (!done)
 	{
+		bool redraw = false;
+
 		if(ImGui::IsKeyPressed(ImGuiKey_Space)) {
 			m_capture ^= 1;
 		}
 		if(m_capture) {
-			m_streams.capture();
-			//poll_audio();
+			if(m_streams.capture()) {
+				redraw = true;
+			}
 		}
 
 		SDL_Event event;
@@ -220,30 +223,40 @@ void Corrie::run()
 				done = true;
 			if(event.type == SDL_EVENT_WINDOW_RESIZED && event.window.windowID == SDL_GetWindowID(m_win))
 				resize_window(event.window.data1, event.window.data2);
+
+			if(event.type == SDL_EVENT_WINDOW_RESIZED ||
+			   event.type == SDL_EVENT_WINDOW_SHOWN ||
+			   event.type == SDL_EVENT_KEY_UP ||
+			   event.type == SDL_EVENT_KEY_DOWN ||
+			   event.type == SDL_EVENT_MOUSE_MOTION ||
+			   event.type == SDL_EVENT_MOUSE_WHEEL ||
+			   event.type == SDL_EVENT_MOUSE_BUTTON_DOWN ||
+			   event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
+				redraw = true;
+			}
 		}
 
-		if (SDL_GetWindowFlags(m_win) & SDL_WINDOW_MINIMIZED) {
+		if(redraw) {
+			ImGui_ImplSDLRenderer3_NewFrame();
+			ImGui_ImplSDL3_NewFrame();
+			ImGui::NewFrame();
+
+			if(m_font) ImGui::PushFont(m_font, 14);
+			draw();
+			if(m_font) ImGui::PopFont();
+			//ImGui::ShowDemoWindow(nullptr);
+
+			ImGui::Render();
+			ImGuiIO& io = ImGui::GetIO();
+			SDL_SetRenderScale(m_rend, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+			SDL_SetRenderDrawColor(m_rend, 0, 0, 0, 255);
+			SDL_RenderClear(m_rend);
+			SDL_RenderTexture(m_rend, m_tex, nullptr, nullptr);
+			ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_rend);
+			SDL_RenderPresent(m_rend);
+		} else {
 			SDL_Delay(10);
-			continue;
 		}
-
-		ImGui_ImplSDLRenderer3_NewFrame();
-		ImGui_ImplSDL3_NewFrame();
-		ImGui::NewFrame();
-
-		if(m_font) ImGui::PushFont(m_font, 14);
-		draw();
-		if(m_font) ImGui::PopFont();
-		//ImGui::ShowDemoWindow(nullptr);
-
-		ImGui::Render();
-		ImGuiIO& io = ImGui::GetIO();
-		SDL_SetRenderScale(m_rend, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
-		SDL_SetRenderDrawColor(m_rend, 0, 0, 0, 255);
-		SDL_RenderClear(m_rend);
-		SDL_RenderTexture(m_rend, m_tex, nullptr, nullptr);
-		ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_rend);
-		SDL_RenderPresent(m_rend);
 	}
 
 }

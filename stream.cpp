@@ -42,8 +42,9 @@ void Streams::add_reader(StreamReader *reader) {
 }
 
 
-void Streams::capture()
+bool Streams::capture()
 {
+	bool captured = false;
 	size_t frame_count = SIZE_MAX;
 	for(auto reader : m_readers) {
 		reader->poll();
@@ -66,7 +67,9 @@ void Streams::capture()
 			reader->drain_into(buf, frame_count, m_channels);
 		}
 		m_rb.write_done(frame_count * m_frame_size);
+		captured = true;
 	}
+	return captured;
 }
 
 
