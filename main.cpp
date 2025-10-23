@@ -105,17 +105,12 @@ void Corrie::resize_window(int w, int h)
 }
 
 
-
-
 void Corrie::draw()
 {
     SDL_SetRenderTarget(m_rend, m_tex);
 	SDL_SetRenderDrawColor(m_rend, 10, 10, 10, 255);
 	SDL_RenderClear(m_rend);
-	if(m_root_panel) {
-		//m_root_panel->dump();
-		m_root_panel->draw(m_view, m_streams, m_rend, 0, 0, m_w, m_h);
-	}
+	m_root_panel->draw(m_view, m_streams, m_rend, 0, 0, m_w, m_h);
 	SDL_SetRenderTarget(m_rend, nullptr);
 }
 
@@ -144,8 +139,6 @@ void Corrie::init()
 	m_root_panel = tmp_root_panel;
 
 	load("config.txt");
-
-	//m_root_panel->dump();
 
 	if(m_root_panel->nkids() == 0) {
 		Panel *p2 = new Panel(Panel::Type::SplitH);
@@ -217,11 +210,13 @@ void Corrie::run()
 			ImGui_ImplSDL3_ProcessEvent(&event);
 			if (event.type == SDL_EVENT_QUIT)
 				done = true;
-			if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == SDL_GetWindowID(m_win))
+			if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && 
+				event.window.windowID == SDL_GetWindowID(m_win))
 				done = true;
 			if(event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_Q)
 				done = true;
-			if(event.type == SDL_EVENT_WINDOW_RESIZED && event.window.windowID == SDL_GetWindowID(m_win))
+			if(event.type == SDL_EVENT_WINDOW_RESIZED && 
+			   event.window.windowID == SDL_GetWindowID(m_win))
 				resize_window(event.window.data1, event.window.data2);
 
 			if(event.type == SDL_EVENT_WINDOW_RESIZED ||
@@ -244,7 +239,6 @@ void Corrie::run()
 			if(m_font) ImGui::PushFont(m_font, 14);
 			draw();
 			if(m_font) ImGui::PopFont();
-			//ImGui::ShowDemoWindow(nullptr);
 
 			ImGui::Render();
 			ImGuiIO& io = ImGui::GetIO();
@@ -258,7 +252,6 @@ void Corrie::run()
 			SDL_Delay(10);
 		}
 	}
-
 }
 
 
