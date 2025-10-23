@@ -128,10 +128,9 @@ void Corrie::init()
 	io.LogFilename = NULL;
 
 	int fd = open("bip", O_RDONLY);
-	m_streams.add_reader(new StreamReaderAudio(0, 2, m_srate));
-	m_streams.add_reader(new StreamReaderGenerator(2, 1, m_srate, 1));
-	m_streams.add_reader(new StreamReaderFd(3, 1, fd));
-	//m_streams.add_reader(new StreamReaderFd(3, 1, 0));
+	m_streams.add_reader(new StreamReaderAudio(2, m_srate));
+	m_streams.add_reader(new StreamReaderGenerator(1, m_srate, 1));
+	m_streams.add_reader(new StreamReaderFd(1, fd));
 
 	m_capture = true;
 

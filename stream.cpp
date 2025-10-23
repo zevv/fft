@@ -61,10 +61,11 @@ bool Streams::capture()
 	}
 	printf("\n");
 
+	size_t channel = 0;
 	if(frame_count > 0) {
 		Sample *buf = (Sample *)m_rb.get_write_ptr();
 		for(auto reader : m_readers) {
-			reader->drain_into(buf, frame_count, m_channels);
+			channel += reader->drain_into(buf, channel, frame_count, m_channels);
 		}
 		m_rb.write_done(frame_count * m_frame_size);
 		captured = true;
@@ -73,9 +74,8 @@ bool Streams::capture()
 }
 
 
-StreamReader::StreamReader(const char *name, size_t ch_start, size_t ch_count)
+StreamReader::StreamReader(const char *name, size_t ch_count)
 	: m_name(name)
-	, m_ch_start(ch_start)
 	, m_ch_count(ch_count)
 	, m_frame_size(ch_count * sizeof(Sample))
 {
@@ -95,22 +95,24 @@ size_t StreamReader::frames_avail()
 
 
 
-void StreamReader::drain_into(Sample *p_dst, size_t frame_count, size_t dst_stride)
+size_t StreamReader::drain_into(Sample *p_dst, size_t ch_start, size_t frame_count, size_t dst_stride)
 {
 	Sample *p_src = (Sample *)m_rb.read(frame_count * m_frame_size);
 	size_t src_stride = m_ch_count;
 
 	for(size_t i=0; i<frame_count; i++) {
-		memcpy(p_dst + m_ch_start, p_src, m_frame_size);
+		memcpy(p_dst + ch_start, p_src, m_frame_size);
 		p_src += src_stride;
 		p_dst += dst_stride;
 	}
+
+	return m_ch_count;
 }
 
 
 
-StreamReaderFd::StreamReaderFd(size_t ch_start, size_t ch_count, int fd)
-	: StreamReader("fd", ch_start, ch_count)
+StreamReaderFd::StreamReaderFd(size_t ch_count, int fd)
+	: StreamReader("fd", ch_count)
 	, m_fd(fd)
 {
 	fcntl(m_fd, F_SETFL, O_NONBLOCK);
@@ -148,19 +150,24 @@ void StreamReaderFd::poll()
 }
 
 
-StreamReaderAudio::StreamReaderAudio(size_t ch_start, size_t ch_count, float srate)
-	: StreamReader("audio", ch_start, ch_count)
+StreamReaderAudio::StreamReaderAudio(size_t ch_count, float srate)
+	: StreamReader("audio", ch_count)
 {
-	SDL_AudioSpec want{};
-    want.freq = srate;
-    want.format = SDL_AUDIO_F32;
-    want.channels = 2;
+	SDL_AudioSpec fmt{};
+    fmt.freq = srate;
+    fmt.format = SDL_AUDIO_F32;
+    fmt.channels = ch_count;
 
-    m_sdl_audiostream = SDL_OpenAudioDeviceStream(
+	SDL_AudioStream *stream = SDL_OpenAudioDeviceStream(
             SDL_AUDIO_DEVICE_DEFAULT_RECORDING,
-            &want, nullptr, (void *)this);
+            &fmt, nullptr, (void *)this);
 
-    SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audiostream));
+	if(stream) {
+		m_sdl_audiostream = stream;
+		SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(stream));
+	} else {
+		fprintf(stderr, "StreamReaderAudio: SDL_OpenAudioDeviceStream failed: %s\n", SDL_GetError());
+	}
 }
 
 
@@ -175,6 +182,7 @@ StreamReaderAudio::~StreamReaderAudio()
 
 void StreamReaderAudio::poll()
 {
+	if(!m_sdl_audiostream) return;
 	size_t read_max = m_rb.bytes_free();
 	if(read_max == 0) return;
 
@@ -190,8 +198,8 @@ void StreamReaderAudio::poll()
 }
 
 
-StreamReaderGenerator::StreamReaderGenerator(size_t ch_start, size_t ch_count, float srate, int type)
-	: StreamReader("gen", ch_start, ch_count)
+StreamReaderGenerator::StreamReaderGenerator(size_t ch_count, float srate, int type)
+	: StreamReader("gen", ch_count)
 	, m_type(type)
 	, m_srate(srate)
 	, m_phase(0.0)
