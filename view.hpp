@@ -11,14 +11,6 @@ class View {
 public:
 	View()
 	{
-		reset();
-	}
-
-	void reset()
-	{
-		t_from = -1000;
-		t_to = 1000;
-		t_cursor = 512;
 	}
 
 	void load(ConfigReader::Node *n)
@@ -48,6 +40,4 @@ public:
 	float freq_to;
 	float freq_cursor;
 	float srate;
-	Window *window;
-
 };
