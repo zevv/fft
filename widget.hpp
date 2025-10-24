@@ -54,7 +54,7 @@ protected:
 	};
 
 	void zoom_t(float fy, float max) {
-		fy /= max;
+		fy /= 50.0;
 		m_t_from += (m_t_cursor - m_t_from) * fy;
         m_t_to   -= (m_t_to - m_t_cursor) * fy;
 	};
@@ -67,7 +67,7 @@ protected:
 
 	
 	void zoom_freq(float fx, float max) {
-		fx /= max;
+		fx /= 50.0;
 		m_freq_from += (m_freq_cursor - m_freq_from) * fx;
 		m_freq_to   -= (m_freq_to - m_freq_cursor) * fx;
 	};
