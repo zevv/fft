@@ -14,11 +14,13 @@ class Spectrum : public Widget {
 public:
 	Spectrum();
 	~Spectrum() override;
-	void load(ConfigReader::Node *node);
-	void save(ConfigWriter &cfg);
-	void copy_to(Spectrum &w);
-	void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
+	void load(ConfigReader::Node *node) override;
+	void save(ConfigWriter &cfg) override;
+
 private:
+	Widget *do_copy() override;
+	void do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r) override;
+
 	void configure_fft(int size, Window::Type window_type);
 
 	int m_size{256};

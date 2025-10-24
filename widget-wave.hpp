@@ -16,10 +16,10 @@ public:
 	~Waveform() override;
 	void load(ConfigReader::Node *node) override;
 	void save(ConfigWriter &cfg) override;
-	void copy_to(Waveform &w);
-	void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 
 private:
+	Widget *do_copy() override;
+	void do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r) override;
 
 	bool m_agc{true};
 	Sample m_peak{};

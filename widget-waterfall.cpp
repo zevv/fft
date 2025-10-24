@@ -48,22 +48,24 @@ void Waterfall::save(ConfigWriter &cw)
 }
 
 
-void Waterfall::copy_to(Waterfall &w)
+Widget *Waterfall::do_copy()
 {
-	w.m_size = m_size;
-	w.m_window_type = m_window_type;
-	w.m_window_beta = m_window_beta;
-	w.configure_fft(w.m_size, w.m_window_type);
+	Waterfall *w = new Waterfall();
+	w->m_size = m_size;
+	w->m_window_type = m_window_type;
+	w->m_window_beta = m_window_beta;
+	w->configure_fft(m_size, m_window_type);
+	return w;
 };
+
 
 struct Pixel {
 	float r, g, b;
 };
 
-void Waterfall::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
-{
-	Widget::draw_controls();
 
+void Waterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+{
 	bool update = false;
 	
 	ImGui::SetNextItemWidth(100);

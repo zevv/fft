@@ -46,19 +46,19 @@ void Spectrum::save(ConfigWriter &cw)
 }
 
 
-void Spectrum::copy_to(Spectrum &w)
+Widget *Spectrum::do_copy()
 {
-	w.m_size = m_size;
-	w.m_window_type = m_window_type;
-	w.m_window_beta = m_window_beta;
-	w.configure_fft(w.m_size, w.m_window_type);
+	auto *w = new Spectrum();
+	w->m_size = m_size;
+	w->m_window_type = m_window_type;
+	w->m_window_beta = m_window_beta;
+	w->configure_fft(m_size, m_window_type);
+	return w;
 };
 
 
-void Spectrum::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+void Spectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
-	Widget::draw_controls();
-
 	bool update = false;
 	
 	ImGui::SetNextItemWidth(100);

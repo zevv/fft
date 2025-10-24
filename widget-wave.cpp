@@ -39,20 +39,17 @@ void Waveform::save(ConfigWriter &cw)
 }
 
 
-void Waveform::copy_to(Waveform &w)
+Widget *Waveform::do_copy()
 {
-	w.m_agc = m_agc;
-	w.m_peak = m_peak;
-	w.m_t_from = m_t_from;
-	w.m_t_to = m_t_to;
-	w.m_t_cursor = m_t_cursor;
+	Waveform *w = new Waveform();
+	w->m_agc = m_agc;
+	w->m_peak = m_peak;
+	return w;
 }
 
 
-void Waveform::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+void Waveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
-	Widget::draw_controls();
-
 	ImGui::SameLine();
 	ImGui::Checkbox("AGC", &m_agc);
 

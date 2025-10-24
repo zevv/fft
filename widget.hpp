@@ -26,8 +26,9 @@ public:
 	virtual void save(ConfigWriter &cfg);
 	Widget *copy();
 	bool has_focus() { return m_has_focus; }
-	virtual void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r) = 0;
+	void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 
+	static Widget *create(Widget::Type type);
 	static Widget *create(const char *type_str);
 	static const char* type_to_string(Type type);
 	static Type string_to_type(const char *str);
@@ -38,7 +39,8 @@ public:
 
 protected:
 
-	void draw_controls();
+	virtual Widget *do_copy() = 0;
+	virtual void do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r) = 0;
 
 	Sample graph(SDL_Renderer *rend, SDL_Rect &r,
 						 Sample *data, size_t data_count, size_t stride,
