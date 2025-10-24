@@ -7,7 +7,7 @@
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
-#include "widget.hpp"
+#include "flap.hpp"
 #include "widget-spectrum.hpp"
 
 
@@ -57,7 +57,7 @@ void Spectrum::copy_to(Spectrum &w)
 };
 
 
-void Spectrum::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+void Spectrum::draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	bool update = false;
 	
@@ -175,4 +175,3 @@ void Spectrum::configure_fft(int size, Window::Type window_type)
 	m_fft.set_window(window_type, size, m_window_beta);
 
 }
-

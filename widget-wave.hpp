@@ -7,7 +7,7 @@
 #include "stream.hpp"
 #include "view.hpp"
 
-class Widget;
+class Flap;
 
 class Waveform {
 
@@ -16,7 +16,7 @@ public:
 	void load(ConfigReader::Node *node);
 	void save(ConfigWriter &cfg);
 	void copy_to(Waveform &w);
-	void draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
+	void draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 
 private:
 

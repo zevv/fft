@@ -7,7 +7,7 @@
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
-#include "widget.hpp"
+#include "flap.hpp"
 #include "widget-wave.hpp"
 
 Waveform::Waveform()
@@ -44,7 +44,7 @@ void Waveform::copy_to(Waveform &w)
 }
 
 
-void Waveform::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+void Waveform::draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	ImGui::SameLine();
 	ImGui::Checkbox("AGC", &m_agc);

@@ -8,7 +8,7 @@
 #include "view.hpp"
 #include "fft.hpp"
 
-class Widget;
+class Flap;
 
 class Waterfall {
 public:
@@ -17,7 +17,7 @@ public:
 	void load(ConfigReader::Node *node);
 	void save(ConfigWriter &cfg);
 	void copy_to(Waterfall &w);
-	void draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
+	void draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 private:
 	void configure_fft(int size, Window::Type window_type);
 
@@ -78,4 +78,3 @@ private:
 	Fft m_fft{};
 	Sample m_peak{};
 };
-

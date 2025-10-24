@@ -7,7 +7,7 @@
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
-#include "widget.hpp"
+#include "flap.hpp"
 #include "widget-waterfall.hpp"
 
 
@@ -64,7 +64,7 @@ struct Pixel {
 	float r, g, b;
 };
 
-void Waterfall::draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+void Waterfall::draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	bool update = false;
 	
@@ -242,4 +242,3 @@ void Waterfall::configure_fft(int size, Window::Type window_type)
 
 	m_window.configure(window_type, size);
 }
-

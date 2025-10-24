@@ -3,7 +3,7 @@
 
 #include <SDL3/SDL.h>
 
-#include "widget.hpp"
+#include "flap.hpp"
 #include "stream.hpp"
 #include "view.hpp"
 #include "config.hpp"
@@ -16,7 +16,7 @@ public:
 		Root, None, Widget, SplitH, SplitV
 	};
 
-	Panel(Widget *widget);
+	Panel(Flap *widget);
 	Panel(Type type);
 	~Panel();
 
@@ -24,7 +24,7 @@ public:
 	void load(ConfigReader::Node *node);
 
 	void add(Panel *p, Panel *p_after = nullptr);
-	void add(Widget *widget);
+	void add(Flap *widget);
 	void replace(Panel *kid_old, Panel *kid_new);
 	void remove(Panel *kid);
 	void update_kid(Panel *pk, int dx, int dy, int dw, int dh);
@@ -42,7 +42,7 @@ private:
 	};
 
 	Panel *m_parent;
-	Widget *m_widget;
+	Flap *m_widget;
 	int m_last_w;
 	int m_last_h;
 	const char *m_title;
@@ -52,4 +52,3 @@ private:
 	std::vector<Panel *> m_kids_remove;
 	std::vector<AddRequest> m_add_requests;
 };
-

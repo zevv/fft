@@ -7,8 +7,9 @@
 #include "stream.hpp"
 #include "view.hpp"
 #include "fft.hpp"
+#include "flap.hpp"
 
-class Widget;
+class Flap;
 
 class Spectrum {
 public:
@@ -17,7 +18,7 @@ public:
 	void load(ConfigReader::Node *node);
 	void save(ConfigWriter &cfg);
 	void copy_to(Spectrum &w);
-	void draw(Widget &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
+	void draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 private:
 	void configure_fft(int size, Window::Type window_type);
 
@@ -55,4 +56,3 @@ private:
 	std::vector<Sample> m_in;
 	std::vector<Sample> m_out_graph;
 };
-

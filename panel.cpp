@@ -5,7 +5,7 @@
 #include "panel.hpp"
 	
 
-Panel::Panel(Widget *widget)
+Panel::Panel(Flap *widget)
 	: m_parent(nullptr)
 	, m_widget(widget)
 	, m_type(Type::Widget)
@@ -73,7 +73,7 @@ void Panel::load(ConfigReader::Node *node)
 
 			if(strcmp(type, "widget") == 0) {
 				m_type = Type::Widget;
-				m_widget = new Widget(Widget::Type::None);
+				m_widget = new Flap(Flap::Type::None);
 				m_widget->load(node->find("widget"));
 			}
 
@@ -127,7 +127,7 @@ void Panel::add(Panel *p, Panel *p_after)
 }
 
 
-void Panel::add(Widget *w)
+void Panel::add(Flap *w)
 {
 	Panel *p = new Panel(w);
 	add(p);
