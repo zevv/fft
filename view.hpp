@@ -16,28 +16,37 @@ public:
 
 	void reset()
 	{
-		wave_from = -1000;
-		wave_to = 1000;
-		cursor = 512;
+		t_from = -1000;
+		t_to = 1000;
+		t_cursor = 512;
 	}
 
 	void load(ConfigReader::Node *n)
 	{
-		n->read("cursor", cursor);
-		n->read("wave_from", wave_from);
-		n->read("wave_to", wave_to);
+		n->read("t_cursor", t_cursor);
+		n->read("t_from", t_from);
+		n->read("t_to", t_to);
+		n->read("freq_from", freq_from);
+		n->read("freq_to", freq_to);
+		n->read("freq_cursor", freq_cursor);
 	}
 
 	void save(ConfigWriter &cfg)
 	{
-		cfg.write("cursor", cursor);
-		cfg.write("wave_from", wave_from);
-		cfg.write("wave_to", wave_to);
+		cfg.write("t_cursor", t_cursor);
+		cfg.write("t_from", t_from);
+		cfg.write("t_to", t_to);
+		cfg.write("freq_from", freq_from);
+		cfg.write("freq_to", freq_to);
+		cfg.write("freq_cursor", freq_cursor);
 	}
 
-	float wave_from;
-	float wave_to;
-	float cursor;
+	float t_from;
+	float t_to;
+	float t_cursor;
+	float freq_from;
+	float freq_to;
+	float freq_cursor;
 	float srate;
 	Window *window;
 

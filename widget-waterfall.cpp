@@ -31,8 +31,8 @@ void Waterfall::load(ConfigReader::Node *node)
 	}
 	node->read("window_beta", m_window_beta);
 	node->read("fft_size", m_size);
-	node->read("freq_from", m_freq_from);
-	node->read("freq_to", m_freq_to);
+	node->read("freq_from", m_view.freq_from);
+	node->read("freq_to", m_view.freq_to);
 	configure_fft(m_size, m_window_type);
 }
 
@@ -92,25 +92,24 @@ void Waterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Re
 	if(has_focus()) {
 	
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
-		ImGui::Text("f=%.6gHz amp=%.2fdB", m_freq_cursor * view.srate * 0.5, m_amp_cursor);
+		ImGui::Text("f=%.6gHz amp=%.2fdB", m_view.freq_cursor * view.srate * 0.5, m_amp_cursor);
 
 		auto pos = ImGui::GetIO().MousePos;
 		if(pos.x >= 0) {
 			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				m_freq_cursor += dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
+				m_view.freq_cursor += dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
 			} else {
-				m_freq_cursor = x_to_freq(pos.x, r);
+				m_view.freq_cursor = x_to_freq(pos.x, r);
 			}
 			m_amp_cursor = (r.y - pos.y) * 100.0f / r.h;
 
 
 			auto pos = ImGui::GetIO().MousePos;
 			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				view.cursor += dy_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
+				m_view.t_cursor += dy_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
 			} else {
-				view.cursor = y_to_t(pos.y, r);
+				m_view.t_cursor = y_to_t(pos.y, r);
 			}
-			m_t_cursor = view.cursor;
 		}
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
 			pan_t(ImGui::GetIO().MouseDelta.y, r.h);
@@ -120,19 +119,19 @@ void Waterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Re
 		}
 	
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
-			m_freq_from = 0.0f;
-			m_freq_to = 1.0;
+			m_view.freq_from = 0.0f;
+			m_view.freq_to = 1.0;
 
 			size_t used;
 			size_t stride;
 			streams.peek(0, &stride, &used);
-			m_t_from = 0;
-			m_t_to   = used / view.srate;
+			m_view.t_from = 0;
+			m_view.t_to   = used / view.srate;
 		}
 	}
 
-	if(m_freq_from < 0.0f) m_freq_from = 0.0f;
-	if(m_freq_to > 1.0f) m_freq_to = 1.0f;
+	if(m_view.freq_from < 0.0f) m_view.freq_from = 0.0f;
+	if(m_view.freq_to > 1.0f) m_view.freq_to = 1.0f;
 
 	
 	if(update) {
@@ -218,7 +217,7 @@ void Waterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Re
 	
 	// cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
-	int cy = t_to_y(view.cursor, r);
+	int cy = t_to_y(m_view.t_cursor, r);
 	SDL_RenderLine(rend, r.x, cy, r.x + r.w, cy);
 	//int cx = freq_to_x(m_freq_cursor, r);
 	//SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);

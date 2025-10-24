@@ -56,7 +56,7 @@ void Waveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rec
 	if(ImGui::IsWindowFocused()) {
 	
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
-		ImGui::Text("t=%.4gs", m_t_cursor);
+		ImGui::Text("t=%.4gs", m_view.t_cursor);
 
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
 			pan_t(ImGui::GetIO().MouseDelta.x, r.w);
@@ -67,22 +67,21 @@ void Waveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rec
 			size_t used;
 			size_t stride;
 			streams.peek(0, &stride, &used);
-			m_t_from = 0;
-			m_t_to   = used / view.srate;
+			m_view.t_from = 0;
+			m_view.t_to   = used / view.srate;
 		}
 
 		auto pos = ImGui::GetIO().MousePos;
 		if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-			view.cursor += dx_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
+			m_view.t_cursor += dx_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
 		} else {
-			view.cursor = x_to_t(pos.x, r);
+			m_view.t_cursor = x_to_t(pos.x, r);
 		}
-		m_t_cursor = view.cursor;
 	}
 
 	Time dt_min = 16.0 / view.srate;
-	if(m_t_to - m_t_from < dt_min) {
-		m_t_from = m_t_to - dt_min;
+	if(m_view.t_to - m_view.t_from < dt_min) {
+		m_view.t_from = m_view.t_to - dt_min;
 	}
 
 	Sample scale = k_sample_max;
@@ -119,7 +118,7 @@ void Waveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rec
 
 	// cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
-	int cx = t_to_x(view.cursor, r);
+	int cx = t_to_x(m_view.t_cursor, r);
 	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
 
 	// zero Y

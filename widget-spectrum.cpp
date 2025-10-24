@@ -89,14 +89,14 @@ void Spectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rec
 	if(has_focus()) {
 	
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
-		ImGui::Text("f=%.6gHz amp=%.2fdB", m_freq_cursor * view.srate * 0.5, m_amp_cursor);
+		ImGui::Text("f=%.6gHz amp=%.2fdB", m_view.freq_cursor * view.srate * 0.5, m_amp_cursor);
 
 		auto pos = ImGui::GetIO().MousePos;
 		if(pos.x >= 0) {
 			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				m_freq_cursor += dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
+				m_view.freq_cursor += dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
 			} else {
-				m_freq_cursor = x_to_freq(pos.x, r);
+				m_view.freq_cursor = x_to_freq(pos.x, r);
 			}
 			m_amp_cursor = (r.y - pos.y) * 100.0f / r.h;
 		}
@@ -106,13 +106,13 @@ void Spectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rec
 		}
 	
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
-			m_freq_from = 0.0f;
-			m_freq_to = 1.0;
+			m_view.freq_from = 0.0f;
+			m_view.freq_to = 1.0;
 		}
 	}
 
-	if(m_freq_from < 0.0f) m_freq_from = 0.0f;
-	if(m_freq_to > 1.0f) m_freq_to = 1.0f;
+	if(m_view.freq_from < 0.0f) m_view.freq_from = 0.0f;
+	if(m_view.freq_to > 1.0f) m_view.freq_to = 1.0f;
 
 	
 
@@ -131,7 +131,7 @@ void Spectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rec
 		size_t avail = 0;
 		Sample *data = streams.peek(ch, &stride, &avail);
 		//int idx = ((int)(view.srate * view.cursor) - m_window.size() / 2) * stride;; TODO
-		int idx = ((int)(view.srate * view.cursor)) * stride;;
+		int idx = ((int)(view.srate * m_view.freq_cursor)) * stride;;
 
 		for(int i=0; i<m_size; i++) {
 			Sample v = 0;
@@ -150,13 +150,13 @@ void Spectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rec
 		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
 		graph(rend, r,
 				m_out_graph.data(), m_out_graph.size(), 1,
-				m_freq_from * npoints, m_freq_to * npoints,
+				m_view.freq_from * npoints, m_view.freq_to * npoints,
 				db_range, 0.0);
 	}
 	
 	// cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
-	int cx = freq_to_x(m_freq_cursor, r);
+	int cx = freq_to_x(m_view.freq_cursor, r);
 	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
 
 
