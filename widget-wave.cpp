@@ -98,10 +98,10 @@ void Waveform::draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *re
 		float idx_from = x_to_t(r.x,       r) * view.srate;
 		float idx_to   = x_to_t(r.x + r.w, r) * view.srate;
 
-		SDL_Color col = widget.channel_color(ch);
+		SDL_Color col = channel_color(ch);
 		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
 
-		float peak = widget.graph(rend, r,
+		float peak = graph(rend, r,
 				data, avail, stride,
 				idx_from, idx_to,
 				-scale, +scale);
@@ -111,7 +111,7 @@ void Waveform::draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *re
 		}
 	}
 
-	widget.grid_time(rend, r, x_to_t(r.x, r), x_to_t(r.x + r.w, r));
+	grid_time(rend, r, x_to_t(r.x, r), x_to_t(r.x + r.w, r));
 
 	// cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);

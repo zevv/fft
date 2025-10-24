@@ -1,11 +1,38 @@
 
 #pragma once
 
+#include <vector>
+
+#include <SDL3/SDL.h>
+
+#include "types.hpp"
+
 class Flap;
 
 class Widget {
 public:
+	
+	enum class Type : int {
+		None, Waveform, Spectrum, Waterfall
+	};
+
+	static const char* type_to_string(Type type);
+	static Type string_to_type(const char *str);
+	static const char **type_names();
+	static size_t type_count();
+	static SDL_Color channel_color(int channel);
+	
+
 protected:
+
+	Sample graph(SDL_Renderer *rend, SDL_Rect &r,
+						 Sample *data, size_t data_count, size_t stride,
+						 float idx_from, float idx_to,
+						 Sample y_min, Sample y_max);
+
+	void grid_vertical(SDL_Renderer *rend, SDL_Rect &r, Sample v_from, Sample v_to);
+	void grid_time(SDL_Renderer *rend, SDL_Rect &r, Time t_from, Time t_to);
+	void grid_time_v(SDL_Renderer *rend, SDL_Rect &r, Time t_from, Time t_to);
 	
 	Time x_to_t(float x, SDL_Rect &r) {
 		return m_t_from - (m_t_from - m_t_to) * (x - r.x) / r.w;
@@ -71,7 +98,6 @@ protected:
 		m_freq_from += (m_freq_cursor - m_freq_from) * fx;
 		m_freq_to   -= (m_freq_to - m_freq_cursor) * fx;
 	};
-
 
 	Time m_t_from{};
 	Time m_t_to{};

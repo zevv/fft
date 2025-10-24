@@ -119,7 +119,7 @@ void Spectrum::draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *re
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
 	float db_range = -120.0;
-	widget.grid_vertical(rend, r, db_range, 0);
+	grid_vertical(rend, r, db_range, 0);
 
 
 	// spectograms
@@ -146,9 +146,9 @@ void Spectrum::draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *re
 		// float scale = 2.0f / m_size / k_sample_max; TODO
 
 		size_t npoints = m_size / 2 + 1;
-		SDL_Color col = widget.channel_color(ch);
+		SDL_Color col = channel_color(ch);
 		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
-		widget.graph(rend, r,
+		graph(rend, r,
 				m_out_graph.data(), m_out_graph.size(), 1,
 				m_freq_from * npoints, m_freq_to * npoints,
 				db_range, 0.0);

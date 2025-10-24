@@ -150,7 +150,7 @@ void Waterfall::draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *r
 	memset(pixels, 0, pitch * r.h);
 
 	float db_range = -80.0;
-	widget.grid_time_v(rend, r, y_to_t(r.y, r), y_to_t(r.y + r.h, r));
+	grid_time_v(rend, r, y_to_t(r.y, r), y_to_t(r.y + r.h, r));
 	
 	int ch = 0;
 	size_t stride = 0;
@@ -167,7 +167,7 @@ void Waterfall::draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *r
 
 		for(int ch=0; ch<8; ch++) {
 			if(!widget.channel_enabled(ch)) continue;
-			SDL_Color col = widget.channel_color(ch);
+			SDL_Color col = channel_color(ch);
 		
 			int idx = (int)(view.srate * t - window.size() / 2) * stride + ch;
 

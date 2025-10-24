@@ -73,7 +73,7 @@ void Panel::load(ConfigReader::Node *node)
 
 			if(strcmp(type, "widget") == 0) {
 				m_type = Type::Widget;
-				m_widget = new Flap(Flap::Type::None);
+				m_widget = new Flap(Widget::Type::None);
 				m_widget->load(node->find("widget"));
 			}
 

@@ -143,12 +143,12 @@ void Corrie::init()
 
 	if(m_root_panel->nkids() == 0) {
 		Panel *p2 = new Panel(Panel::Type::SplitH);
-		p2->add(new Flap(Flap::Type::Waterfall));
-		p2->add(new Flap(Flap::Type::Spectrum));
+		p2->add(new Flap(Widget::Type::Waterfall));
+		p2->add(new Flap(Widget::Type::Spectrum));
 		Panel *p1 = new Panel(Panel::Type::SplitV);
 		p1->add(p2);
-		p1->add(new Flap(Flap::Type::Waveform));
-		p1->add(new Flap(Flap::Type::Waveform));
+		p1->add(new Flap(Widget::Type::Waveform));
+		p1->add(new Flap(Widget::Type::Waveform));
 		m_root_panel->add(p1);
 	}
 }
