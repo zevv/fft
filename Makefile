@@ -29,7 +29,7 @@ CXXFLAGS += -std=c++17 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 CXXFLAGS += -g 
 CXXFLAGS += -Wall -Wformat -Werror
 CXXFLAGS += -Wno-unused-but-set-variable -Wno-unused-variable
-CXXFLAGS += -O0
+CXXFLAGS += -O3
 CXXFLAGS += -MMD
 #CXXFLAGS += -ffast-math
 
