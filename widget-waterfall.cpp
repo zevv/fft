@@ -113,12 +113,10 @@ void Waterfall::draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *r
 			m_t_cursor = view.cursor;
 		}
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-			pan(-dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r),
-				-dy_to_dt(ImGui::GetIO().MouseDelta.y, r));
+			pan_t_y(ImGui::GetIO().MouseDelta.y, r);
 		}
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			zoom(ImGui::GetIO().MouseDelta.x / 100.0f,
-				 ImGui::GetIO().MouseDelta.y / 100.0f);
+			zoom_t_y(ImGui::GetIO().MouseDelta.y, r);
 		}
 	
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
