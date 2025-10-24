@@ -50,16 +50,18 @@ bool Streams::capture()
 		reader->poll();
 		frame_count = std::min(frame_count, reader->frames_avail());
 	}
-	
-	for(auto reader : m_readers) {
-		printf("%s:", reader->name());
-		size_t frames_avail = reader->frames_avail();
-		for(size_t i=0; i<4096; i+=512) {
-			putchar((frames_avail > i) ? '#' : '.');
+
+	if(false) {
+		for(auto reader : m_readers) {
+			printf("%s:", reader->name());
+			size_t frames_avail = reader->frames_avail();
+			for(size_t i=0; i<4096; i+=512) {
+				putchar((frames_avail > i) ? '#' : '.');
+			}
+			printf(" ");
 		}
-		printf(" ");
+		printf("\n");
 	}
-	printf("\n");
 
 	size_t channel = 0;
 	if(frame_count > 0) {

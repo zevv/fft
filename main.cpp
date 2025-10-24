@@ -34,6 +34,7 @@ public:
 	void exit();
 
 	void init_video();
+	void req_redraw();
 
 	void draw();
 	void resize_window(int w, int h);
@@ -52,6 +53,7 @@ private:
 	Streams m_streams{};
 	View m_view{};
 	ImFont *m_font{};
+	int m_redraw{1};
 };
 
 
@@ -187,19 +189,24 @@ void Corrie::init_video(void)
 }
 
 
+void Corrie::req_redraw()
+{
+	m_redraw = 2;
+}
+
+
 void Corrie::run()
 {
 	bool done = false;
 	while (!done)
 	{
-		bool redraw = false;
 
 		if(ImGui::IsKeyPressed(ImGuiKey_Space)) {
 			m_capture ^= 1;
 		}
 		if(m_capture) {
 			if(m_streams.capture()) {
-				redraw = true;
+				req_redraw();
 			}
 		}
 
@@ -218,19 +225,13 @@ void Corrie::run()
 			   event.window.windowID == SDL_GetWindowID(m_win))
 				resize_window(event.window.data1, event.window.data2);
 
-			if(event.type == SDL_EVENT_WINDOW_RESIZED ||
-			   event.type == SDL_EVENT_WINDOW_SHOWN ||
-			   event.type == SDL_EVENT_KEY_UP ||
-			   event.type == SDL_EVENT_KEY_DOWN ||
-			   event.type == SDL_EVENT_MOUSE_MOTION ||
-			   event.type == SDL_EVENT_MOUSE_WHEEL ||
-			   event.type == SDL_EVENT_MOUSE_BUTTON_DOWN ||
-			   event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
-				redraw = true;
-			}
+			req_redraw();
 		}
 
-		if(redraw) {
+
+		if(m_redraw > 0) {
+			m_redraw --;
+
 			ImGui_ImplSDLRenderer3_NewFrame();
 			ImGui_ImplSDL3_NewFrame();
 			ImGui::NewFrame();
