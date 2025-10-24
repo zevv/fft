@@ -74,16 +74,11 @@ size_t Rb::bytes_used()
 }
 
 
-size_t Rb::bytes_free()
-{
-	return m_size - bytes_used();
-}
-
 
 void *Rb::get_write_ptr(size_t *bytes_max)
 {
 	assert(m_head >= m_tail && "rb underflow");
-	if(bytes_max) *bytes_max = bytes_free();
+	if(bytes_max) *bytes_max = m_size - bytes_used();
 	size_t write_idx = m_head % m_size;
 	return m_map1 + write_idx;
 }
@@ -91,8 +86,11 @@ void *Rb::get_write_ptr(size_t *bytes_max)
 
 void Rb::write_done(size_t len)
 {
-	assert(len <= bytes_free() && "write xrun");
+	assert(len <= m_size && "rb overflow");
 	m_head += len;
+	if(m_head - m_tail > m_size) {
+		m_tail = m_head - m_size;
+	}
 }
 
 

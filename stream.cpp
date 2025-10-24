@@ -10,7 +10,7 @@
 
 
 Streams::Streams()
-	: m_depth(1024 * 1024)
+	: m_depth(32 * 1024 * 1024)
 	, m_channels(8)
 	, m_frame_size(m_channels * sizeof(Sample))
 {
@@ -51,7 +51,7 @@ bool Streams::capture()
 		frame_count = std::min(frame_count, reader->frames_avail());
 	}
 
-	if(false) {
+	if(true) {
 		for(auto reader : m_readers) {
 			printf("%s:", reader->name());
 			size_t frames_avail = reader->frames_avail();
@@ -63,9 +63,12 @@ bool Streams::capture()
 		printf("\n");
 	}
 
+	size_t bytes_max = 0;
+	Sample *buf = (Sample *)m_rb.get_write_ptr(&bytes_max);
+
 	size_t channel = 0;
 	if(frame_count > 0) {
-		Sample *buf = (Sample *)m_rb.get_write_ptr();
+
 		for(auto reader : m_readers) {
 			channel += reader->drain_into(buf, channel, frame_count, m_channels);
 		}
@@ -138,7 +141,6 @@ void StreamReaderFd::poll()
 	void *buf = m_rb.get_write_ptr(&bytes_max);
 	if(bytes_max == 0) return;
 
-
 	ssize_t r = read(m_fd, buf, bytes_max);
 	if(r > 0) {
 		m_rb.write_done(r);
@@ -185,14 +187,14 @@ StreamReaderAudio::~StreamReaderAudio()
 void StreamReaderAudio::poll()
 {
 	if(!m_sdl_audiostream) return;
-	size_t read_max = m_rb.bytes_free();
+	size_t read_max;
+	void *buf = m_rb.get_write_ptr(&read_max);
 	if(read_max == 0) return;
 
 	size_t bytes_per_frame = m_ch_count * sizeof(Sample);
 	size_t frames_max = read_max / bytes_per_frame;
 	size_t bytes_to_read = frames_max * bytes_per_frame;
 
-	void *buf = m_rb.get_write_ptr(&read_max);
 	int r = SDL_GetAudioStreamData(m_sdl_audiostream, buf, bytes_to_read);
 	if(r > 0) {
 		m_rb.write_done(r);
@@ -216,11 +218,11 @@ StreamReaderGenerator::~StreamReaderGenerator()
 
 void StreamReaderGenerator::poll()
 {
-	size_t bytes_gen = m_rb.bytes_free();
+	size_t bytes_gen;
+	Sample *buf = (Sample *)m_rb.get_write_ptr(&bytes_gen);
 	size_t frames_gen = bytes_gen / m_frame_size;
 	if(frames_gen == 0) return;
 
-	Sample *buf = (Sample *)m_rb.get_write_ptr(&bytes_gen);
 	for(size_t i=0; i<frames_gen; i++) {
 		buf[i] = run();
 	}

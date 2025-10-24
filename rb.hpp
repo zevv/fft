@@ -11,7 +11,6 @@ public:
 	void set_size(size_t size);
 
 	size_t bytes_used();
-	size_t bytes_free();
 
 	void *get_write_ptr(size_t *bytes_max = nullptr);
 	void write_done(size_t len);
