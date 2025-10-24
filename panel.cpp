@@ -237,6 +237,8 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 
 	if(m_type == Type::Widget) {
 
+		assert(m_widget);
+
 		// setup window
 		ImGuiWindowFlags flags = 0;
 		flags |= ImGuiWindowFlags_NoCollapse;
@@ -294,6 +296,15 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 				if(m_parent && m_parent->get_type() != Type::Root) {
 					m_parent->remove(this);
 				}
+			}
+			Widget *widget_new = nullptr;
+			if(ImGui::IsKeyPressed(ImGuiKey_F1)) widget_new = Widget::create(Widget::Type::Waveform);
+			if(ImGui::IsKeyPressed(ImGuiKey_F2)) widget_new = Widget::create(Widget::Type::Spectrum);
+			if(ImGui::IsKeyPressed(ImGuiKey_F3)) widget_new = Widget::create(Widget::Type::Waterfall);
+			if(widget_new) {
+				m_widget->copy_to(widget_new);
+				delete m_widget;
+				m_widget = widget_new;
 			}
 		}
 

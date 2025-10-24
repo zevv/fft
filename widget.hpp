@@ -25,6 +25,7 @@ public:
 	virtual void load(ConfigReader::Node *node);
 	virtual void save(ConfigWriter &cfg);
 	Widget *copy();
+	void copy_to(Widget *w);
 	bool has_focus() { return m_has_focus; }
 	void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 
