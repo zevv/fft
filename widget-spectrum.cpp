@@ -7,11 +7,11 @@
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
-#include "flap.hpp"
 #include "widget-spectrum.hpp"
 
 
 Spectrum::Spectrum()
+	: Widget(Widget::Type::Spectrum)
 {
 	configure_fft(m_size, m_window_type);
 }
@@ -25,25 +25,23 @@ Spectrum::~Spectrum()
 void Spectrum::load(ConfigReader::Node *node)
 {
 	if(!node) return;
+	Widget::load(node);
 	if(const char *window_type = node->read_str("window_type")) {
 		m_window_type = Window::str_to_type(window_type);
 	}
 	node->read("window_beta", m_window_beta);
 	node->read("fft_size", m_size);
-	node->read("freq_from", m_freq_from);
-	node->read("freq_to", m_freq_to);
 	configure_fft(m_size, m_window_type);
 }
 
 
 void Spectrum::save(ConfigWriter &cw)
 {
+	Widget::save(cw);
 	cw.push("spectrum");
 	cw.write("fft_size", (int)m_size);
 	cw.write("window_type", Window::type_to_str(m_window_type));
 	cw.write("window_beta", m_window_beta);
-	cw.write("freq_from", m_freq_from);
-	cw.write("freq_to", m_freq_to);
 	cw.pop();
 }
 
@@ -57,8 +55,10 @@ void Spectrum::copy_to(Spectrum &w)
 };
 
 
-void Spectrum::draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+void Spectrum::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
+	Widget::draw_controls();
+
 	bool update = false;
 	
 	ImGui::SetNextItemWidth(100);
@@ -86,7 +86,7 @@ void Spectrum::draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *re
 		}
 	}
 
-	if(widget.has_focus()) {
+	if(has_focus()) {
 	
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
 		ImGui::Text("f=%.6gHz amp=%.2fdB", m_freq_cursor * view.srate * 0.5, m_amp_cursor);
@@ -125,7 +125,7 @@ void Spectrum::draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *re
 	// spectograms
 		
 	for(int ch=0; ch<8; ch++) {
-		if(!widget.channel_enabled(ch)) continue;
+		if(!m_channel_map[ch]) continue;
 
 		size_t stride = 0;
 		size_t avail = 0;

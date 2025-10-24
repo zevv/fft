@@ -29,18 +29,13 @@ public:
 
 public:
 
-
-	bool channel_enabled(int channel) const { return m_channel_map[channel]; }
-
 	Sample graph(SDL_Renderer *rend, SDL_Rect &r,
 					Sample *data, size_t data_count, size_t stride,
 					float idx_from, float idx_to,
 					Sample y_min, Sample y_max);
 
 private:
-	Widget::Type m_type;
-	bool m_channel_map[8];
-	bool m_lock_view{true};
+	Widget::Type m_type{Widget::Type::None};
 	Waveform m_waveform;
 	Spectrum m_spectrum;
 	Waterfall m_waterfall;

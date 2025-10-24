@@ -14,11 +14,11 @@ class Flap;
 class Waterfall : public Widget {
 public:
 	Waterfall();
-	~Waterfall();
+	~Waterfall() override;
 	void load(ConfigReader::Node *node);
 	void save(ConfigWriter &cfg);
 	void copy_to(Waterfall &w);
-	void draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
+	void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 private:
 	void configure_fft(int size, Window::Type window_type);
 

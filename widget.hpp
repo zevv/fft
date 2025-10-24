@@ -6,6 +6,9 @@
 #include <SDL3/SDL.h>
 
 #include "types.hpp"
+#include "view.hpp"
+#include "stream.hpp"
+#include "config.hpp"
 
 class Flap;
 
@@ -16,6 +19,16 @@ public:
 		None, Waveform, Spectrum, Waterfall
 	};
 
+	Widget(Type type);
+	virtual ~Widget();
+	
+	virtual void load(ConfigReader::Node *node);
+	virtual void save(ConfigWriter &cfg);
+	Widget *copy();
+	bool has_focus() { return m_has_focus; }
+	virtual void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r) = 0;
+
+	static Widget *create(const char *type_str);
 	static const char* type_to_string(Type type);
 	static Type string_to_type(const char *str);
 	static const char **type_names();
@@ -24,6 +37,8 @@ public:
 	
 
 protected:
+
+	void draw_controls();
 
 	Sample graph(SDL_Renderer *rend, SDL_Rect &r,
 						 Sample *data, size_t data_count, size_t stride,
@@ -91,13 +106,18 @@ protected:
 		m_freq_from += df;
 		m_freq_to += df;
 	};
-
 	
 	void zoom_freq(float fx, float max) {
 		fx /= 50.0;
 		m_freq_from += (m_freq_cursor - m_freq_from) * fx;
 		m_freq_to   -= (m_freq_to - m_freq_cursor) * fx;
 	};
+
+
+	Widget::Type m_type{Widget::Type::None};
+	bool m_channel_map[8]{true, true, true, true, true, true, true, true};
+	bool m_lock_view{true};
+	bool m_has_focus{false};
 
 	Time m_t_from{};
 	Time m_t_to{};

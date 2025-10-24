@@ -7,18 +7,17 @@
 #include "stream.hpp"
 #include "view.hpp"
 #include "fft.hpp"
-#include "flap.hpp"
 #include "widget.hpp"
 
 
 class Spectrum : public Widget {
 public:
 	Spectrum();
-	~Spectrum();
+	~Spectrum() override;
 	void load(ConfigReader::Node *node);
 	void save(ConfigWriter &cfg);
 	void copy_to(Spectrum &w);
-	void draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
+	void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 private:
 	void configure_fft(int size, Window::Type window_type);
 

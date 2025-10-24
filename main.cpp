@@ -16,10 +16,12 @@
 #include <imgui_impl_sdlrenderer3.h>
 
 #include "panel.hpp"
-#include "flap.hpp"
 #include "stream.hpp"
 #include "view.hpp"
 #include "config.hpp"
+#include "widget-wave.hpp"
+#include "widget-spectrum.hpp"
+#include "widget-waterfall.hpp"
 
 
 class Corrie {
@@ -143,12 +145,12 @@ void Corrie::init()
 
 	if(m_root_panel->nkids() == 0) {
 		Panel *p2 = new Panel(Panel::Type::SplitH);
-		p2->add(new Flap(Widget::Type::Waterfall));
-		p2->add(new Flap(Widget::Type::Spectrum));
+		p2->add(new Waterfall());
+		p2->add(new Spectrum());
 		Panel *p1 = new Panel(Panel::Type::SplitV);
 		p1->add(p2);
-		p1->add(new Flap(Widget::Type::Waveform));
-		p1->add(new Flap(Widget::Type::Waveform));
+		p1->add(new Waveform());
+		p1->add(new Waveform());
 		m_root_panel->add(p1);
 	}
 }

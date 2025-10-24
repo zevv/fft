@@ -7,29 +7,34 @@
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
-#include "flap.hpp"
 #include "widget-wave.hpp"
 
+
 Waveform::Waveform()
+	: Widget(Widget::Type::Waveform)
+{
+}
+
+
+Waveform::~Waveform()
 {
 }
 
 
 void Waveform::load(ConfigReader::Node *node)
 {
+	printf("Waveform::load\n");
 	if(!node) return;
+	Widget::load(node);
 	node->read("agc", m_agc);
-	node->read("t_from", m_t_from);
-	node->read("t_to", m_t_to);
 }
 
 
 void Waveform::save(ConfigWriter &cw)
 {
+	Widget::save(cw);
 	cw.push("waveform");
 	cw.write("agc", m_agc);
-	cw.write("t_from", m_t_from);
-	cw.write("t_to", m_t_to);
 	cw.pop();
 }
 
@@ -44,8 +49,10 @@ void Waveform::copy_to(Waveform &w)
 }
 
 
-void Waveform::draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+void Waveform::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
+	Widget::draw_controls();
+
 	ImGui::SameLine();
 	ImGui::Checkbox("AGC", &m_agc);
 
@@ -90,7 +97,7 @@ void Waveform::draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *re
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 	for(int ch=0; ch<8; ch++) {
-		if(!widget.channel_enabled(ch)) continue;
+		if(!m_channel_map[ch]) continue;
 		size_t stride;
 		size_t avail;
 		Sample *data = streams.peek(ch, &stride, &avail);

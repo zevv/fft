@@ -13,10 +13,11 @@ class Waveform : public Widget {
 
 public:
 	Waveform();
-	void load(ConfigReader::Node *node);
-	void save(ConfigWriter &cfg);
+	~Waveform() override;
+	void load(ConfigReader::Node *node) override;
+	void save(ConfigWriter &cfg) override;
 	void copy_to(Waveform &w);
-	void draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
+	void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 
 private:
 

@@ -6,7 +6,6 @@ IMGUI_DIR = /home/ico/external/imgui
 SRC += main.cpp
 SRC += window.cpp
 SRC += panel.cpp
-SRC += flap.cpp
 SRC += widget.cpp
 SRC += widget-wave.cpp
 SRC += widget-spectrum.cpp
