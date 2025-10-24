@@ -73,12 +73,10 @@ void Panel::load(ConfigReader::Node *node)
 
 			if(strcmp(type, "widget") == 0) {
 				m_type = Type::Widget;
-				if(auto nc = node->find("widget")) {
-					if(const char *wtype = nc->read_str("type")) {
-						m_widget = Widget::create(wtype);
-						assert(m_widget);
-						m_widget->load(node->find("widget"));
-					}
+				if(const char *wtype = node->read_str("widget")) {
+					printf("wtype=%s\n", wtype);
+					m_widget = Widget::create(wtype);
+					m_widget->load(node);
 				}
 			}
 
