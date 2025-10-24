@@ -101,8 +101,8 @@ void Spectrum::draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *re
 			m_amp_cursor = (r.y - pos.y) * 100.0f / r.h;
 		}
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			pan_freq_x(-ImGui::GetIO().MouseDelta.x, r);
-			zoom_freq_y(ImGui::GetIO().MouseDelta.y, r);
+			pan_freq(-ImGui::GetIO().MouseDelta.x, r.w);
+			zoom_freq(ImGui::GetIO().MouseDelta.y, r.h);
 		}
 	
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {

@@ -45,40 +45,31 @@ protected:
 		return dy * (m_t_to - m_t_from) / r.h;
 	}
 
-	void pan_freq_x(float dx, SDL_Rect &r) {
-		Frequency df = dx * (m_freq_to - m_freq_from) / r.w;
+	///
+
+	void pan_t(float dx, float max) {
+		Time dt = -dx * (m_t_to - m_t_from) / max;
+		m_t_from += dt;
+		m_t_to += dt;
+	};
+
+	void zoom_t(float fy, float max) {
+		fy /= max;
+		m_t_from += (m_t_cursor - m_t_from) * fy;
+        m_t_to   -= (m_t_to - m_t_cursor) * fy;
+	};
+	
+	void pan_freq(float dx, float max) {
+		Frequency df = dx * (m_freq_to - m_freq_from) / max;
 		m_freq_from += df;
 		m_freq_to += df;
 	};
 
-	void pan_t_y(float dy, SDL_Rect &r) {
-		Time dt = -dy * (m_t_to - m_t_from) / r.h;
-		m_t_from += dt;
-        m_t_to += dt;
-	};
 	
-	void pan_t_x(float dx, SDL_Rect &r) {
-		Time dt = -dx * (m_t_to - m_t_from) / r.w;
-		m_t_from += dt;
-		m_t_to += dt;
-	};
-	
-	void zoom_freq_y(float f, SDL_Rect &r) {
-		f /= 100.0;
-		m_freq_from += (m_freq_cursor - m_freq_from) * f;
-		m_freq_to   -= (m_freq_to - m_freq_cursor) * f;
-	};
-
-	void zoom_freq_x(float fx, SDL_Rect &r) {
-		fx /= 100;
+	void zoom_freq(float fx, float max) {
+		fx /= max;
 		m_freq_from += (m_freq_cursor - m_freq_from) * fx;
 		m_freq_to   -= (m_freq_to - m_freq_cursor) * fx;
-	};
-
-	void zoom_t_y(float fy, SDL_Rect &r) {
-		fy /= 100;
-		m_t_from += (m_t_cursor - m_t_from) * fy;
-        m_t_to   -= (m_t_to - m_t_cursor) * fy;
 	};
 
 

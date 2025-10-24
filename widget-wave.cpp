@@ -55,8 +55,8 @@ void Waveform::draw(Flap &widget, View &view, Streams &streams, SDL_Renderer *re
 		ImGui::Text("t=%.4gs", m_t_cursor);
 
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			pan_t_x(ImGui::GetIO().MouseDelta.x, r);
-			zoom_t_y(ImGui::GetIO().MouseDelta.y, r);
+			pan_t(ImGui::GetIO().MouseDelta.x, r.w);
+			zoom_t(ImGui::GetIO().MouseDelta.y, r.h);
 		}
 
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
