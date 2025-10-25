@@ -266,7 +266,7 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 
 		Widget::Type type = m_widget->get_type();
 		ImGui::SetNextItemWidth(100);
-		ImGui::Combo("type", (int *)&type, Widget::type_names(), Widget::type_count());
+		ImGui::Combo("##type", (int *)&type, Widget::type_names(), Widget::type_count());
 		if(type != m_widget->get_type()) {
 			Widget *widget_new = Widget::create(type);
 			m_widget->copy_to(widget_new);
