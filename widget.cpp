@@ -8,6 +8,7 @@
 #include "widget-wave.hpp"
 #include "widget-spectrum.hpp"
 #include "widget-waterfall.hpp"
+#include "widget-histogram.hpp"
 #include "widget.hpp"
 
 
@@ -27,6 +28,7 @@ Widget *Widget::create(Widget::Type type)
 	if(type == Widget::Type::Waveform) return new WidgetWaveform();
 	if(type == Widget::Type::Spectrum) return new WidgetSpectrum();
 	if(type == Widget::Type::Waterfall) return new WidgetWaterfall();
+	if(type == Widget::Type::Histogram) return new WidgetHistogram();
 	assert(false && "unknown widget type");
 	return nullptr;
 }
@@ -318,7 +320,7 @@ SDL_Color Widget::channel_color(int channel)
 
 
 const char *k_type_str[] = {
-	"none", "wave", "spectrum", "waterfall"
+	"none", "wave", "spectrum", "waterfall", "histogram"
 };
 
 const char **Widget::type_names()
