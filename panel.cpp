@@ -6,10 +6,8 @@
 	
 
 Panel::Panel(Widget *widget)
-	: m_parent(nullptr)
-	, m_widget(widget)
+	: m_widget(widget)
 	, m_type(Type::Widget)
-	, m_weight(1.0)
 {
 	char buf[16] = "";
 	for(int i=0; i<15; i++) {
@@ -22,11 +20,7 @@ Panel::Panel(Widget *widget)
 
 
 Panel::Panel(Type type)
-	: m_parent(nullptr)
-	, m_widget(nullptr)
-	, m_type(type)
-	, m_weight(1.0)
-	, m_kids{}
+	: m_type(type)
 {
 	char buf[16] = "";
 	for(int i=0; i<15; i++) {

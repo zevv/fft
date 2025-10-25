@@ -92,8 +92,7 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	m_has_focus = ImGui::IsWindowFocused();
 
-
-	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 3));
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3, 3));
 	for(size_t i=0; i<8; i++) {
 		if(i > 0) {
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
@@ -167,10 +166,7 @@ Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
 		Sample vmax = data[stride * idx_start];
 
 		for(int idx=idx_start; idx<idx_end; idx++) {
-			Sample v = 0;
-			if(idx >= idx_min && idx < idx_max) {
-				v = data[stride * idx];
-			}
+			Sample v = data[stride * idx];
 			if(v < vmin) vmin = v;
 			if(v > vmax) vmax = v;
 		}

@@ -41,14 +41,14 @@ private:
 		Panel *p_after;
 	};
 
-	Panel *m_parent;
-	Widget *m_widget;
-	int m_last_w;
-	int m_last_h;
-	const char *m_title;
-	Type m_type;
-	float m_weight;
-	std::vector<Panel *> m_kids;
-	std::vector<Panel *> m_kids_remove;
-	std::vector<AddRequest> m_add_requests;
+	Panel *m_parent{};
+	Widget *m_widget{};
+	int m_last_w{};
+	int m_last_h{};
+	const char *m_title{};
+	Type m_type{};
+	float m_weight{1.0};
+	std::vector<Panel *> m_kids{};
+	std::vector<Panel *> m_kids_remove{};
+	std::vector<AddRequest> m_add_requests{};
 };
