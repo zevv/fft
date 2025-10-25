@@ -72,10 +72,10 @@ std::vector<Sample> Fft::run(std::vector<Sample> &input)
 		Sample v = 0.0;
 		if(i == 0) {
 			v = m_in[0] * scale / 2;
-		} else if(i < size / 2) {
-			v = hypot(m_in[i], m_in[size - i]) * scale;
 		} else if(i == size / 2) {
 			v = fabs(m_in[size / 2]) * scale / 2;
+		} else {
+			v = hypot(m_in[i], m_in[size - i]) * scale;
 		} 
 		m_out[i] = (v >= 1e-20f) ? 20.0f * log10f(v) : db_range;
 	}
