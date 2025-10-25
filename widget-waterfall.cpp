@@ -97,25 +97,25 @@ void Waterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Re
 		auto pos = ImGui::GetIO().MousePos;
 		if(pos.x >= 0) {
 			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				m_view.freq_cursor += dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
+				m_view.freq_cursor += m_view.dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
 			} else {
-				m_view.freq_cursor = x_to_freq(pos.x, r);
+				m_view.freq_cursor = m_view.x_to_freq(pos.x, r);
 			}
 			m_amp_cursor = (r.y - pos.y) * 100.0f / r.h;
 
 
 			auto pos = ImGui::GetIO().MousePos;
 			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				m_view.t_cursor += dy_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
+				m_view.t_cursor += m_view.dy_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
 			} else {
-				m_view.t_cursor = y_to_t(pos.y, r);
+				m_view.t_cursor = m_view.y_to_t(pos.y, r);
 			}
 		}
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-			pan_t(ImGui::GetIO().MouseDelta.y, r.h);
+			m_view.pan_t(ImGui::GetIO().MouseDelta.y / r.h);
 		}
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			zoom_t(ImGui::GetIO().MouseDelta.y, r.h);
+			m_view.zoom_t(ImGui::GetIO().MouseDelta.y);
 		}
 	
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
@@ -149,7 +149,7 @@ void Waterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Re
 	memset(pixels, 0, pitch * r.h);
 
 	float db_range = -80.0;
-	grid_time_v(rend, r, y_to_t(r.y, r), y_to_t(r.y + r.h, r));
+	grid_time_v(rend, r, m_view.y_to_t(r.y, r), m_view.y_to_t(r.y + r.h, r));
 	
 	int ch = 0;
 	size_t stride = 0;
@@ -161,7 +161,7 @@ void Waterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Re
 	std::vector<Sample> m_in(m_size);
 
 	for(int y=0; y<r.h; y++) {
-		Time t = y_to_t(r.y + y, r);
+		Time t = m_view.y_to_t(r.y + y, r);
 		memset(row.data(), 0, sizeof(Pixel) * row.size());
 
 		for(int ch=0; ch<8; ch++) {
@@ -217,7 +217,7 @@ void Waterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Re
 	
 	// cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
-	int cy = t_to_y(m_view.t_cursor, r);
+	int cy = m_view.t_to_y(m_view.t_cursor, r);
 	SDL_RenderLine(rend, r.x, cy, r.x + r.w, cy);
 	//int cx = freq_to_x(m_freq_cursor, r);
 	//SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);

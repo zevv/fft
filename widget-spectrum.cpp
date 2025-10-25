@@ -94,15 +94,15 @@ void Spectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rec
 		auto pos = ImGui::GetIO().MousePos;
 		if(pos.x >= 0) {
 			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				m_view.freq_cursor += dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
+				m_view.freq_cursor += m_view.dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
 			} else {
-				m_view.freq_cursor = x_to_freq(pos.x, r);
+				m_view.freq_cursor = m_view.x_to_freq(pos.x, r);
 			}
 			m_amp_cursor = (r.y - pos.y) * 100.0f / r.h;
 		}
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			pan_freq(-ImGui::GetIO().MouseDelta.x, r.w);
-			zoom_freq(ImGui::GetIO().MouseDelta.y, r.h);
+			m_view.pan_freq(-ImGui::GetIO().MouseDelta.x / r.w);
+			m_view.zoom_freq(ImGui::GetIO().MouseDelta.y);
 		}
 	
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
@@ -156,7 +156,7 @@ void Spectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rec
 	
 	// cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
-	int cx = freq_to_x(m_view.freq_cursor, r);
+	int cx = m_view.freq_to_x(m_view.freq_cursor, r);
 	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
 
 

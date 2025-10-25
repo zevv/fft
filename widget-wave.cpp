@@ -59,8 +59,8 @@ void Waveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rec
 		ImGui::Text("t=%.4gs", m_view.t_cursor);
 
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			pan_t(ImGui::GetIO().MouseDelta.x, r.w);
-			zoom_t(ImGui::GetIO().MouseDelta.y, r.h);
+			m_view.pan_t(ImGui::GetIO().MouseDelta.x / r.w);
+			m_view.zoom_t(ImGui::GetIO().MouseDelta.y);
 		}
 
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
@@ -73,9 +73,9 @@ void Waveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rec
 
 		auto pos = ImGui::GetIO().MousePos;
 		if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-			m_view.t_cursor += dx_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
+			m_view.t_cursor += m_view.dx_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
 		} else {
-			m_view.t_cursor = x_to_t(pos.x, r);
+			m_view.t_cursor = m_view.x_to_t(pos.x, r);
 		}
 	}
 
@@ -98,8 +98,8 @@ void Waveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rec
 		size_t avail;
 		Sample *data = streams.peek(ch, &stride, &avail);
 
-		float idx_from = x_to_t(r.x,       r) * view.srate;
-		float idx_to   = x_to_t(r.x + r.w, r) * view.srate;
+		float idx_from = m_view.x_to_t(r.x,       r) * view.srate;
+		float idx_to   = m_view.x_to_t(r.x + r.w, r) * view.srate;
 
 		SDL_Color col = channel_color(ch);
 		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
@@ -114,11 +114,11 @@ void Waveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rec
 		}
 	}
 
-	grid_time(rend, r, x_to_t(r.x, r), x_to_t(r.x + r.w, r));
+	grid_time(rend, r, m_view.x_to_t(r.x, r), m_view.x_to_t(r.x + r.w, r));
 
 	// cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
-	int cx = t_to_x(m_view.t_cursor, r);
+	int cx = m_view.t_to_x(m_view.t_cursor, r);
 	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
 
 	// zero Y
