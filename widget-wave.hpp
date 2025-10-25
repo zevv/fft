@@ -9,11 +9,11 @@
 #include "widget.hpp"
 
 
-class Waveform : public Widget {
+class WidgetWaveform : public Widget {
 
 public:
-	Waveform();
-	~Waveform() override;
+	WidgetWaveform();
+	~WidgetWaveform() override;
 	void load(ConfigReader::Node *node) override;
 	void save(ConfigWriter &cfg) override;
 

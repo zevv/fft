@@ -11,10 +11,10 @@
 
 class Flap;
 
-class Waterfall : public Widget {
+class WidgetWaterfall : public Widget {
 public:
-	Waterfall();
-	~Waterfall() override;
+	WidgetWaterfall();
+	~WidgetWaterfall() override;
 	void load(ConfigReader::Node *node) override;
 	void save(ConfigWriter &cfg) override;
 

@@ -10,19 +10,19 @@
 #include "widget-waterfall.hpp"
 
 
-Waterfall::Waterfall()
+WidgetWaterfall::WidgetWaterfall()
 	: Widget(Widget::Type::Waterfall)
 {
 	configure_fft(m_size, m_window_type);
 }
 
 
-Waterfall::~Waterfall()
+WidgetWaterfall::~WidgetWaterfall()
 {
 }
 
 
-void Waterfall::load(ConfigReader::Node *node)
+void WidgetWaterfall::load(ConfigReader::Node *node)
 {
 	if(!node) return;
 	Widget::load(node);
@@ -37,7 +37,7 @@ void Waterfall::load(ConfigReader::Node *node)
 }
 
 
-void Waterfall::save(ConfigWriter &cw)
+void WidgetWaterfall::save(ConfigWriter &cw)
 {
 	Widget::save(cw);
 	cw.push("waterfall");
@@ -48,9 +48,9 @@ void Waterfall::save(ConfigWriter &cw)
 }
 
 
-Widget *Waterfall::do_copy()
+Widget *WidgetWaterfall::do_copy()
 {
-	Waterfall *w = new Waterfall();
+	WidgetWaterfall *w = new WidgetWaterfall();
 	w->m_size = m_size;
 	w->m_window_type = m_window_type;
 	w->m_window_beta = m_window_beta;
@@ -64,7 +64,7 @@ struct Pixel {
 };
 
 
-void Waterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	bool update = false;
 	
@@ -228,7 +228,7 @@ void Waterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Re
 }
 
 
-void Waterfall::configure_fft(int size, Window::Type window_type)
+void WidgetWaterfall::configure_fft(int size, Window::Type window_type)
 {
 	m_fft.set_window(m_window_type, m_window_beta);
 	m_fft.set_size(size);

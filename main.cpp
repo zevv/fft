@@ -145,12 +145,12 @@ void Corrie::init()
 
 	if(m_root_panel->nkids() == 0) {
 		Panel *p2 = new Panel(Panel::Type::SplitH);
-		p2->add(new Waterfall());
-		p2->add(new Spectrum());
+		p2->add(new WidgetWaterfall());
+		p2->add(new WidgetSpectrum());
 		Panel *p1 = new Panel(Panel::Type::SplitV);
 		p1->add(p2);
-		p1->add(new Waveform());
-		p1->add(new Waveform());
+		p1->add(new WidgetWaveform());
+		p1->add(new WidgetWaveform());
 		m_root_panel->add(p1);
 	}
 }
@@ -289,4 +289,3 @@ int main(int, char**)
 
 	return 0;
 }
-
