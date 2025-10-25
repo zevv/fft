@@ -25,7 +25,7 @@ Widget::~Widget()
 Widget *Widget::create(Widget::Type type)
 {
 	if(type == Widget::Type::Waveform) return new Waveform();
-	if(type == Widget::Type::Spectrum) return new Spectrum();
+	if(type == Widget::Type::Spectrum) return new WidgetSpectrum();
 	if(type == Widget::Type::Waterfall) return new Waterfall();
 	assert(false && "unknown widget type");
 	return nullptr;

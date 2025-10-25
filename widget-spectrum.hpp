@@ -10,10 +10,10 @@
 #include "widget.hpp"
 
 
-class Spectrum : public Widget {
+class WidgetSpectrum : public Widget {
 public:
-	Spectrum();
-	~Spectrum() override;
+	WidgetSpectrum();
+	~WidgetSpectrum() override;
 	void load(ConfigReader::Node *node) override;
 	void save(ConfigWriter &cfg) override;
 

@@ -10,19 +10,19 @@
 #include "widget-spectrum.hpp"
 
 
-Spectrum::Spectrum()
+WidgetSpectrum::WidgetSpectrum()
 	: Widget(Widget::Type::Spectrum)
 {
 	configure_fft(m_size, m_window_type);
 }
 
 
-Spectrum::~Spectrum()
+WidgetSpectrum::~WidgetSpectrum()
 {
 }
 
 
-void Spectrum::load(ConfigReader::Node *node)
+void WidgetSpectrum::load(ConfigReader::Node *node)
 {
 	if(!node) return;
 	Widget::load(node);
@@ -35,7 +35,7 @@ void Spectrum::load(ConfigReader::Node *node)
 }
 
 
-void Spectrum::save(ConfigWriter &cw)
+void WidgetSpectrum::save(ConfigWriter &cw)
 {
 	Widget::save(cw);
 	cw.push("spectrum");
@@ -46,9 +46,9 @@ void Spectrum::save(ConfigWriter &cw)
 }
 
 
-Widget *Spectrum::do_copy()
+Widget *WidgetSpectrum::do_copy()
 {
-	auto *w = new Spectrum();
+	auto *w = new WidgetSpectrum();
 	w->m_size = m_size;
 	w->m_window_type = m_window_type;
 	w->m_window_beta = m_window_beta;
@@ -57,7 +57,7 @@ Widget *Spectrum::do_copy()
 };
 
 
-void Spectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+void WidgetSpectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	bool update = false;
 	
@@ -165,7 +165,7 @@ void Spectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rec
 }
 
 
-void Spectrum::configure_fft(int size, Window::Type window_type)
+void WidgetSpectrum::configure_fft(int size, Window::Type window_type)
 {
 	m_size = size;
 	m_in.resize(size);
