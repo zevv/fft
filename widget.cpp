@@ -89,7 +89,9 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	m_has_focus = ImGui::IsWindowFocused();
 
+
 	for(size_t i=0; i<8; i++) {
+		if(i > 0) ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 		ImGui::SameLine();
 		SDL_Color c = Widget::channel_color(i);
 		ImVec4 col = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
@@ -104,10 +106,12 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 			m_channel_map[i] = !m_channel_map[i];
 		}
 		ImGui::PopStyleColor(3);
+		if(i > 0) ImGui::PopStyleVar();
 	}
 
+
 	ImGui::SameLine();
-	ImGui::Checkbox("L##lock view", &m_lock_view);
+	ImGui::Checkbox("Lock", &m_lock_view);
 	
 	if(m_has_focus) {
 		if(ImGui::IsKeyPressed(ImGuiKey_0)) {

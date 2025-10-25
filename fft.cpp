@@ -48,8 +48,10 @@ std::vector<Sample> Fft::run(std::vector<Sample> &input)
 	assert(m_window.size() == input.size());
 
 	double key = 0;
+	float i = 1.0;
 	for(auto v : input) {
-		key += v;
+		key += v * i;
+		i *= 1.0001;
 	}
 
 	auto it = m_cache.find(key);

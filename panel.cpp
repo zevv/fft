@@ -258,7 +258,7 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 			ImGui::Begin(m_title, nullptr, flags);
 		}
 
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 2.0f);
 
 		if(ImGui::IsWindowHovered() && 
 		   !ImGui::IsMouseDragging(ImGuiMouseButton_Left) && 
