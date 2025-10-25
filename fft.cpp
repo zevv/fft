@@ -82,7 +82,7 @@ std::vector<Sample> Fft::run(std::vector<Sample> &input)
 		m_out[i] = (v >= 1e-20f) ? 20.0f * log10f(v) : db_range;
 	}
 
-	m_cache[key] = m_out;
+	//m_cache[key] = m_out;
 
 	return m_out;
 }

@@ -26,13 +26,13 @@ void WidgetWaterfall::load(ConfigReader::Node *node)
 {
 	if(!node) return;
 	Widget::load(node);
-	if(const char *window_type = node->read_str("window_type")) {
-		m_window_type = Window::str_to_type(window_type);
+	if(auto *wnode = node->find("waterfall")) {
+		if(const char *window_type = wnode->read_str("window_type")) {
+			m_window_type = Window::str_to_type(window_type);
+		}
+		wnode->read("window_beta", m_window_beta);
+		wnode->read("fft_size", m_size);
 	}
-	node->read("window_beta", m_window_beta);
-	node->read("fft_size", m_size);
-	node->read("freq_from", m_view.freq_from);
-	node->read("freq_to", m_view.freq_to);
 	configure_fft(m_size, m_window_type);
 }
 

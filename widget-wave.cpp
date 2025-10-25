@@ -25,7 +25,9 @@ void WidgetWaveform::load(ConfigReader::Node *node)
 {
 	if(!node) return;
 	Widget::load(node);
-	node->read("agc", m_agc);
+	if(auto *wnode = node->find("waveform")) {
+		wnode->read("agc", m_agc);
+	}
 }
 
 
