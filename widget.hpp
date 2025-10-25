@@ -16,7 +16,7 @@ class Widget {
 public:
 	
 	enum class Type : int {
-		None, Waveform, Spectrum, Waterfall, Histogram
+		None, Waveform, Spectrum, Waterfall, Histogram, StyleEditor
 	};
 
 	Widget(Type type);
@@ -61,4 +61,25 @@ protected:
 
 	View m_view{};
 };
+
+
+class WidgetNone : public Widget {
+public:
+	WidgetNone() : Widget(Widget::Type::None) {}
+	void do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r) { }
+	Widget *do_copy() { return new WidgetNone(); }
+};
+
+
+class WidgetStyleEditor : public Widget {
+public:
+	WidgetStyleEditor() : Widget(Widget::Type::StyleEditor) {}
+	void do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r) { ImGui::ShowStyleEditor(); }
+	Widget *do_copy() { return new WidgetStyleEditor(); }
+};
+
+namespace ImGui {
+	bool ToggleButton(const char* str_id, bool* v);
+}
+
 

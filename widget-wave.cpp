@@ -52,7 +52,7 @@ Widget *WidgetWaveform::do_copy()
 void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	ImGui::SameLine();
-	ImGui::Checkbox("AGC", &m_agc);
+	ImGui::ToggleButton("AGC", &m_agc);
 
 	if(ImGui::IsWindowFocused()) {
 	

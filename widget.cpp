@@ -25,10 +25,12 @@ Widget::~Widget()
 
 Widget *Widget::create(Widget::Type type)
 {
+	if(type == Widget::Type::None) return new WidgetNone();
 	if(type == Widget::Type::Waveform) return new WidgetWaveform();
 	if(type == Widget::Type::Spectrum) return new WidgetSpectrum();
 	if(type == Widget::Type::Waterfall) return new WidgetWaterfall();
 	if(type == Widget::Type::Histogram) return new WidgetHistogram();
+	if(type == Widget::Type::StyleEditor) return new WidgetStyleEditor();
 	assert(false && "unknown widget type");
 	return nullptr;
 }
@@ -91,8 +93,12 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	m_has_focus = ImGui::IsWindowFocused();
 
 
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 3));
 	for(size_t i=0; i<8; i++) {
-		if(i > 0) ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+		if(i > 0) {
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+		}
+
 		ImGui::SameLine();
 		SDL_Color c = Widget::channel_color(i);
 		ImVec4 col = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
@@ -102,17 +108,17 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, col);
 		char label[2] = { (char)('1' + i), 0 };
 		ImGuiKey key = (ImGuiKey)(ImGuiKey_1 + i);
-		if(ImGui::SmallButton(label) || (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(key))) {
+		if(ImGui::Button(label) || (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(key))) {
 			if(ImGui::GetIO().KeyShift) for(int j=0; j<8; j++) m_channel_map[j] = 0;
 			m_channel_map[i] = !m_channel_map[i];
 		}
 		ImGui::PopStyleColor(3);
-		if(i > 0) ImGui::PopStyleVar();
+		if(i > 0) ImGui::PopStyleVar(1);
 	}
-
+	ImGui::PopStyleVar(1);
 
 	ImGui::SameLine();
-	ImGui::Checkbox("Lock", &m_lock_view);
+	ImGui::ToggleButton("Lock", &m_lock_view);
 	
 	if(m_has_focus) {
 		if(ImGui::IsKeyPressed(ImGuiKey_0)) {
@@ -320,7 +326,7 @@ SDL_Color Widget::channel_color(int channel)
 
 
 const char *k_type_str[] = {
-	"none", "wave", "spectrum", "waterfall", "histogram"
+	"none", "wave", "spectrum", "waterfall", "histogram", "style editor"
 };
 
 const char **Widget::type_names()
@@ -353,3 +359,20 @@ Widget::Type Widget::string_to_type(const char *str)
 	}
 	return Type::None;
 }
+
+
+namespace ImGui {
+bool ToggleButton(const char* str_id, bool* v)
+{
+	ImVec4 col = *v ? ImVec4(0.26f, 0.59f, 0.98f, 1.0f) : ImVec4(0.26f, 0.26f, 0.38f, 1.0f);
+	ImGui::PushStyleColor(ImGuiCol_Button, col);
+	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, col);
+	ImGui::PushStyleColor(ImGuiCol_ButtonActive, col);
+	bool pressed = ImGui::Button(str_id);
+	if(pressed) *v = !*v;
+	ImGui::PopStyleColor(3);
+	return pressed;
+}
+}
+
+
