@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include <algorithm>
+#include <SDL3/SDL.h>
 
-#include "window.hpp"
 #include "config.hpp"
+#include "types.hpp"
 
 class View {
 
@@ -32,45 +32,6 @@ public:
 		cfg.write("freq_to", freq_to);
 		cfg.write("freq_cursor", freq_cursor);
 	}
-	
-	//Time x_to_t(float x, SDL_Rect &r) {
-	//	return m_view.t_from - (m_view.t_from - m_view.t_to) * (x - r.x) / r.w;
-	//}
-
-	//float t_to_x(Time t, SDL_Rect &r) {
-	//	return r.x + r.w * (m_view.t_from - t) / (m_view.t_from - m_view.t_to);
-	//}
-
-	//Time dx_to_dt(float dx, SDL_Rect &r) {
-	//	return dx * (m_view.t_to - m_view.t_from) / r.w;
-	//}
-
-	//
-	//Frequency x_to_freq(float x, SDL_Rect &r) {
-	//	return m_view.freq_from + (m_view.freq_to - m_view.freq_from) * (x - r.x) / r.w;
-	//}
-
-	//float freq_to_x(Frequency freq, SDL_Rect &r) {
-	//	return r.x + r.w * (freq - m_view.freq_from) / (m_view.freq_to - m_view.freq_from);
-	//}
-
-	//Frequency dx_to_dfreq(float dx, SDL_Rect &r) {
-	//	return dx * (m_view.freq_to - m_view.freq_from) / r.w;
-	//}
-
-
-	//Time y_to_t(float y, SDL_Rect &r) {
-	//	return m_view.t_from - (m_view.t_from - m_view.t_to) * (y - r.y) / r.h;
-	//}
-
-	//float t_to_y(Time t, SDL_Rect &r) {
-	//	return r.y + r.h * (m_view.t_from - t) / (m_view.t_from - m_view.t_to);
-	//}
-
-	//Time dy_to_dt(float dy, SDL_Rect &r) {
-	//	return dy * (m_view.t_to - m_view.t_from) / r.h;
-	//}
-
 
 	Time x_to_t(float x, SDL_Rect &r) {
 		return t_from + (t_to - t_from) * (x - r.x) / r.w;
@@ -107,11 +68,6 @@ public:
 	Time dy_to_dt(float dy, SDL_Rect &r) {
 		return dy * (t_to - t_from) / r.h;
 	}
-
-
-	
-	
-
 
 	void pan_t(float f) {
 		printf("pan t: %f\n", f);

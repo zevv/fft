@@ -89,8 +89,6 @@ void Waveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rec
 		scale = m_peak / 0.9;
 	}
 
-	Sample data2[] = { 0, 1, 2, 3, 4, 3, 2, 1, 0 };
-
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 	for(int ch=0; ch<8; ch++) {
 		if(!m_channel_map[ch]) continue;
