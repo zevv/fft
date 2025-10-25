@@ -26,6 +26,7 @@ public:
 	virtual void save(ConfigWriter &cfg);
 	Widget *copy();
 	void copy_to(Widget *w);
+	Type get_type() { return m_type; }
 	bool has_focus() { return m_has_focus; }
 	void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 
