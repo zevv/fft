@@ -44,7 +44,6 @@ Widget *WidgetHistogram::do_copy()
 {
 	WidgetHistogram *w = new WidgetHistogram();
 	w->m_agc = m_agc;
-	w->m_peak = m_peak;
 	return w;
 }
 
@@ -53,9 +52,13 @@ void WidgetHistogram::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 {
 	ImGui::SameLine();
 	ImGui::Checkbox("AGC", &m_agc);
+	
+	ImGui::SetNextItemWidth(100);
+	ImGui::SameLine();
+	ImGui::SliderInt("##nbins", &m_nbins, 
+				16, 32768, "%d", ImGuiSliderFlags_Logarithmic);
 
-	int nbins = 256;
-	std::vector<Sample> bins(nbins);
+	std::vector<Sample> bins(m_nbins);
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 	for(int ch=0; ch<8; ch++) {
@@ -69,13 +72,23 @@ void WidgetHistogram::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 
 		idx_from = std::max<float>(0.0f, idx_from);
 		idx_to   = std::min<float>(avail, idx_to);
+	
+		Sample vmin = -1.0;
+		Sample vmax =  1.0;
+		if(m_agc) {
+			for(int idx=idx_from; idx<idx_to; idx++) {
+				Sample v = data[idx * stride];
+				if(idx == (int)idx_from || v < vmin) vmin = v;
+				if(idx == (int)idx_from || v > vmax) vmax = v;
+			}
+		}
 
-		bins.assign(nbins, 0.0f);
+		bins.assign(m_nbins, 0.0f);
 		float bin_max = 0.0;
 		for(int idx=idx_from; idx<idx_to; idx++) {
 			float v = data[idx * stride];
-			int bin = (int)((v + 1.0f) * 0.5f * nbins);
-			bin = std::clamp(bin, 0, nbins - 1);
+			int bin = (v - vmin) / (vmax - vmin) * (m_nbins - 1);
+			bin = std::clamp(bin, 0, m_nbins - 1);
 			bins[bin] += 1.0f;
 			bin_max = std::max(bin_max, bins[bin]);
 		}
@@ -83,17 +96,12 @@ void WidgetHistogram::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 		SDL_Color col = channel_color(ch);
 		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
 
-		float peak = graph(rend, r,
-				bins.data(), nbins, 1,
-				0, nbins,
+		graph(rend, r,
+				bins.data(), m_nbins, 1,
+				0, m_nbins-1,
 				0.0, bin_max);
 
-		if(peak > m_peak) {
-			m_peak = peak;
-		}
 	}
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
-
-	m_peak *= 0.9f;
 }

@@ -22,5 +22,5 @@ private:
 	void do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r) override;
 
 	bool m_agc{true};
-	Sample m_peak{};
+	int m_nbins{256};
 };
