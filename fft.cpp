@@ -22,7 +22,7 @@ void Fft::set_size(size_t size)
 	}
 
 	m_in.resize(size);
-	m_out.resize(size);
+	m_out.resize(size / 2 + 1);
 	m_plan = fftwf_plan_r2r_1d(size, m_in.data(), m_in.data(), FFTW_R2HC, FFTW_ESTIMATE);
 	m_window.set_size(size);
 	m_cache.clear();
@@ -42,7 +42,7 @@ int Fft::out_size()
 }
 
 
-std::vector<Sample> &Fft::run(std::vector<Sample> &input)
+std::vector<Sample> Fft::run(std::vector<Sample> &input)
 {
 	assert(m_in.size() == input.size());
 	assert(m_window.size() == input.size());
@@ -68,7 +68,7 @@ std::vector<Sample> &Fft::run(std::vector<Sample> &input)
 	float scale = m_window.gain() * 2.0f / size;
 	float db_range = -120.0;
 
-	for(size_t i=0; i<size; i++) {
+	for(size_t i=0; i<size/2; i++) {
 		Sample v = 0.0;
 		if(i == 0) {
 			v = m_in[0] * scale / 2;

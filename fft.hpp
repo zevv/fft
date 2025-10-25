@@ -17,7 +17,7 @@ public:
 	void set_size(size_t size);
 	void set_window(Window::Type type, size_t size, float beta=5.0f);
 	int out_size();
-	std::vector<Sample> &run(std::vector<Sample> &input);
+	std::vector<Sample> run(std::vector<Sample> &input);
 
 private:
 	fftwf_plan m_plan{nullptr};
