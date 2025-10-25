@@ -70,7 +70,7 @@ std::vector<Sample> Fft::run(std::vector<Sample> &input)
 	float scale = m_window.gain() * 2.0f / size;
 	float db_range = -120.0;
 
-	for(size_t i=0; i<size/2; i++) {
+	for(size_t i=0; i<=size/2; i++) {
 		Sample v = 0.0;
 		if(i == 0) {
 			v = m_in[0] * scale / 2;
