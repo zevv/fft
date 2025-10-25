@@ -219,8 +219,10 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
 	int cy = m_view.t_to_y(m_view.t_cursor, r);
 	SDL_RenderLine(rend, r.x, cy, r.x + r.w, cy);
-	//int cx = freq_to_x(m_freq_cursor, r);
-	//SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
+	
+	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
+	int cx = m_view.freq_to_x(m_view.freq_cursor, r);
+	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
 
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
