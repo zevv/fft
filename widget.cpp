@@ -59,7 +59,6 @@ void Widget::save(ConfigWriter &cw)
 		if(m_channel_map[i]) channel_map |= (1 << i);
 	}
 
-	printf("save widget type=%s\n", Widget::type_to_string(m_type));
 	cw.write("widget", Widget::type_to_string(m_type));
 	cw.write("channel_map", channel_map);
 	cw.write("lock_view", m_lock_view);

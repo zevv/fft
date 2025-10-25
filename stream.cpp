@@ -51,7 +51,7 @@ bool Streams::capture()
 		frame_count = std::min(frame_count, reader->frames_avail());
 	}
 
-	if(true) {
+	if(false) {
 		for(auto reader : m_readers) {
 			printf("%s:", reader->name());
 			size_t frames_avail = reader->frames_avail();

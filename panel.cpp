@@ -59,7 +59,6 @@ void Panel::load(ConfigReader::Node *node)
 		if(const char *type = node->read_str("type")) {
 
 			if(strcmp(type, "root") == 0) {
-				printf("%p loading root panel\n", this);
 				m_type = Type::Root;
 			}
 
@@ -74,7 +73,6 @@ void Panel::load(ConfigReader::Node *node)
 			if(strcmp(type, "widget") == 0) {
 				m_type = Type::Widget;
 				if(const char *wtype = node->read_str("widget")) {
-					printf("wtype=%s\n", wtype);
 					m_widget = Widget::create(wtype);
 					m_widget->load(node);
 				}

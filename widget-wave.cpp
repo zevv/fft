@@ -23,7 +23,6 @@ Waveform::~Waveform()
 
 void Waveform::load(ConfigReader::Node *node)
 {
-	printf("Waveform::load\n");
 	if(!node) return;
 	Widget::load(node);
 	node->read("agc", m_agc);

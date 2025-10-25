@@ -70,7 +70,6 @@ public:
 	}
 
 	void pan_t(float f) {
-		printf("pan t: %f\n", f);
 		Time dt = -f * (t_to - t_from);
 		t_from += dt;
 		t_to += dt;
