@@ -112,7 +112,7 @@ void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 		} else {
 			peak = graph(rend, r,
 					&wdata[ch].min, &wdata[ch].max, 
-					frames_avail / 256, wdata_stride,
+					frames_avail / 256, wdata_stride * 2,
 					idx_from / 256, idx_to / 256,
 					(Sample)-scale, (Sample)+scale);
 		}

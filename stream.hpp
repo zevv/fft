@@ -96,5 +96,7 @@ private:
 	Sample run();
 	float m_srate{};
 	double m_phase{};
+	int m_type{};
+	size_t m_count{};
 };
 

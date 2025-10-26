@@ -96,7 +96,7 @@ Wavecache::Wavecache(size_t depth, size_t channel_count, size_t step)
 	, m_step(step)
 	, m_n(0)
 {
-	m_rb.set_size(depth * sizeof(SampleRange) * channel_count);
+	m_rb.set_size(depth * m_frame_size);
 }
 
 
@@ -104,7 +104,7 @@ SampleRange *Wavecache::peek(size_t *frames_avail, size_t *stride)
 {
 	size_t bytes_used;
 	SampleRange *data = (SampleRange *)m_rb.peek(&bytes_used);
-	if(frames_avail) *frames_avail = bytes_used / (sizeof(SampleRange) * m_channel_count);
+	if(frames_avail) *frames_avail = bytes_used / m_frame_size;
 	if(stride) *stride = m_channel_count;
 	return data;
 }
@@ -125,8 +125,7 @@ void Wavecache::feed_frame(Sample *buf, size_t channel_count)
 	m_n ++;
 
 	if(m_n == m_step) {
-		// TODO why /2?
-		m_rb.write_done(m_frame_size/2);
+		m_rb.write_done(m_frame_size);
 		m_n = 0;
 	}
 }
@@ -137,7 +136,7 @@ StreamReader::StreamReader(const char *name, size_t ch_count)
 	, m_ch_count(ch_count)
 	, m_frame_size(ch_count * sizeof(Sample))
 {
-	m_rb.set_size(m_frame_size * 4096);
+	m_rb.set_size(4096);
 }
 
 
@@ -259,6 +258,7 @@ StreamReaderGenerator::StreamReaderGenerator(size_t ch_count, float srate, int t
 	: StreamReader("gen", ch_count)
 	, m_srate(srate)
 	, m_phase(0.0)
+	, m_type(type)
 {
 }
 
@@ -284,8 +284,19 @@ void StreamReaderGenerator::poll()
 
 Sample StreamReaderGenerator::run()
 {
-	Sample v = sin(2.0 * M_PI * 440.0 * m_phase);
-	m_phase += 1.0 / m_srate;
-	if(m_phase >= 1.0) m_phase -= 1.0;
+	Sample v = 0;
+
+	if(m_type == 0) {
+		v = sin(2.0 * M_PI * 440.0 * m_phase);
+		m_phase += 1.0 / m_srate;
+		if(m_phase >= 1.0) m_phase -= 1.0;
+	}
+
+	if(m_type == 1) {
+		v = m_phase - 0.5;
+		m_phase += 440.0 / m_srate;
+		if(m_phase > 1.0) m_phase -= 1.0;
+	}
+
 	return v;
 }
