@@ -116,23 +116,17 @@ void WidgetSpectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 	if(m_view.freq_from < 0.0f) m_view.freq_from = 0.0f;
 	if(m_view.freq_to > 1.0f) m_view.freq_to = 1.0f;
 
-	
-
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
 	float db_range = -120.0;
 	grid_vertical(rend, r, db_range, 0);
 
-
-	// spectograms
-		
 	for(int ch=0; ch<8; ch++) {
 		if(!m_channel_map[ch]) continue;
 
 		size_t stride = 0;
 		size_t avail = 0;
 		Sample *data = streams.peek(&stride, &avail);
-		//int idx = ((int)(view.srate * view.cursor) - m_window.size() / 2) * stride;; TODO
 		int idx = ((int)(view.srate * m_view.t_cursor)) * stride + ch;
 
 		for(int i=0; i<m_size; i++) {
@@ -145,7 +139,6 @@ void WidgetSpectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 		}
 
 		auto m_out_graph = m_fft.run(m_in);
-		// float scale = 2.0f / m_size / k_sample_max; TODO
 
 		size_t npoints = m_size / 2 + 1;
 		SDL_Color col = channel_color(ch);

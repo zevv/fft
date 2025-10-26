@@ -40,11 +40,11 @@ void Window::configure(Window::Type type, size_t size, float beta)
 	m_beta = beta;
 	m_data.resize(size);
 
-	Sample sum = 0.0f;
+	double sum = 0.0f;
 
 	for(size_t i=0; i<size; i++) {
 		Time x = (float)i / (float)(size - 1);
-		Sample y = 0.0;
+		double y = 0.0;
 
 		switch(type) {
 		case Type::Square:

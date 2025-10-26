@@ -1,8 +1,8 @@
 #pragma once
 
-//#define SAMPLE_S16
+#define SAMPLE_S16
 //#define SAMPLE_FLOAT16
-#define SAMPLE_FLOAT
+//#define SAMPLE_FLOAT
 //#define SAMPLE_DOUBLE
 
 #ifdef SAMPLE_S16

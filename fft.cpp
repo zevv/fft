@@ -63,7 +63,7 @@ std::vector<float> Fft::run(std::vector<Sample> &input)
 
 	auto window = m_window.data();
 	for(size_t i=0; i<size; i++) {
-		m_in[i] = input[i] * window[i];
+		m_in[i] = input[i] * window[i] / k_sample_max;
 	}
 	fftwf_execute(m_plan);
 

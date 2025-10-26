@@ -18,12 +18,12 @@ public:
 	void configure(Type type, size_t size, float beta = 6.0f);
 	void set_size(size_t size);
 	size_t size() const { return m_data.size(); };
-	Sample gain() const { return m_gain; };
-	std::vector<Sample> &data() { return m_data; };
+	double gain() const { return m_gain; };
+	std::vector<double> &data() { return m_data; };
 
 private:
 	Type m_type;
 	float m_beta;
-	Sample m_gain;
-	std::vector<Sample> m_data;
+	double m_gain;
+	std::vector<double> m_data;
 };
