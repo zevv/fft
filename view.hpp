@@ -73,25 +73,42 @@ public:
 		Time dt = -f * (t_to - t_from);
 		t_from += dt;
 		t_to += dt;
+		clamp();
 	};
 
 	void zoom_t(float f) {
 		f /= 50.0;
 		t_from += (t_cursor - t_from) * f;
 		t_to   -= (t_to - t_cursor) * f;
+		clamp();
 	};
 
 	void pan_freq(float f) {
 		Frequency df = f * (freq_to - freq_from);
 		freq_from += df;
 		freq_to += df;
+		clamp();
 	};
 
 	void zoom_freq(float f) {
 		f /= 50.0;
 		freq_from += (freq_cursor - freq_from) * f;
 		freq_to   -= (freq_to - freq_cursor) * f;
+		clamp();
 	};
+
+	void clamp() {
+		if(t_from >= t_to) {
+			Time mid = 0.5 * (t_from + t_to);
+			t_from = mid - 0.001;
+			t_to   = mid + 0.001;
+		}
+		if(freq_from >= freq_to) {
+			Frequency mid = 0.5 * (freq_from + freq_to);
+			freq_from = mid - 0.001;
+			freq_to   = mid + 0.001;
+		}
+	}
 
 	float t_from;
 	float t_to;

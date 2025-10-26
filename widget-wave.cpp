@@ -81,11 +81,6 @@ void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 		}
 	}
 
-	Time dt_min = 16.0 / view.srate;
-	if(m_view.t_to - m_view.t_from < dt_min) {
-		m_view.t_from = m_view.t_to - dt_min;
-	}
-
 	Sample scale = k_sample_max;
 	if(m_agc && m_peak > 0.0f) {
 		scale = m_peak / 0.9;
