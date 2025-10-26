@@ -77,7 +77,7 @@ void WidgetHistogram::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 	Sample vmin = m_agc ? frames_data[0] : -1.0;
 	Sample vmax = m_agc ? frames_data[0] :  1.0;
 
-	if(vmax == vmin) vmax += 1;
+	if(m_vmax == m_vmin) m_vmax += 1;
 
 	int bin_max = 0.0f;
 	for(int idx=idx_from; idx<idx_to; idx++) {
@@ -88,15 +88,15 @@ void WidgetHistogram::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 			vmin = std::min(vmin, v);
 			vmax = std::max(vmax, v);
 
-			int bin = (v - m_vmin) / (m_vmax - m_vmin) * (m_nbins - 1);
+			int bin = (m_nbins - 1) * (v - m_vmin) / (m_vmax - m_vmin);
 			bin = std::clamp(bin, 0, m_nbins - 1);
-			bins[ch][bin] += 1.0f;
+			bins[ch][bin] ++;
 			bin_max = std::max(bin_max, bins[ch][bin]);
 		}
 	}
 
-	m_vmin = m_agc ? vmin : -1.0;
-	m_vmax = m_agc ? vmax : +1.0;
+	m_vmin = m_agc ? vmin : -k_sample_max;
+	m_vmax = m_agc ? vmax : +k_sample_max;
 
 	// draw channel histograms
 
