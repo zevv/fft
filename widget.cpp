@@ -299,18 +299,18 @@ void Widget::grid_time_v(SDL_Renderer *rend, SDL_Rect &r, Time t_min, Time t_max
 }
 
 
-void Widget::grid_vertical(SDL_Renderer *rend, SDL_Rect &r, Sample v_min, Sample v_max)
+void Widget::grid_vertical(SDL_Renderer *rend, SDL_Rect &r, float v_min, float v_max)
 {
 	ImDrawList* dl = ImGui::GetWindowDrawList();
 	for(int n=6; n>=-6; n--) {
-		Sample base = pow(10.0f, n);
+		float base = pow(10.0f, n);
 		float dy = (base / (v_max - v_min)) * r.h;
 		if(dy < 10) break;
 		int col = std::clamp((int)(dy-10) * 4, 0, 64);
 		SDL_SetRenderDrawColor(rend, col, col, col, 255);
-		Sample v_start = ceilf(v_min / base) * base;
-		Sample v_end   = floorf(v_max / base) * base;
-		Sample v = v_start;
+		float v_start = ceilf(v_min / base) * base;
+		float v_end   = floorf(v_max / base) * base;
+		float v = v_start;
 		while(v <= v_end) {
 			int y = r.y + r.h - (int)((v - v_min) / (v_max - v_min) * r.h);
 			SDL_RenderLine(rend, r.x, y, r.x + r.w, y);
@@ -324,8 +324,6 @@ void Widget::grid_vertical(SDL_Renderer *rend, SDL_Rect &r, Sample v_min, Sample
 	}
 
 }
-
-
 
 
 SDL_Color Widget::channel_color(int channel)

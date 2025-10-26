@@ -211,7 +211,11 @@ StreamReaderAudio::StreamReaderAudio(size_t ch_count, float srate)
 {
 	SDL_AudioSpec fmt{};
     fmt.freq = srate;
+#ifdef SAMPLE_S16
+	fmt.format = SDL_AUDIO_S16;
+#else
     fmt.format = SDL_AUDIO_F32;
+#endif
     fmt.channels = ch_count;
 
 	SDL_AudioStream *stream = SDL_OpenAudioDeviceStream(

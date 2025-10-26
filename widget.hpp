@@ -56,7 +56,7 @@ protected:
 						 double idx_from, double idx_to,
 						 T y_min, T y_max);
 
-	void grid_vertical(SDL_Renderer *rend, SDL_Rect &r, Sample v_from, Sample v_to);
+	void grid_vertical(SDL_Renderer *rend, SDL_Rect &r, float v_from, float v_to);
 	void grid_time(SDL_Renderer *rend, SDL_Rect &r, Time t_from, Time t_to);
 	void grid_time_v(SDL_Renderer *rend, SDL_Rect &r, Time t_from, Time t_to);
 	

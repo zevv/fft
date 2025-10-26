@@ -139,7 +139,7 @@ void Corrie::init()
 #endif
 	m_streams.add_reader(new StreamReaderFd(2, fd));
 	//m_streams.add_reader(new StreamReaderAudio(3, m_srate));
-	//m_streams.add_reader(new StreamReaderGenerator(1, m_srate, 1));
+	m_streams.add_reader(new StreamReaderGenerator(1, m_srate, 1));
 
 	m_capture = true;
 
