@@ -131,10 +131,10 @@ void Corrie::init()
 	io.IniFilename = NULL;
 	io.LogFilename = NULL;
 
-	int fd = open("bip", O_RDONLY);
-	m_streams.add_reader(new StreamReaderAudio(3, m_srate));
-	m_streams.add_reader(new StreamReaderGenerator(1, m_srate, 1));
-	m_streams.add_reader(new StreamReaderFd(1, fd));
+	int fd = open("/home/ico/tmp/1.raw", O_RDONLY);
+	m_streams.add_reader(new StreamReaderFd(2, fd));
+	//m_streams.add_reader(new StreamReaderAudio(3, m_srate));
+	//m_streams.add_reader(new StreamReaderGenerator(1, m_srate, 1));
 
 	m_capture = true;
 
@@ -202,13 +202,18 @@ void Corrie::run()
 	bool done = false;
 	while (!done)
 	{
+		Uint64 t_now = SDL_GetTicks();
 
 		if(ImGui::IsKeyPressed(ImGuiKey_Space)) {
 			m_capture ^= 1;
 		}
-		if(m_capture) {
+
+		Uint64 t_until = t_now + 10;
+		while(m_capture && SDL_GetTicks() < t_until) {
 			if(m_streams.capture()) {
 				req_redraw();
+			} else {
+				break;
 			}
 		}
 

@@ -53,6 +53,10 @@ void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 {
 	ImGui::SameLine();
 	ImGui::ToggleButton("AGC", &m_agc);
+	
+	size_t frames_avail;
+	size_t data_stride;
+	Sample *data = streams.peek(&data_stride, &frames_avail);
 
 	if(ImGui::IsWindowFocused()) {
 	
@@ -65,11 +69,8 @@ void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 		}
 
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
-			size_t used;
-			size_t stride;
-			streams.peek(0, &stride, &used);
 			m_view.t_from = 0;
-			m_view.t_to   = used / view.srate;
+			m_view.t_to   = frames_avail / view.srate;
 		}
 
 		auto pos = ImGui::GetIO().MousePos;
@@ -90,21 +91,18 @@ void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 		scale = m_peak / 0.9;
 	}
 
+	float idx_from = m_view.x_to_t(r.x,       r) * view.srate;
+	float idx_to   = m_view.x_to_t(r.x + r.w, r) * view.srate;
+
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 	for(int ch=0; ch<8; ch++) {
 		if(!m_channel_map[ch]) continue;
-		size_t stride;
-		size_t avail;
-		Sample *data = streams.peek(ch, &stride, &avail);
-
-		float idx_from = m_view.x_to_t(r.x,       r) * view.srate;
-		float idx_to   = m_view.x_to_t(r.x + r.w, r) * view.srate;
 
 		SDL_Color col = channel_color(ch);
 		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
 
 		float peak = graph(rend, r,
-				data, avail, stride,
+				data + ch, frames_avail, data_stride,
 				idx_from, idx_to,
 				-scale, +scale);
 

@@ -10,7 +10,7 @@
 
 
 Streams::Streams()
-	: m_depth(32 * 1024 * 1024)
+	: m_depth(128 * 1024 * 1024)
 	, m_channels(8)
 	, m_frame_size(m_channels * sizeof(Sample))
 {
@@ -27,13 +27,13 @@ Streams::~Streams()
 
 
 
-Sample *Streams::peek(size_t channel, size_t *stride, size_t *frames_avail)
+Sample *Streams::peek(size_t *stride, size_t *frames_avail)
 {
 	size_t bytes_used;
 	Sample *data = (Sample *)m_rb.peek(&bytes_used);
 	if(stride) *stride = m_channels;
 	if(frames_avail) *frames_avail = bytes_used / m_frame_size;
-	return &data[channel];
+	return data;
 }
 
 
@@ -204,7 +204,6 @@ void StreamReaderAudio::poll()
 
 StreamReaderGenerator::StreamReaderGenerator(size_t ch_count, float srate, int type)
 	: StreamReader("gen", ch_count)
-	, m_type(type)
 	, m_srate(srate)
 	, m_phase(0.0)
 {

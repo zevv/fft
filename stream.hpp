@@ -16,7 +16,7 @@ public:
 
 	Streams();
 	~Streams();
-	Sample *peek(size_t channel, size_t *stride, size_t *used = nullptr);
+	Sample *peek(size_t *stride, size_t *used = nullptr);
 	void add_reader(StreamReader *reader);
 	bool capture();
 
@@ -75,7 +75,6 @@ public:
 private:
 
 	Sample run();
-	int m_type{};
 	float m_srate{};
 	double m_phase{};
 };

@@ -133,7 +133,18 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 
 Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
-					 Sample *data, size_t data_count, size_t stride,
+					 Sample data[], size_t data_count, size_t stride,
+					 float idx_from, float idx_to,
+					 Sample y_min, Sample y_max)
+{
+	return graph(rend, r, data, data, data_count, stride,
+		  idx_from, idx_to,
+		  y_min, y_max);
+}
+
+
+Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
+					 Sample data_min[], Sample data_max[], size_t data_count, size_t stride,
 					 float idx_from, float idx_to,
 					 Sample y_min, Sample y_max)
 {
@@ -162,13 +173,12 @@ Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
 		if(idx_end   >= idx_max) break;
 		if(idx_start <  idx_min) continue;
 
-		Sample vmin = data[stride * idx_start];
-		Sample vmax = data[stride * idx_start];
+		Sample vmin = data_min[stride * idx_start];
+		Sample vmax = data_max[stride * idx_start];
 
 		for(int idx=idx_start; idx<idx_end; idx++) {
-			Sample v = data[stride * idx];
-			if(v < vmin) vmin = v;
-			if(v > vmax) vmax = v;
+			vmin = std::min(vmin, data_min[stride * idx]);
+			vmax = std::max(vmax, data_max[stride * idx]);
 		}
 
 		float px = r.x + x;

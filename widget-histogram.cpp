@@ -59,13 +59,14 @@ void WidgetHistogram::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 				16, 32768, "%d", ImGuiSliderFlags_Logarithmic);
 
 	std::vector<Sample> bins(m_nbins);
+		
+	size_t stride;
+	size_t avail;
+	Sample *data = streams.peek(&stride, &avail);
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 	for(int ch=0; ch<8; ch++) {
 		if(!m_channel_map[ch]) continue;
-		size_t stride;
-		size_t avail;
-		Sample *data = streams.peek(ch, &stride, &avail);
 
 		float idx_from = m_view.x_to_t(r.x,       r) * view.srate;
 		float idx_to   = m_view.x_to_t(r.x + r.w, r) * view.srate;
@@ -77,7 +78,7 @@ void WidgetHistogram::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 		Sample vmax =  1.0;
 		if(m_agc) {
 			for(int idx=idx_from; idx<idx_to; idx++) {
-				Sample v = data[idx * stride];
+				Sample v = data[idx * stride + ch];
 				if(idx == (int)idx_from || v < vmin) vmin = v;
 				if(idx == (int)idx_from || v > vmax) vmax = v;
 			}
@@ -86,7 +87,7 @@ void WidgetHistogram::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 		bins.assign(m_nbins, 0.0f);
 		float bin_max = 0.0;
 		for(int idx=idx_from; idx<idx_to; idx++) {
-			float v = data[idx * stride];
+			float v = data[idx * stride + ch];
 			int bin = (v - vmin) / (vmax - vmin) * (m_nbins - 1);
 			bin = std::clamp(bin, 0, m_nbins - 1);
 			bins[bin] += 1.0f;

@@ -131,9 +131,9 @@ void WidgetSpectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 
 		size_t stride = 0;
 		size_t avail = 0;
-		Sample *data = streams.peek(ch, &stride, &avail);
+		Sample *data = streams.peek(&stride, &avail);
 		//int idx = ((int)(view.srate * view.cursor) - m_window.size() / 2) * stride;; TODO
-		int idx = ((int)(view.srate * m_view.t_cursor)) * stride;;
+		int idx = ((int)(view.srate * m_view.t_cursor)) * stride + ch;
 
 		for(int i=0; i<m_size; i++) {
 			Sample v = 0;

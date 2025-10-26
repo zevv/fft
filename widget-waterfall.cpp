@@ -68,6 +68,11 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 {
 	bool update = false;
 	
+	size_t stride = 0;
+	size_t avail = 0;
+	Sample *data = streams.peek(&stride, &avail);
+
+	
 	ImGui::SetNextItemWidth(100);
 	ImGui::SameLine();
 	update |= ImGui::SliderInt("##fft size", (int *)&m_size, 
@@ -122,11 +127,8 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 			m_view.freq_from = 0.0f;
 			m_view.freq_to = 1.0;
 
-			size_t used;
-			size_t stride;
-			streams.peek(0, &stride, &used);
 			m_view.t_from = 0;
-			m_view.t_to   = used / view.srate;
+			m_view.t_to   = avail / view.srate;
 		}
 	}
 
@@ -151,11 +153,6 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 	float db_range = -80.0;
 	grid_time_v(rend, r, m_view.y_to_t(r.y, r), m_view.y_to_t(r.y + r.h, r));
 	
-	int ch = 0;
-	size_t stride = 0;
-	size_t avail = 0;
-	Sample *data = streams.peek(ch, &stride, &avail);
-
 	std::vector<Pixel> row(m_fft.out_size());
 
 	std::vector<Sample> m_in(m_size);

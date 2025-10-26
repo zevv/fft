@@ -45,7 +45,12 @@ protected:
 	virtual void do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r) = 0;
 
 	Sample graph(SDL_Renderer *rend, SDL_Rect &r,
-						 Sample *data, size_t data_count, size_t stride,
+						 Sample data[], size_t data_count, size_t stride,
+						 float idx_from, float idx_to,
+						 Sample y_min, Sample y_max);
+	
+	Sample graph(SDL_Renderer *rend, SDL_Rect &r,
+						 Sample data_min[], Sample data_max[], size_t data_count, size_t stride,
 						 float idx_from, float idx_to,
 						 Sample y_min, Sample y_max);
 
