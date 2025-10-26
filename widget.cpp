@@ -127,8 +127,14 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	}
 
 	if(m_lock_view) m_view = view;
+	float t1 = SDL_GetPerformanceCounter();
 	do_draw(view, streams, rend, r);
+	float t2 = SDL_GetPerformanceCounter();
 	if(m_lock_view) view = m_view;
+
+	// bottom right
+	ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 60, ImGui::GetWindowHeight() - 25));
+	ImGui::Text("%.2f ms", (t2 - t1) * 1000.0f / SDL_GetPerformanceFrequency());
 }
 
 
