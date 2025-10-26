@@ -9,10 +9,11 @@
 #include "stream.hpp"
 
 
-Streams::Streams()
-	: m_depth(128 * 1024 * 1024)
-	, m_channels(8)
+Streams::Streams(size_t depth, size_t channel_count)
+	: m_depth(depth)
+	, m_channels(channel_count)
 	, m_frame_size(m_channels * sizeof(Sample))
+	, m_wavecache(Wavecache(depth, channel_count, 256))
 {
 	m_rb.set_size(m_depth * m_frame_size);
 }
@@ -34,6 +35,12 @@ Sample *Streams::peek(size_t *stride, size_t *frames_avail)
 	if(stride) *stride = m_channels;
 	if(frames_avail) *frames_avail = bytes_used / m_frame_size;
 	return data;
+}
+
+
+SampleRange *Streams::peek_wavecache(size_t *stride, size_t *frames_avail)
+{
+	return m_wavecache.peek(frames_avail, stride);
 }
 
 
@@ -68,14 +75,60 @@ bool Streams::capture()
 
 	size_t channel = 0;
 	if(frame_count > 0) {
-
 		for(auto reader : m_readers) {
 			channel += reader->drain_into(buf, channel, frame_count, m_channels);
+		}
+		Sample *pin = buf;
+		for(size_t i=0; i<frame_count; i++) {
+			m_wavecache.feed_frame(buf, m_channels);
+			buf += m_channels;
 		}
 		m_rb.write_done(frame_count * m_frame_size);
 		captured = true;
 	}
 	return captured;
+}
+
+
+Wavecache::Wavecache(size_t depth, size_t channel_count, size_t step)
+	: m_channel_count(channel_count)
+	, m_frame_size(channel_count * sizeof(SampleRange))
+	, m_step(step)
+	, m_n(0)
+{
+	m_rb.set_size(depth * sizeof(SampleRange) * channel_count);
+}
+
+
+SampleRange *Wavecache::peek(size_t *frames_avail, size_t *stride)
+{
+	size_t bytes_used;
+	SampleRange *data = (SampleRange *)m_rb.peek(&bytes_used);
+	if(frames_avail) *frames_avail = bytes_used / (sizeof(SampleRange) * m_channel_count);
+	if(stride) *stride = m_channel_count;
+	return data;
+}
+
+
+void Wavecache::feed_frame(Sample *buf, size_t channel_count)
+{
+	SampleRange *pout = (SampleRange *)m_rb.get_write_ptr();
+	for(size_t ch=0; ch<channel_count; ch++) {
+		if(m_n == 0) {
+			pout[ch].min = buf[ch];
+			pout[ch].max = buf[ch];
+		} else {
+			pout[ch].min = std::min(pout[ch].min, buf[ch]);
+			pout[ch].max = std::max(pout[ch].max, buf[ch]);
+		}
+	}
+	m_n ++;
+
+	if(m_n == m_step) {
+		// TODO why /2?
+		m_rb.write_done(m_frame_size/2);
+		m_n = 0;
+	}
 }
 
 

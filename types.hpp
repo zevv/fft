@@ -25,6 +25,11 @@ typedef double Sample;
 static constexpr Sample k_sample_max = 1.0;
 #endif
 
+typedef struct {
+	Sample min;
+	Sample max;
+} SampleRange;
+
 
 #ifdef SAMPLE_DOUBLE
 typedef double SampleFFTW;

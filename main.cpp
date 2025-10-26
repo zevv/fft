@@ -52,7 +52,7 @@ private:
 	int m_h = 600;
 	Time m_srate{48000.0};
 	bool m_capture{false};
-	Streams m_streams{};
+	Streams m_streams;
 	View m_view{};
 	ImFont *m_font{};
 	int m_redraw{1};
@@ -62,6 +62,7 @@ private:
 Corrie::Corrie(SDL_Window *window, SDL_Renderer *renderer)
     : m_win(window)
     , m_rend(renderer)
+	, m_streams(Streams(512 * 1024 * 1024, 8))
 {
     resize_window(800, 600);
 }

@@ -58,6 +58,10 @@ void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 	size_t data_stride;
 	Sample *data = streams.peek(&data_stride, &frames_avail);
 
+	size_t wframes_avail;
+	size_t wdata_stride;
+	SampleRange *wdata = streams.peek_wavecache(&wdata_stride, &wframes_avail);
+
 	if(ImGui::IsWindowFocused()) {
 	
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
@@ -88,22 +92,32 @@ void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 
 	float idx_from = m_view.x_to_t(r.x,       r) * view.srate;
 	float idx_to   = m_view.x_to_t(r.x + r.w, r) * view.srate;
+	float step = (idx_to - idx_from) / r.w;
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
+
 	for(int ch=0; ch<8; ch++) {
 		if(!m_channel_map[ch]) continue;
 
 		SDL_Color col = channel_color(ch);
 		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
 
-		float peak = graph(rend, r,
-				data + ch, frames_avail, data_stride,
-				idx_from, idx_to,
-				-scale, +scale);
+		float peak;
 
-		if(peak > m_peak) {
-			m_peak = peak;
+		if(step < 256) {
+			peak = graph(rend, r,
+					data + ch, frames_avail, data_stride,
+					idx_from, idx_to,
+					-scale, +scale);
+		} else {
+			peak = graph(rend, r,
+					&wdata[ch].min, &wdata[ch].max, 
+					frames_avail / 256, wdata_stride,
+					idx_from / 256, idx_to / 256,
+					-scale, +scale);
 		}
+
+		m_peak = std::max(m_peak, peak);
 	}
 
 	grid_time(rend, r, m_view.x_to_t(r.x, r), m_view.x_to_t(r.x + r.w, r));

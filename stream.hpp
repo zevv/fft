@@ -9,14 +9,29 @@
 #include "types.hpp"
 
 
+class Wavecache {
+public:
+	Wavecache(size_t depth, size_t channel_count, size_t step);
+	SampleRange *peek(size_t *frames_avail, size_t *stride);
+	void feed_frame(Sample *buf, size_t channel_count);
+private:
+	size_t m_channel_count;
+	size_t m_frame_size;
+	size_t m_step;
+	size_t m_n;
+	Rb m_rb;
+};
+
+
 class StreamReader;
 
 class Streams {
 public:
 
-	Streams();
+	Streams(size_t depth, size_t channel_count);
 	~Streams();
 	Sample *peek(size_t *stride, size_t *used = nullptr);
+	SampleRange *peek_wavecache(size_t *stride, size_t *used = nullptr);
 	void add_reader(StreamReader *reader);
 	bool capture();
 
@@ -25,6 +40,10 @@ private:
 	size_t m_channels{};
 	size_t m_frame_size{};
 	Rb m_rb;
+
+	Wavecache m_wavecache;
+
+
 	std::vector<StreamReader *> m_readers{};
 };
 
