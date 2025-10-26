@@ -68,14 +68,6 @@ void ConfigWriter::write(const char *key, int val)
 }
 
 
-void ConfigWriter::write(const char *key, size_t val)
-{
-	char buf[32];
-	snprintf(buf, sizeof(buf), "%zu", val);
-	write(key, buf);
-}
-
-
 void ConfigWriter::write(const char *key, float val)
 {
 	char buf[32];
@@ -268,26 +260,6 @@ bool ConfigReader::Node::read(const char *key, int &val, int defval)
 	}
 }
 
-bool ConfigReader::Node::read(const char *key, size_t &val)
-{
-	if(const char *buf = read_str(key)) {
-		val = atoi(buf);
-		return true;
-	} else {
-		return false;
-	}
-}
-
-
-bool ConfigReader::Node::read(const char *key, size_t &val, size_t defval)
-{
-	if(const char *buf = read_str(key)) {
-		return atoi(buf);
-	} else {
-		return defval;
-	}
-}
-
 bool ConfigReader::Node::read(const char *key, float &val)
 {
 	char buf[32];
@@ -313,7 +285,6 @@ bool ConfigReader::Node::read(const char *key, float &val, float defval)
 		return false;
 	}
 }
-
 
 bool ConfigReader::Node::read(const char *key, double &val)
 {

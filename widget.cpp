@@ -146,9 +146,8 @@ template float  Widget::graph<float >(SDL_Renderer*, SDL_Rect&, float [], float 
 template Sample Widget::graph<Sample>(SDL_Renderer*, SDL_Rect&, Sample[],           size_t, size_t, float, float, Sample, Sample);
 template Sample Widget::graph<Sample>(SDL_Renderer*, SDL_Rect&, Sample[], Sample[], size_t, size_t, float, float, Sample, Sample);
 
-template size_t Widget::graph<size_t>(SDL_Renderer*, SDL_Rect&, size_t[],           size_t, size_t, float, float, size_t, size_t);
-template size_t Widget::graph<size_t>(SDL_Renderer*, SDL_Rect&, size_t[], size_t[], size_t, size_t, float, float, size_t, size_t);
-
+template int    Widget::graph<int   >(SDL_Renderer*, SDL_Rect&, int   [],           size_t, size_t, float, float, int   , int   );
+template int    Widget::graph<int   >(SDL_Renderer*, SDL_Rect&, int   [], int   [], size_t, size_t, float, float, int   , int   );
 
 template<typename T>
 T Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
