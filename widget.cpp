@@ -316,7 +316,7 @@ void Widget::grid_vertical(SDL_Renderer *rend, SDL_Rect &r, Sample v_min, Sample
 			SDL_RenderLine(rend, r.x, y, r.x + r.w, y);
 			if(dy > 20) {
 				char buf[32];
-				snprintf(buf, sizeof(buf), "%.0f", v);
+				snprintf(buf, sizeof(buf), "%d", (int)v);
 				dl->AddText(ImVec2(r.x + 2, y), 0xFF808080, buf);
 			}
 			v += base;

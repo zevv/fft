@@ -77,6 +77,8 @@ void WidgetHistogram::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 	Sample vmin = m_agc ? frames_data[0] : -1.0;
 	Sample vmax = m_agc ? frames_data[0] :  1.0;
 
+	if(vmax == vmin) vmax += 1;
+
 	int bin_max = 0.0f;
 	for(int idx=idx_from; idx<idx_to; idx++) {
 		for(int ch=0; ch<8; ch++) {
