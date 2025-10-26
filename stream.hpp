@@ -13,7 +13,7 @@ class Wavecache {
 public:
 	Wavecache(size_t depth, size_t channel_count, size_t step);
 	SampleRange *peek(size_t *frames_avail, size_t *stride);
-	void feed_frame(Sample *buf, size_t channel_count);
+	void feed_frames(Sample *buf, size_t frame_count, size_t channel_count);
 private:
 	size_t m_channel_count;
 	size_t m_frame_size;
@@ -97,6 +97,5 @@ private:
 	float m_srate{};
 	double m_phase{};
 	int m_type{};
-	size_t m_count{};
 };
 

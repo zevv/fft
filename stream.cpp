@@ -3,6 +3,7 @@
 #include <math.h>
 #include <algorithm>
 #include <unistd.h>
+#include <experimental/simd>
 
 #include <SDL3/SDL_audio.h>
 
@@ -78,12 +79,8 @@ bool Streams::capture()
 		for(auto reader : m_readers) {
 			channel += reader->drain_into(buf, channel, frame_count, m_channels);
 		}
-		Sample *pin = buf;
-		for(size_t i=0; i<frame_count; i++) {
-			m_wavecache.feed_frame(buf, m_channels);
-			buf += m_channels;
-		}
 		m_rb.write_done(frame_count * m_frame_size);
+		m_wavecache.feed_frames(buf, frame_count, m_channels);
 		captured = true;
 	}
 	return captured;
@@ -110,24 +107,31 @@ SampleRange *Wavecache::peek(size_t *frames_avail, size_t *stride)
 }
 
 
-void Wavecache::feed_frame(Sample *buf, size_t channel_count)
+void Wavecache::feed_frames(Sample *buf, size_t frame_count, size_t channel_count)
 {
 	SampleRange *pout = (SampleRange *)m_rb.get_write_ptr();
-	for(size_t ch=0; ch<channel_count; ch++) {
+	size_t frames_out = 0;
+	for(size_t i=0; i<frame_count; i++) {
 		if(m_n == 0) {
-			pout[ch].min = buf[ch];
-			pout[ch].max = buf[ch];
+			for(size_t ch=0; ch<channel_count; ch++) {
+				pout[ch].min = buf[ch];
+				pout[ch].max = buf[ch];
+			}
 		} else {
-			pout[ch].min = std::min(pout[ch].min, buf[ch]);
-			pout[ch].max = std::max(pout[ch].max, buf[ch]);
+			for(size_t ch=0; ch<channel_count; ch++) {
+				pout[ch].min = std::min(pout[ch].min, buf[ch]);
+				pout[ch].max = std::max(pout[ch].max, buf[ch]);
+			}
 		}
+		m_n ++;
+		if(m_n == m_step) {
+			pout += channel_count;
+			frames_out ++;
+			m_n = 0;
+		}
+		buf += channel_count;
 	}
-	m_n ++;
-
-	if(m_n == m_step) {
-		m_rb.write_done(m_frame_size);
-		m_n = 0;
-	}
+	m_rb.write_done(m_frame_size * frames_out);
 }
 
 

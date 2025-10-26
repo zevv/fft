@@ -26,11 +26,12 @@ SRC += $(IMGUI_DIR)/backends/imgui_impl_sdlrenderer3.cpp
 OBJS = $(SRC:.cpp=.o)
 DEPS = $(OBJS:.o=.d)
 
-CXXFLAGS += -std=c++17 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
+CXXFLAGS += -std=c++23 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 CXXFLAGS += -g 
 CXXFLAGS += -Wall -Wformat -Werror
 CXXFLAGS += -Wno-unused-but-set-variable -Wno-unused-variable
-CXXFLAGS += -O3
+CXXFLAGS += -Ofast
+CXXFLAGS += -march=native
 CXXFLAGS += -MMD
 #CXXFLAGS += -ffast-math
 
