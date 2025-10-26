@@ -44,15 +44,17 @@ protected:
 	virtual Widget *do_copy() = 0;
 	virtual void do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r) = 0;
 
-	Sample graph(SDL_Renderer *rend, SDL_Rect &r,
-						 Sample data[], size_t data_count, size_t stride,
+	template<typename T>
+	T graph(SDL_Renderer *rend, SDL_Rect &r,
+						 T data[], size_t data_count, size_t stride,
 						 float idx_from, float idx_to,
-						 Sample y_min, Sample y_max);
+						 T y_min, T y_max);
 	
-	Sample graph(SDL_Renderer *rend, SDL_Rect &r,
-						 Sample data_min[], Sample data_max[], size_t data_count, size_t stride,
+	template<typename T>
+	T graph(SDL_Renderer *rend, SDL_Rect &r,
+						 T data_min[], T data_max[], size_t data_count, size_t stride,
 						 float idx_from, float idx_to,
-						 Sample y_min, Sample y_max);
+						 T y_min, T y_max);
 
 	void grid_vertical(SDL_Renderer *rend, SDL_Rect &r, Sample v_from, Sample v_to);
 	void grid_time(SDL_Renderer *rend, SDL_Rect &r, Time t_from, Time t_to);

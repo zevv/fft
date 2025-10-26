@@ -153,7 +153,7 @@ void WidgetSpectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 		graph(rend, r,
 				m_out_graph.data(), m_out_graph.size(), 1,
 				m_view.freq_from * npoints, m_view.freq_to * npoints,
-				db_range, 0.0);
+				db_range, 0.0f);
 	}
 	
 	// cursor

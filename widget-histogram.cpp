@@ -68,7 +68,7 @@ void WidgetHistogram::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 	int idx_from = std::max(m_view.x_to_t(r.x,       r) * view.srate, 0.0);
 	int idx_to   = std::min(m_view.x_to_t(r.x + r.w, r) * view.srate, (double)frames_avail);
 
-	std::vector<std::vector<Sample>> bins;
+	std::vector<std::vector<float>> bins;
 	bins.resize(m_nbins);
 	for(auto &b : bins) {
 		b.assign(m_nbins, 0.0f);
@@ -82,7 +82,7 @@ void WidgetHistogram::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 		for(int ch=0; ch<8; ch++) {
 			if(!m_channel_map[ch]) continue;
 
-			float v = frames_data[idx * frames_stride + ch];
+			Sample v = frames_data[idx * frames_stride + ch];
 			vmin = std::min(vmin, v);
 			vmax = std::max(vmax, v);
 
@@ -109,7 +109,7 @@ void WidgetHistogram::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 		graph(rend, r,
 				bins[ch].data(), m_nbins, 1,
 				0, m_nbins-1,
-				0.0, bin_max);
+				0.0f, bin_max);
 
 	}
 

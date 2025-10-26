@@ -137,26 +137,34 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	ImGui::Text("%.2f ms", (t2 - t1) * 1000.0f / SDL_GetPerformanceFrequency());
 }
 
+template Sample Widget::graph<Sample>(SDL_Renderer*, SDL_Rect&, Sample[],           size_t, size_t, float, float, Sample, Sample);
+template Sample Widget::graph<Sample>(SDL_Renderer*, SDL_Rect&, Sample[], Sample[], size_t, size_t, float, float, Sample, Sample);
+#ifndef SAMPLE_FLOAT
+template float  Widget::graph<float >(SDL_Renderer*, SDL_Rect&, float [],           size_t, size_t, float , float , float , float );
+template float  Widget::graph<float >(SDL_Renderer*, SDL_Rect&, float [], float [], size_t, size_t, float , float , float , float );
+#endif
 
-Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
-					 Sample data[], size_t data_count, size_t stride,
+
+template<typename T>
+T Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
+					 T data[], size_t data_count, size_t stride,
 					 float idx_from, float idx_to,
-					 Sample y_min, Sample y_max)
+					 T y_min, T y_max)
 {
 	return graph(rend, r, data, data, data_count, stride,
 		  idx_from, idx_to,
 		  y_min, y_max);
 }
 
-
-Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
-					 Sample data_min[], Sample data_max[], size_t data_count, size_t stride,
+template<typename T>
+T Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
+					 T data_min[], T data_max[], size_t data_count, size_t stride,
 					 float idx_from, float idx_to,
-					 Sample y_min, Sample y_max)
+					 T y_min, T y_max)
 {
 	float y_scale = (r.h - 2) / ((float)y_min - (float)y_max);
 	float y_off = r.y - (float)y_max * (float)y_scale;
-	Sample v_peak = 0;
+	T v_peak = 0;
 
 	int npoints = 0;
 	int nrects = 0;
@@ -179,8 +187,8 @@ Sample Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
 		if(idx_end   >= idx_max) break;
 		if(idx_start <  idx_min) continue;
 
-		Sample vmin = data_min[stride * idx_start];
-		Sample vmax = data_max[stride * idx_start];
+		T vmin = data_min[stride * idx_start];
+		T vmax = data_max[stride * idx_start];
 
 		for(int idx=idx_start; idx<idx_end; idx++) {
 			vmin = std::min(vmin, data_min[stride * idx]);

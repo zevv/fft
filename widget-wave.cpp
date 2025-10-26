@@ -102,7 +102,7 @@ void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 		SDL_Color col = channel_color(ch);
 		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
 
-		float peak;
+		Sample peak;
 
 		if(step < 256) {
 			peak = graph(rend, r,

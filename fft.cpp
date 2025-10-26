@@ -42,7 +42,7 @@ int Fft::out_size()
 }
 
 
-std::vector<Sample> Fft::run(std::vector<Sample> &input)
+std::vector<float> Fft::run(std::vector<Sample> &input)
 {
 	assert(m_in.size() == input.size());
 	assert(m_window.size() == input.size());
@@ -71,7 +71,7 @@ std::vector<Sample> Fft::run(std::vector<Sample> &input)
 	float db_range = -120.0;
 
 	for(size_t i=0; i<=size/2; i++) {
-		Sample v = 0.0;
+		float v = 0.0;
 		if(i == 0) {
 			v = m_in[0] * scale / 2;
 		} else if(i == size / 2) {
