@@ -137,12 +137,17 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	ImGui::Text("%.2f ms", (t2 - t1) * 1000.0f / SDL_GetPerformanceFrequency());
 }
 
-template Sample Widget::graph<Sample>(SDL_Renderer*, SDL_Rect&, Sample[],           size_t, size_t, float, float, Sample, Sample);
-template Sample Widget::graph<Sample>(SDL_Renderer*, SDL_Rect&, Sample[], Sample[], size_t, size_t, float, float, Sample, Sample);
+
 #ifndef SAMPLE_FLOAT
 template float  Widget::graph<float >(SDL_Renderer*, SDL_Rect&, float [],           size_t, size_t, float , float , float , float );
 template float  Widget::graph<float >(SDL_Renderer*, SDL_Rect&, float [], float [], size_t, size_t, float , float , float , float );
 #endif
+
+template Sample Widget::graph<Sample>(SDL_Renderer*, SDL_Rect&, Sample[],           size_t, size_t, float, float, Sample, Sample);
+template Sample Widget::graph<Sample>(SDL_Renderer*, SDL_Rect&, Sample[], Sample[], size_t, size_t, float, float, Sample, Sample);
+
+template size_t Widget::graph<size_t>(SDL_Renderer*, SDL_Rect&, size_t[],           size_t, size_t, float, float, size_t, size_t);
+template size_t Widget::graph<size_t>(SDL_Renderer*, SDL_Rect&, size_t[], size_t[], size_t, size_t, float, float, size_t, size_t);
 
 
 template<typename T>
