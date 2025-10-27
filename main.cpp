@@ -133,7 +133,7 @@ void Corrie::init()
 	io.LogFilename = NULL;
 
 #ifdef SAMPLE_S16
-	int fd = open("/home/ico/tmp/1.s16", O_RDONLY);
+	int fd = open("/home/ico/tmp/2.s16", O_RDONLY);
 #else
 	int fd = open("/home/ico/tmp/1.float", O_RDONLY);
 #endif

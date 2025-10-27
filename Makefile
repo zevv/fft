@@ -15,6 +15,7 @@ SRC += stream.cpp
 SRC += config.cpp
 SRC += rb.cpp
 SRC += fft.cpp
+SRC += histogram.cpp
 SRC += $(IMGUI_DIR)/imgui.cpp 
 SRC += $(IMGUI_DIR)/imgui_demo.cpp
 SRC += $(IMGUI_DIR)/imgui_draw.cpp 

@@ -8,6 +8,7 @@
 #include <imgui.h>
 
 #include "widget-waterfall.hpp"
+#include "histogram.hpp"
 
 
 WidgetWaterfall::WidgetWaterfall()
@@ -56,24 +57,6 @@ Widget *WidgetWaterfall::do_copy()
 struct Pixel {
 	float r, g, b;
 };
-
-
-static void find_aperture(std::array<size_t, 256> hist, float &db_min, float &db_max)
-{
-	size_t total = 0;
-	for(auto &v : hist) total += v;
-	size_t count_05 = total * 0.05;
-	size_t count_99 = total * 0.99;
-	size_t cum = 0;
-	db_min = db_max = 1.0;
-	for(size_t i=0; i<hist.size(); i++) {
-		cum += hist[i];
-		if(db_max == 1.0 && cum >= count_05) db_max = -(float)i;
-		if(db_min == 1.0 && cum >= count_99) db_min = -(float)i;
-	}
-	db_max = std::min(db_max, -1.0f);
-	db_min = std::max(db_min, db_max - 80.0f);
-}
 
 
 void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
@@ -169,7 +152,7 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 	
 	std::vector<Pixel> row(m_fft.out_size());
 
-	std::array<size_t, 256> hist{};
+	Histogram hist(64, -120.0, 0.0);
 
 	m_db_min = 0.0;
 	m_db_max = -200.0;
@@ -190,8 +173,7 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 
 			for(int x=0; x<fft_w; x++) {
 				float db = out_graph[x];
-				int bin = -db;
-				if(bin > 0 && bin < (int)hist.size()) hist[bin]++;
+				hist.add(db);
 				m_db_min = std::min(m_db_min, db);
 				m_db_max = std::max(m_db_max, db);
 				float intensity = 0.0;
@@ -215,7 +197,8 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 	}
 
 	if(m_agc) {
-		find_aperture(hist, m_db_min, m_db_max);
+		m_db_min = hist.get_percentile(0.01);
+		m_db_max = hist.get_percentile(0.99);
 	}
 
 	SDL_UnlockTexture(tex);
