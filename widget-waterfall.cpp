@@ -142,7 +142,7 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 	
 			int idx = (int)(view.srate * t - m_view.fft.size / 2) * stride + ch;
 			if(idx < 0) continue;
-			if(idx >= frames_avail * stride) break;
+			if(idx >= (int)(frames_avail * stride)) break;
 
 			auto m_out_graph = m_fft.run(&data[idx], stride);
 
