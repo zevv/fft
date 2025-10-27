@@ -42,16 +42,15 @@ int Fft::out_size()
 std::vector<float> Fft::run(Sample *input, size_t stride)
 {
 	double key = 0.0;
-	for(size_t i=0; i<m_in.size(); i++) {
-		key += input[i * stride] * i;
+	size_t size = m_in.size();
+	for(size_t i=0; i<size; i++) {
+		key += static_cast<double>(input[i * stride]) * 1e-6;
 	}
 
 	auto it = m_cache.find(key);
 	if(it != m_cache.end()) {
 		return it->second;
 	}
-
-	size_t size = m_in.size();
 
 	auto window = m_window.data();
 	for(size_t i=0; i<size; i++) {
@@ -74,7 +73,7 @@ std::vector<float> Fft::run(Sample *input, size_t stride)
 		m_out[i] = (v >= 1e-20f) ? 20.0f * log10f(v) : db_range;
 	}
 
-	//m_cache[key] = m_out;
+	m_cache[key] = m_out;
 
 	return m_out;
 }
