@@ -93,7 +93,7 @@ Wavecache::Wavecache(size_t depth, size_t channel_count, size_t step)
 	, m_step(step)
 	, m_n(0)
 {
-	m_rb.set_size(depth * m_frame_size);
+	m_rb.set_size(depth * m_frame_size / step);
 }
 
 

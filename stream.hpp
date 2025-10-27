@@ -9,6 +9,8 @@
 #include "types.hpp"
 
 
+// TODO: use int8_t instead of Sample
+
 class Wavecache {
 public:
 	Wavecache(size_t depth, size_t channel_count, size_t step);
