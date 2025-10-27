@@ -39,16 +39,11 @@ int Fft::out_size()
 }
 
 
-std::vector<float> Fft::run(std::vector<Sample> &input)
+std::vector<float> Fft::run(Sample *input, size_t stride)
 {
-	assert(m_in.size() == input.size());
-	assert(m_window.size() == input.size());
-
-	double key = 0;
-	float i = 1.0;
-	for(auto v : input) {
-		key += v * i;
-		i *= 1.0001;
+	double key = 0.0;
+	for(size_t i=0; i<m_in.size(); i++) {
+		key += input[i * stride] * i;
 	}
 
 	auto it = m_cache.find(key);
@@ -60,7 +55,7 @@ std::vector<float> Fft::run(std::vector<Sample> &input)
 
 	auto window = m_window.data();
 	for(size_t i=0; i<size; i++) {
-		m_in[i] = input[i] * window[i] / k_sample_max;
+		m_in[i] = input[i * stride] * window[i] / k_sample_max;
 	}
 	fftwf_execute(m_plan);
 

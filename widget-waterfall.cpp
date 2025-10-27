@@ -118,7 +118,6 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 	}
 
 	m_fft.configure(m_view.fft.size, m_view.fft.window_type, m_view.fft.window_beta);
-	m_in.resize(m_view.fft.size);
 	
 	int fft_w = m_fft.out_size();
 	SDL_Texture *tex = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA32,
@@ -133,8 +132,6 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 	
 	std::vector<Pixel> row(m_fft.out_size());
 
-	std::vector<Sample> m_in(m_view.fft.size);
-
 	for(int y=0; y<r.h; y++) {
 		Time t = m_view.y_to_t(r.y + y, r);
 		memset(row.data(), 0, sizeof(Pixel) * row.size());
@@ -147,13 +144,7 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 			if(idx < 0) continue;
 			if(idx >= frames_avail * stride) break;
 
-			// TODO make fft->run() accept src + stride
-			for(int i=0; i<m_view.fft.size; i++) {
-				m_in[i] = data[idx];
-				idx += stride;
-			}
-
-			auto m_out_graph = m_fft.run(m_in);
+			auto m_out_graph = m_fft.run(&data[idx], stride);
 
 			for(int x=0; x<fft_w; x++) {
 				float db = m_out_graph[x];

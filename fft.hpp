@@ -16,7 +16,7 @@ public:
 
 	void configure(size_t size, Window::Type type, float beta=5.0f);
 	int out_size();
-	std::vector<float> run(std::vector<Sample> &input);
+	std::vector<float> run(Sample *input, size_t stride=1);
 
 private:
 	fftwf_plan m_plan{nullptr};

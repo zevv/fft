@@ -24,6 +24,5 @@ private:
 	float m_amp_cursor{0.0};
 	Fft m_fft{};
 
-	std::vector<Sample> m_in;
 	std::vector<Sample> m_out_graph;
 };

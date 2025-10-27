@@ -100,7 +100,6 @@ void WidgetSpectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 	}
 
 	m_fft.configure(m_view.fft.size, m_view.fft.window_type, m_view.fft.window_beta);
-	m_in.resize(m_view.fft.size);
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
@@ -115,16 +114,11 @@ void WidgetSpectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 		Sample *data = streams.peek(&stride, &avail);
 		int idx = ((int)(view.srate * m_view.time.cursor)) * stride + ch;
 
-		for(int i=0; i<m_view.fft.size; i++) {
-			Sample v = 0;
-			if(idx >= 0 && idx < (int)(avail * stride)) {
-				v = data[idx];
-			}
-			m_in[i] = v;
-			idx += stride;;
-		}
+		if(idx < 0) continue;
+		if(idx >= (int)(avail * stride)) continue;
 
-		auto out_graph = m_fft.run(m_in);
+
+		auto out_graph = m_fft.run(&data[idx], stride);
 
 		size_t npoints = m_view.fft.size / 2 + 1;
 		SDL_Color col = channel_color(ch);
