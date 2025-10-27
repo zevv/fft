@@ -27,10 +27,10 @@ void WidgetWaterfall::load(ConfigReader::Node *node)
 	Widget::load(node);
 	if(auto *wnode = node->find("waterfall")) {
 		if(const char *window_type = wnode->read_str("window_type")) {
-			m_view.window_type = Window::str_to_type(window_type);
+			m_view.fft.window_type = Window::str_to_type(window_type);
 		}
-		wnode->read("window_beta", m_view.window_beta);
-		wnode->read("fft_size", m_view.fft_size);
+		wnode->read("window_beta", m_view.fft.window_beta);
+		wnode->read("fft_size", m_view.fft.size);
 	}
 }
 
@@ -39,9 +39,9 @@ void WidgetWaterfall::save(ConfigWriter &cw)
 {
 	Widget::save(cw);
 	cw.push("waterfall");
-	cw.write("fft_size", (int)m_view.fft_size);
-	cw.write("window_type", Window::type_to_str(m_view.window_type));
-	cw.write("window_beta", m_view.window_beta);
+	cw.write("fft_size", (int)m_view.fft.size);
+	cw.write("window_type", Window::type_to_str(m_view.fft.window_type));
+	cw.write("window_beta", m_view.fft.window_beta);
 	cw.pop();
 }
 
@@ -67,42 +67,42 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 	
 	ImGui::SetNextItemWidth(100);
 	ImGui::SameLine();
-	ImGui::SliderInt("##fft size", (int *)&m_view.fft_size, 
+	ImGui::SliderInt("##fft size", (int *)&m_view.fft.size, 
 				16, 32768, "%d", ImGuiSliderFlags_Logarithmic);
 
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(100);
-	ImGui::Combo("##window", (int *)&m_view.window_type, 
+	ImGui::Combo("##window", (int *)&m_view.fft.window_type, 
 			Window::type_names(), Window::type_count());
 	
-	if(m_view.window_type == Window::Type::Gauss || 
-	   m_view.window_type == Window::Type::Kaiser) {
+	if(m_view.fft.window_type == Window::Type::Gauss || 
+	   m_view.fft.window_type == Window::Type::Kaiser) {
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(100);
-		float beta = m_view.window_beta;
+		float beta = m_view.fft.window_beta;
 		ImGui::SliderFloat("beta", &beta,
 				0.0f, 5.0f, "%.2f", ImGuiSliderFlags_Logarithmic);
-		m_view.window_beta = beta;
+		m_view.fft.window_beta = beta;
 	}
 
 	if(has_focus()) {
 	
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
-		ImGui::Text("f=%.6gHz", m_view.freq_cursor * view.srate * 0.5);
+		ImGui::Text("f=%.6gHz", m_view.freq.cursor * view.srate * 0.5);
 
 		auto pos = ImGui::GetIO().MousePos;
 		if(pos.x >= 0) {
 			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				m_view.freq_cursor += m_view.dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
+				m_view.freq.cursor += m_view.dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
 			} else {
-				m_view.freq_cursor = m_view.x_to_freq(pos.x, r);
+				m_view.freq.cursor = m_view.x_to_freq(pos.x, r);
 			}
 
 			auto pos = ImGui::GetIO().MousePos;
 			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				m_view.t_cursor += m_view.dy_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
+				m_view.time.cursor += m_view.dy_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
 			} else {
-				m_view.t_cursor = m_view.y_to_t(pos.y, r);
+				m_view.time.cursor = m_view.y_to_t(pos.y, r);
 			}
 		}
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
@@ -112,16 +112,13 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 		ImGuiIO& io = ImGui::GetIO();
 		m_view.pan_t(io.MouseWheel * 0.1f);
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
-			m_view.freq_from = 0.0f;
-			m_view.freq_to = 1.0;
+			m_view.freq.from = 0.0f;
+			m_view.freq.to = 1.0;
 		}
 	}
 
-	if(m_view.freq_from < 0.0f) m_view.freq_from = 0.0f;
-	if(m_view.freq_to > 1.0f) m_view.freq_to = 1.0f;
-
-	m_fft.configure(m_view.fft_size, m_view.window_type, m_view.window_beta);
-	m_in.resize(m_view.fft_size);
+	m_fft.configure(m_view.fft.size, m_view.fft.window_type, m_view.fft.window_beta);
+	m_in.resize(m_view.fft.size);
 	
 	int fft_w = m_fft.out_size();
 	SDL_Texture *tex = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA32,
@@ -132,11 +129,11 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 	memset(pixels, 0, pitch * r.h);
 
 	float db_range = -80.0;
-	grid_time_v(rend, r, m_view.y_to_t(r.y, r), m_view.y_to_t(r.y + r.h, r));
+	grid_time_v(rend, r, m_view.time.from, m_view.time.to);
 	
 	std::vector<Pixel> row(m_fft.out_size());
 
-	std::vector<Sample> m_in(m_view.fft_size);
+	std::vector<Sample> m_in(m_view.fft.size);
 
 	for(int y=0; y<r.h; y++) {
 		Time t = m_view.y_to_t(r.y + y, r);
@@ -145,11 +142,12 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 		for(int ch=0; ch<8; ch++) {
 			if(!m_channel_map[ch]) continue;
 			SDL_Color col = channel_color(ch);
-		
-			int idx = (int)(view.srate * t - m_view.fft_size / 2) * stride + ch;
+	
+			int idx = (int)(view.srate * t) * stride + ch;
 			if(idx < 0) continue;
 
-			for(int i=0; i<m_view.fft_size; i++) {
+			// TODO make fft->run() accept src + stride
+			for(int i=0; i<m_view.fft.size; i++) {
 				m_in[i] = data[idx];
 				idx += stride;
 			}
@@ -188,26 +186,26 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 	SDL_RectToFRect(&r, &dest);
 
 	SDL_FRect src;
-	src.x = m_view.freq_from * fft_w;
+	src.x = m_view.freq.from * fft_w;
 	src.y = 0;
-	src.w = (m_view.freq_to - m_view.freq_from) * fft_w;
+	src.w = (m_view.freq.to - m_view.freq.from) * fft_w;
 	src.h = r.h;
 
-	SDL_RenderTexture(rend, tex, &src, nullptr);
+	SDL_FRect dst;
+	SDL_RectToFRect(&r, &dst);
+	SDL_RenderTexture(rend, tex, &src, &dst);
 	SDL_DestroyTexture(tex);
 	
 	// cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
-	int cy = m_view.t_to_y(m_view.t_cursor, r);
+	int cy = m_view.t_to_y(m_view.time.cursor, r);
 	SDL_RenderLine(rend, r.x, cy, r.x + r.w, cy);
 	
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
-	int cx = m_view.freq_to_x(m_view.freq_cursor, r);
+	int cx = m_view.freq_to_x(m_view.freq.cursor, r);
 	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
 
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
 }
-
-

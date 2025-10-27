@@ -65,7 +65,7 @@ void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 	if(ImGui::IsWindowFocused()) {
 	
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
-		ImGui::Text("t=%.4gs", m_view.t_cursor);
+		ImGui::Text("t=%.4gs", m_view.time.cursor);
 
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
 			m_view.pan_t(ImGui::GetIO().MouseDelta.x / r.w);
@@ -73,15 +73,15 @@ void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 		}
 
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
-			m_view.t_from = 0;
-			m_view.t_to   = frames_avail / view.srate;
+			m_view.time.from = 0;
+			m_view.time.to   = frames_avail / view.srate;
 		}
 
 		auto pos = ImGui::GetIO().MousePos;
 		if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-			m_view.t_cursor += m_view.dx_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
+			m_view.time.cursor += m_view.dx_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
 		} else {
-			m_view.t_cursor = m_view.x_to_t(pos.x, r);
+			m_view.time.cursor = m_view.x_to_t(pos.x, r);
 		}
 	}
 
@@ -128,7 +128,7 @@ void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 
 	// cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
-	int cx = m_view.t_to_x(m_view.t_cursor, r);
+	int cx = m_view.t_to_x(m_view.time.cursor, r);
 	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
 
 	// zero Y
