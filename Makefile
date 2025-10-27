@@ -30,10 +30,9 @@ CXXFLAGS += -std=c++23 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 CXXFLAGS += -g 
 CXXFLAGS += -Wall -Wformat -Werror
 CXXFLAGS += -Wno-unused-but-set-variable -Wno-unused-variable
-CXXFLAGS += -Ofast
+CXXFLAGS += -O3 -ffast-math
 CXXFLAGS += -march=native
 CXXFLAGS += -MMD
-#CXXFLAGS += -ffast-math
 
 CXXFLAGS += `pkg-config sdl3 fftw3 fftw3f --cflags`
 LIBS += -ldl `pkg-config sdl3 fftw3 fftw3f --libs`

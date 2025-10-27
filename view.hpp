@@ -110,11 +110,11 @@ public:
 		}
 	}
 
-	float t_from;
-	float t_to;
-	float t_cursor;
-	float freq_from;
-	float freq_to;
-	float freq_cursor;
-	float srate;
+	Time t_from;
+	Time t_to;
+	Time t_cursor;
+	Frequency freq_from;
+	Frequency freq_to;
+	Frequency freq_cursor;
+	Samplerate srate;
 };

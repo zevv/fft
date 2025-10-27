@@ -13,8 +13,13 @@
 
 class Wavecache {
 public:
+	struct Range {
+		int8_t min;
+		int8_t max;
+	};
+
 	Wavecache(size_t depth, size_t channel_count, size_t step);
-	SampleRange *peek(size_t *frames_avail, size_t *stride);
+	Range *peek(size_t *frames_avail, size_t *stride);
 	void feed_frames(Sample *buf, size_t frame_count, size_t channel_count);
 private:
 	size_t m_channel_count;
@@ -33,7 +38,7 @@ public:
 	Streams(size_t depth, size_t channel_count);
 	~Streams();
 	Sample *peek(size_t *stride, size_t *used = nullptr);
-	SampleRange *peek_wavecache(size_t *stride, size_t *used = nullptr);
+	Wavecache::Range *peek_wavecache(size_t *stride, size_t *used = nullptr);
 	void add_reader(StreamReader *reader);
 	bool capture();
 
@@ -96,8 +101,8 @@ public:
 private:
 
 	Sample run();
-	float m_srate{};
-	double m_phase{};
+	Samplerate m_srate{};
+	Time m_phase{};
 	int m_type{};
 };
 

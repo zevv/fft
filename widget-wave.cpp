@@ -60,7 +60,7 @@ void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 
 	size_t wframes_avail;
 	size_t wdata_stride;
-	SampleRange *wdata = streams.peek_wavecache(&wdata_stride, &wframes_avail);
+	Wavecache::Range *wdata = streams.peek_wavecache(&wdata_stride, &wframes_avail);
 
 	if(ImGui::IsWindowFocused()) {
 	
@@ -94,6 +94,9 @@ void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 	float idx_to   = m_view.x_to_t(r.x + r.w, r) * view.srate;
 	float step = (idx_to - idx_from) / r.w;
 
+	ImGui::SameLine();
+	ImGui::Text(" step: %.0f", step);
+
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
 	for(int ch=0; ch<8; ch++) {
@@ -114,7 +117,8 @@ void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 					&wdata[ch].min, &wdata[ch].max, 
 					frames_avail / 256, wdata_stride * 2,
 					idx_from / 256, idx_to / 256,
-					(Sample)-scale, (Sample)+scale);
+					(int8_t)(-scale / 256), (int8_t)(+scale / 256));
+			peak *= 256;
 		}
 
 		m_peak = std::max(m_peak, peak);

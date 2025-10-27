@@ -149,6 +149,10 @@ template Sample Widget::graph<Sample>(SDL_Renderer*, SDL_Rect&, Sample[], Sample
 template int    Widget::graph<int   >(SDL_Renderer*, SDL_Rect&, int   [],           size_t, size_t, double, double, int   , int   );
 template int    Widget::graph<int   >(SDL_Renderer*, SDL_Rect&, int   [], int   [], size_t, size_t, double, double, int   , int   );
 
+template int8_t Widget::graph<int8_t>(SDL_Renderer*, SDL_Rect&, int8_t[],           size_t, size_t, double, double, int8_t, int8_t);
+template int8_t Widget::graph<int8_t>(SDL_Renderer*, SDL_Rect&, int8_t[], int8_t[], size_t, size_t, double, double, int8_t, int8_t);
+
+
 template<typename T>
 T Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
 					 T data[], size_t data_count, size_t stride,
