@@ -116,20 +116,15 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 				m_view.t_cursor = m_view.y_to_t(pos.y, r);
 			}
 		}
-		if(ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-			m_view.pan_t(ImGui::GetIO().MouseDelta.y / r.h);
-		}
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			m_view.zoom_t(ImGui::GetIO().MouseDelta.y);
+			m_view.pan_freq(-ImGui::GetIO().MouseDelta.x / r.w);
+			m_view.zoom_freq(ImGui::GetIO().MouseDelta.y);
 		}
 		ImGuiIO& io = ImGui::GetIO();
 		m_view.pan_t(io.MouseWheel * 0.1f);
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
 			m_view.freq_from = 0.0f;
 			m_view.freq_to = 1.0;
-
-			m_view.t_from = 0;
-			m_view.t_to   = avail / view.srate;
 		}
 	}
 
@@ -210,7 +205,14 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 	SDL_UnlockTexture(tex);
 	SDL_FRect dest;
 	SDL_RectToFRect(&r, &dest);
-	SDL_RenderTexture(rend, tex, nullptr, &dest);
+
+	SDL_FRect src;
+	src.x = m_view.freq_from * fft_w;
+	src.y = 0;
+	src.w = (m_view.freq_to - m_view.freq_from) * fft_w;
+	src.h = r.h;
+
+	SDL_RenderTexture(rend, tex, &src, nullptr);
 	SDL_DestroyTexture(tex);
 	
 	// cursor
