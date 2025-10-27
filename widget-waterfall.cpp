@@ -129,25 +129,25 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 
 	float db_range = -80.0;
 	grid_time_v(rend, r, m_view.time.from, m_view.time.to);
+
 	
 	std::vector<Pixel> row(m_fft.out_size());
 
 	for(int y=0; y<r.h; y++) {
 		Time t = m_view.y_to_t(r.y + y, r);
 		memset(row.data(), 0, sizeof(Pixel) * row.size());
+	
+		int idx = (int)(view.srate * t - m_view.fft.size / 2) * stride;
+		if(idx < 0) continue;
+		if(idx >= (int)(frames_avail * stride)) break;
+		auto out_graph = m_fft.run_many(&data[idx], stride);
 
 		for(int ch=0; ch<8; ch++) {
 			if(!m_channel_map[ch]) continue;
 			SDL_Color col = channel_color(ch);
 	
-			int idx = (int)(view.srate * t - m_view.fft.size / 2) * stride + ch;
-			if(idx < 0) continue;
-			if(idx >= (int)(frames_avail * stride)) break;
-
-			auto m_out_graph = m_fft.run(&data[idx], stride);
-
 			for(int x=0; x<fft_w; x++) {
-				float db = m_out_graph[x];
+				float db = out_graph[x*8 + ch];
 				float intensity = 0.0;
 				if(db > db_range) {
 					intensity = (db - db_range) / -db_range;

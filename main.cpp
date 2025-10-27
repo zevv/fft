@@ -138,7 +138,7 @@ void Corrie::init()
 	int fd = open("/home/ico/tmp/1.float", O_RDONLY);
 #endif
 	m_streams.add_reader(new StreamReaderFd(2, fd));
-	m_streams.add_reader(new StreamReaderAudio(3, m_srate));
+	//m_streams.add_reader(new StreamReaderAudio(3, m_srate));
 	m_streams.add_reader(new StreamReaderGenerator(1, m_srate, 1));
 
 	m_capture = true;
@@ -285,6 +285,8 @@ void Corrie::exit()
 int main(int, char**)
 {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+	fftwf_init_threads();
+	//fftwf_plan_with_nthreads(4);
 
 	// scope to ensure Corrie destructor called before SDL_Quit
 	{
