@@ -93,7 +93,6 @@ void WidgetSpectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 			m_view.pan_freq(-ImGui::GetIO().MouseDelta.x / r.w);
 			m_view.zoom_freq(ImGui::GetIO().MouseDelta.y);
 		}
-	
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
 			m_view.freq.from = 0.0f;
 			m_view.freq.to = 1.0;

@@ -62,8 +62,8 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 {
 	
 	size_t stride = 0;
-	size_t avail = 0;
-	Sample *data = streams.peek(&stride, &avail);
+	size_t frames_avail = 0;
+	Sample *data = streams.peek(&stride, &frames_avail);
 	
 	ImGui::SetNextItemWidth(100);
 	ImGui::SameLine();
@@ -143,8 +143,9 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 			if(!m_channel_map[ch]) continue;
 			SDL_Color col = channel_color(ch);
 	
-			int idx = (int)(view.srate * t) * stride + ch;
+			int idx = (int)(view.srate * t - m_view.fft.size / 2) * stride + ch;
 			if(idx < 0) continue;
+			if(idx >= frames_avail * stride) break;
 
 			// TODO make fft->run() accept src + stride
 			for(int i=0; i<m_view.fft.size; i++) {
