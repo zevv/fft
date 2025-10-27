@@ -134,14 +134,20 @@ public:
 		Frequency cursor{11000.0};
 	};
 
-	struct Vfft {
+	struct VFft {
 		int size{256};
 		Window::Type window_type{Window::Type::Hanning};
 		double window_beta{0.5};
+	};
+
+	struct VAperture {
+		float center{-40.0f};
+		float range{80.0f};
 	};
 	
 	Samplerate srate{48000};
 	VTime time;
 	VFreq freq;
-	Vfft fft;
+	VFft fft;
+	VAperture aperture;
 };

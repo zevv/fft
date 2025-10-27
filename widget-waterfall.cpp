@@ -58,6 +58,24 @@ struct Pixel {
 };
 
 
+static void find_aperture(std::array<size_t, 256> hist, float &db_min, float &db_max)
+{
+	size_t total = 0;
+	for(auto &v : hist) total += v;
+	size_t count_05 = total * 0.05;
+	size_t count_99 = total * 0.99;
+	size_t cum = 0;
+	db_min = db_max = 1.0;
+	for(size_t i=0; i<hist.size(); i++) {
+		cum += hist[i];
+		if(db_max == 1.0 && cum >= count_05) db_max = -(float)i;
+		if(db_min == 1.0 && cum >= count_99) db_min = -(float)i;
+	}
+	db_max = std::min(db_max, -1.0f);
+	db_min = std::max(db_min, db_max - 80.0f);
+}
+
+
 void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	
@@ -83,6 +101,26 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 		ImGui::SliderFloat("beta", &beta,
 				0.0f, 5.0f, "%.2f", ImGuiSliderFlags_Logarithmic);
 		m_view.fft.window_beta = beta;
+	}
+
+	ImGui::SameLine();
+	ImGui::ToggleButton("AGC", &m_agc);
+
+	float db_min = -100.0;
+	float db_max = 0.0;
+
+	if(!m_agc) {
+		ImGui::SameLine();
+		ImGui::SetNextItemWidth(100);
+		ImGui::SliderFloat("##db center", &m_view.aperture.center, 0.0f, -100.0f, "%.1f");
+		ImGui::SameLine();
+		ImGui::SetNextItemWidth(100);
+		ImGui::SliderFloat("##db range", &m_view.aperture.range, 100.0f, 0.0f, "%.1f");
+		db_min = m_view.aperture.center - m_view.aperture.range;
+		db_max = m_view.aperture.center + m_view.aperture.range;
+	} else {
+		db_min = m_db_min;
+		db_max = m_db_max;
 	}
 
 	if(has_focus()) {
@@ -127,10 +165,14 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 	SDL_LockTexture(tex, nullptr, (void **)&pixels, &pitch);
 	memset(pixels, 0, pitch * r.h);
 
-	float db_range = -80.0;
 	grid_time_v(rend, r, m_view.time.from, m_view.time.to);
 	
 	std::vector<Pixel> row(m_fft.out_size());
+
+	std::array<size_t, 256> hist{};
+
+	m_db_min = 0.0;
+	m_db_max = -200.0;
 
 	for(int y=0; y<r.h; y++) {
 		Time t = m_view.y_to_t(r.y + y, r);
@@ -144,13 +186,17 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 			if(idx < 0) continue;
 			if(idx >= (int)(frames_avail * stride)) break;
 
-			auto m_out_graph = m_fft.run(&data[idx], stride);
+			auto out_graph = m_fft.run(&data[idx], stride);
 
 			for(int x=0; x<fft_w; x++) {
-				float db = m_out_graph[x];
+				float db = out_graph[x];
+				int bin = -db;
+				if(bin > 0 && bin < (int)hist.size()) hist[bin]++;
+				m_db_min = std::min(m_db_min, db);
+				m_db_max = std::max(m_db_max, db);
 				float intensity = 0.0;
-				if(db > db_range) {
-					intensity = (db - db_range) / -db_range;
+				if(db > db_min && db_max > db_min) {
+					intensity = (db - db_min) / (db_max - db_min);
 				}
 				SDL_Color col2 = col;
 				col2.a = intensity;
@@ -161,17 +207,16 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 		}
 
 		for(int x=0; x<fft_w; x++) {
-			if(row[x].r > m_peak) m_peak = row[x].r;
-			if(row[x].g > m_peak) m_peak = row[x].g;
-			if(row[x].b > m_peak) m_peak = row[x].b;
-			uint8_t r = std::min(row[x].r / m_peak * 255, 255.0f);
-			uint8_t g = std::min(row[x].g / m_peak * 255, 255.0f);
-			uint8_t b = std::min(row[x].b / m_peak * 255, 255.0f);
+			uint8_t r = std::min(row[x].r, 255.0f);
+			uint8_t g = std::min(row[x].g, 255.0f);
+			uint8_t b = std::min(row[x].b, 255.0f);
 			pixels[y * (pitch / 4) + x] = (0xff << 24) | (b << 16) | (g << 8) | r;
 		}
 	}
 
-	m_peak *= 0.95;
+	if(m_agc) {
+		find_aperture(hist, m_db_min, m_db_max);
+	}
 
 	SDL_UnlockTexture(tex);
 	SDL_FRect dest;

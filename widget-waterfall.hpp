@@ -22,7 +22,8 @@ private:
 	Widget *do_copy() override;
 	void do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r) override;
 
-	std::vector<Sample> m_out_graph;
 	Fft m_fft{};
-	float m_peak{};
+	float m_db_min{};
+	float m_db_max{};
+	bool m_agc{true};
 };
