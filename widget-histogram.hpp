@@ -7,6 +7,7 @@
 #include "stream.hpp"
 #include "view.hpp"
 #include "widget.hpp"
+#include "histogram.hpp"
 
 
 class WidgetHistogram : public Widget {
@@ -25,4 +26,5 @@ private:
 	int m_nbins{64};
 	Sample m_vmin{};
 	Sample m_vmax{};
+	std::array<Histogram, 8> m_hists{};
 };

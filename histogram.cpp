@@ -4,6 +4,14 @@
 
 #include "histogram.hpp"
 
+Histogram::Histogram()
+	: m_min(0.0)
+	, m_binwidth(1.0)
+{
+	m_bin.resize(64, 0);
+}
+
+
 Histogram::Histogram(int bins, double min, double max)
 	: m_min(min)
 	, m_binwidth((max - min) / bins)
@@ -20,24 +28,26 @@ void Histogram::clear()
 }
 
 
-void Histogram::normalize()
+void Histogram::set_nbins(size_t n)
 {
-	size_t v_min = m_bin[0];
-	size_t v_max = m_bin[0];
+	m_bin.resize(n, 0);
+}
+
+
+void Histogram::set_range(double min, double max)
+{
+	m_min = min;
+	m_binwidth = (max - min) / m_bin.size();
+}
+
+
+size_t Histogram::get_peak() const
+{
+	size_t peak = m_bin[0];
 	for(size_t i=1; i<m_bin.size(); i++) {
-		v_min = std::min(v_min, m_bin[i]);
-		v_max = std::max(v_max, m_bin[i]);
+		peak = std::max(peak, m_bin[i]);
 	}
-	double range = v_max - v_min;
-	if(range > 0) {
-		for(size_t i=0; i<m_bin.size(); i++) {
-			m_bin[i] = (m_bin[i] - v_min) / range;
-		}
-	} else {
-		for(size_t i=0; i<m_bin.size(); i++) {
-			m_bin[i] = 0;
-		}
-	}
+	return peak;
 }
 
 

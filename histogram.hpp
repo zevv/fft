@@ -5,10 +5,12 @@
 
 class Histogram {
 public:
+	Histogram();
 	Histogram(int bins, double min, double max);
 
 	void clear();
-	void normalize();
+	void set_nbins(size_t n);
+	void set_range(double min, double max);
 	std::vector<size_t> &bins() { return m_bin; }
 
 	inline void add(double v) {
@@ -20,6 +22,7 @@ public:
 	}
 
 	double get_percentile(double p) const;
+	size_t get_peak() const;
 
 private:
 	std::vector<size_t> m_bin{};
