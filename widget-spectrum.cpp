@@ -13,7 +13,6 @@
 WidgetSpectrum::WidgetSpectrum()
 	: Widget(Widget::Type::Spectrum)
 {
-	configure_fft(m_size, m_window_type);
 }
 
 
@@ -28,12 +27,11 @@ void WidgetSpectrum::load(ConfigReader::Node *node)
 	Widget::load(node);
 	if(auto *wnode = node->find("spectrum")) {
 		if(const char *window_type = wnode->read_str("window_type")) {
-			m_window_type = Window::str_to_type(window_type);
+			m_view.window_type = Window::str_to_type(window_type);
 		}
-		wnode->read("window_beta", m_window_beta);
-		wnode->read("fft_size", m_size);
+		wnode->read("window_beta", m_view.window_beta);
+		wnode->read("fft_size", m_view.fft_size);
 	}
-	configure_fft(m_size, m_window_type);
 }
 
 
@@ -41,9 +39,9 @@ void WidgetSpectrum::save(ConfigWriter &cw)
 {
 	Widget::save(cw);
 	cw.push("spectrum");
-	cw.write("fft_size", (int)m_size);
-	cw.write("window_type", Window::type_to_str(m_window_type));
-	cw.write("window_beta", m_window_beta);
+	cw.write("fft_size", (int)m_view.fft_size);
+	cw.write("window_type", Window::type_to_str(m_view.window_type));
+	cw.write("window_beta", m_view.window_beta);
 	cw.pop();
 }
 
@@ -51,43 +49,32 @@ void WidgetSpectrum::save(ConfigWriter &cw)
 Widget *WidgetSpectrum::do_copy()
 {
 	auto *w = new WidgetSpectrum();
-	w->m_size = m_size;
-	w->m_window_type = m_window_type;
-	w->m_window_beta = m_window_beta;
-	w->configure_fft(m_size, m_window_type);
 	return w;
 };
 
 
 void WidgetSpectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
-	bool update = false;
-	
 	ImGui::SetNextItemWidth(100);
 	ImGui::SameLine();
-	update |= ImGui::SliderInt("##fft size", (int *)&m_size, 
+	ImGui::SliderInt("##fft size", (int *)&m_view.fft_size, 
 				16, 32768, "%d", ImGuiSliderFlags_Logarithmic);
 
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(100);
-	update |= ImGui::Combo("##window", (int *)&m_window_type, 
+	ImGui::Combo("##window", (int *)&m_view.window_type, 
 			Window::type_names(), Window::type_count());
-	
-	if(update) {
-		configure_fft(m_size, m_window_type);
-	}
 
-	if(m_window_type == Window::Type::Gauss || 
-	   m_window_type == Window::Type::Kaiser) {
+	if(m_view.window_type == Window::Type::Gauss || 
+	   m_view.window_type == Window::Type::Kaiser) {
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(100);
-		bool changed = ImGui::SliderFloat("beta", &m_window_beta, 
+		float beta = m_view.window_beta;
+		ImGui::SliderFloat("beta", &beta,
 				0.0f, 5.0f, "%.2f", ImGuiSliderFlags_Logarithmic);
-		if(changed) {
-			m_fft.set_window(m_window_type, m_size, m_window_beta);
-		}
+		m_view.window_beta = beta;
 	}
-
+	
 	if(has_focus()) {
 	
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
@@ -115,6 +102,9 @@ void WidgetSpectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 
 	if(m_view.freq_from < 0.0f) m_view.freq_from = 0.0f;
 	if(m_view.freq_to > 1.0f) m_view.freq_to = 1.0f;
+	
+	m_fft.configure(m_view.fft_size, m_view.window_type, m_view.window_beta);
+	m_in.resize(m_view.fft_size);
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
@@ -129,7 +119,7 @@ void WidgetSpectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 		Sample *data = streams.peek(&stride, &avail);
 		int idx = ((int)(view.srate * m_view.t_cursor)) * stride + ch;
 
-		for(int i=0; i<m_size; i++) {
+		for(int i=0; i<m_view.fft_size; i++) {
 			Sample v = 0;
 			if(idx >= 0 && idx < (int)(avail * stride)) {
 				v = data[idx];
@@ -138,13 +128,13 @@ void WidgetSpectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 			idx += stride;;
 		}
 
-		auto m_out_graph = m_fft.run(m_in);
+		auto out_graph = m_fft.run(m_in);
 
-		size_t npoints = m_size / 2 + 1;
+		size_t npoints = m_view.fft_size / 2 + 1;
 		SDL_Color col = channel_color(ch);
 		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
 		graph(rend, r,
-				m_out_graph.data(), m_out_graph.size(), 1,
+				out_graph.data(), out_graph.size(), 1,
 				m_view.freq_from * npoints, m_view.freq_to * npoints,
 				db_range, 0.0f);
 	}
@@ -160,13 +150,3 @@ void WidgetSpectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 }
 
 
-void WidgetSpectrum::configure_fft(int size, Window::Type window_type)
-{
-	m_size = size;
-	m_in.resize(size);
-	m_out_graph.resize(size);
-
-	m_fft.set_size(size);
-	m_fft.set_window(window_type, size, m_window_beta);
-
-}

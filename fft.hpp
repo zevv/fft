@@ -14,8 +14,7 @@ public:
 	Fft();
 	~Fft();
 
-	void set_size(size_t size);
-	void set_window(Window::Type type, size_t size, float beta=5.0f);
+	void configure(size_t size, Window::Type type, float beta=5.0f);
 	int out_size();
 	std::vector<float> run(std::vector<Sample> &input);
 

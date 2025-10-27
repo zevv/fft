@@ -5,6 +5,7 @@
 
 #include "config.hpp"
 #include "types.hpp"
+#include "window.hpp"
 
 class View {
 
@@ -21,6 +22,11 @@ public:
 		n->read("freq_from", freq_from);
 		n->read("freq_to", freq_to);
 		n->read("freq_cursor", freq_cursor);
+		n->read("fft_size", fft_size);
+		if(const char *tmp = n->read_str("window_type")) {
+			window_type = Window::str_to_type(tmp);
+		}
+		n->read("window_beta", window_beta);
 	}
 
 	void save(ConfigWriter &cfg)
@@ -31,6 +37,9 @@ public:
 		cfg.write("freq_from", freq_from);
 		cfg.write("freq_to", freq_to);
 		cfg.write("freq_cursor", freq_cursor);
+		cfg.write("fft_size", fft_size);
+		cfg.write("window_type", Window::type_to_str(window_type));
+		cfg.write("window_beta", window_beta);
 	}
 
 	Time x_to_t(float x, SDL_Rect &r) {
@@ -110,11 +119,14 @@ public:
 		}
 	}
 
-	Time t_from;
-	Time t_to;
-	Time t_cursor;
-	Frequency freq_from;
-	Frequency freq_to;
-	Frequency freq_cursor;
-	Samplerate srate;
+	Time t_from{0.0};
+	Time t_to{1.0};
+	Time t_cursor{0.5};
+	Frequency freq_from{0.0};
+	Frequency freq_to{22000.0};
+	Frequency freq_cursor{11000.0};
+	Samplerate srate{48000};
+	int fft_size{256};
+	Window::Type window_type{Window::Type::Hanning};
+	double window_beta{0.5};
 };

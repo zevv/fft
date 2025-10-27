@@ -16,14 +16,17 @@ public:
 	static Type str_to_type(const char *s);
 
 	void configure(Type type, size_t size, float beta = 6.0f);
-	void set_size(size_t size);
+
 	size_t size() const { return m_data.size(); };
+	double beta() const { return m_beta; };
 	double gain() const { return m_gain; };
+	Type type() const { return m_type; };
+
 	std::vector<double> &data() { return m_data; };
 
 private:
 	Type m_type;
-	float m_beta;
+	double m_beta;
 	double m_gain;
 	std::vector<double> m_data;
 };

@@ -21,12 +21,7 @@ private:
 	Widget *do_copy() override;
 	void do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r) override;
 
-	void configure_fft(int size, Window::Type window_type);
-
-	int m_size{256};
 	float m_amp_cursor{0.0};
-	Window::Type m_window_type{Window::Type::Hanning};
-	float m_window_beta{5.0f};
 	Fft m_fft{};
 
 	std::vector<Sample> m_in;

@@ -74,11 +74,6 @@ void Window::configure(Window::Type type, size_t size, float beta)
 }
 
 
-void Window::set_size(size_t size)
-{
-	configure(m_type, size, m_beta);
-}
-
 
 static const char *k_window_str[] = { 
 	"square", "hanning", "hamming", "blackman", "gauss", "kaiser"

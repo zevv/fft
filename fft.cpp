@@ -4,6 +4,7 @@
 
 Fft::Fft()
 {
+	configure(1024, Window::Type::Hanning, 0.0f);
 }
 
 
@@ -15,24 +16,20 @@ Fft::~Fft()
 }
 
 
-void Fft::set_size(size_t size)
+void Fft::configure(size_t size, Window::Type window_type, float window_beta)
 {
-	if(m_plan) {
-		fftwf_destroy_plan(m_plan);
+	if(m_window.size() != size || m_window.type() != window_type || m_window.beta() != window_beta) {
+		m_window.configure(window_type, size, window_beta);
+		m_cache.clear();
 	}
 
-	m_in.resize(size);
-	m_out.resize(size / 2 + 1);
-	m_plan = fftwf_plan_r2r_1d(size, m_in.data(), m_in.data(), FFTW_R2HC, FFTW_ESTIMATE);
-	m_window.set_size(size);
-	m_cache.clear();
-}
-
-
-void Fft::set_window(Window::Type type, size_t size, float beta)
-{
-	m_window.configure(type, size, beta);
-	m_cache.clear();
+	if(m_in.size() != size) {
+		m_in.resize(size);
+		m_out.resize(size / 2 + 1);
+		if(m_plan) fftwf_destroy_plan(m_plan);
+		m_plan = fftwf_plan_r2r_1d(size, m_in.data(), m_in.data(), FFTW_R2HC, FFTW_ESTIMATE);
+		m_cache.clear();
+	}
 }
 
 
