@@ -138,12 +138,9 @@ void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 	// window
 	Window w = Window(m_view.fft.window_type, m_view.fft.size, m_view.fft.window_beta);
 	SDL_SetRenderDrawColor(rend, 128, 128, 128, 255);
+	double w_idx_from = (m_view.time.from - m_view.time.cursor) * m_view.srate;
+	double w_idx_to   = (m_view.time.to   - m_view.time.cursor) * m_view.srate;
 
-	Time w_idx_span = (m_view.time.to - m_view.time.from) * m_view.srate;;
-	double w_idx_from = (m_view.x_to_t(r.x, r) - m_view.time.cursor) * view.srate;
-	double w_idx_to   = w_idx_from + w_idx_span;
-
-	
 	graph(rend, r, w.data().data(), w.size(), 1,
 			w_idx_from, w_idx_to,
 			-1.0, +1.0);
