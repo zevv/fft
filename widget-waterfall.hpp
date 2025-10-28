@@ -26,4 +26,5 @@ private:
 	float m_db_min{};
 	float m_db_max{};
 	bool m_agc{true};
+	SDL_Texture *m_tex{nullptr};
 };

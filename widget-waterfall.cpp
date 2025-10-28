@@ -19,6 +19,9 @@ WidgetWaterfall::WidgetWaterfall()
 
 WidgetWaterfall::~WidgetWaterfall()
 {
+	if(m_tex) {
+		SDL_DestroyTexture(m_tex);
+	}
 }
 
 
@@ -141,11 +144,17 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	m_fft.configure(m_view.fft.size, m_view.fft.window_type, m_view.fft.window_beta);
 	
 	int fft_w = m_fft.out_size();
-	SDL_Texture *tex = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA32,
+
+	if(m_tex == nullptr || m_tex->w != fft_w || m_tex->h != r.h) {
+		if(m_tex) SDL_DestroyTexture(m_tex);
+		m_tex = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA32,
 			SDL_TEXTUREACCESS_STREAMING, fft_w, r.h);
+	}
+	assert(m_tex);
+
 	uint32_t *pixels;
 	int pitch;
-	SDL_LockTexture(tex, nullptr, (void **)&pixels, &pitch);
+	SDL_LockTexture(m_tex, nullptr, (void **)&pixels, &pitch);
 	memset(pixels, 0, pitch * r.h);
 
 	grid_time_v(rend, r, m_view.time.from, m_view.time.to);
@@ -201,7 +210,7 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		m_db_max = hist.get_percentile(0.99);
 	}
 
-	SDL_UnlockTexture(tex);
+	SDL_UnlockTexture(m_tex);
 	SDL_FRect dest;
 	SDL_RectToFRect(&r, &dest);
 
@@ -213,8 +222,7 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 	SDL_FRect dst;
 	SDL_RectToFRect(&r, &dst);
-	SDL_RenderTexture(rend, tex, &src, &dst);
-	SDL_DestroyTexture(tex);
+	SDL_RenderTexture(rend, m_tex, &src, &dst);
 	
 	// cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
