@@ -103,7 +103,7 @@ void WidgetSpectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
-	float db_range = -120.0;
+	int8_t db_range = -120.0;
 	grid_vertical(rend, r, db_range, 0);
 
 	for(int ch=0; ch<8; ch++) {
@@ -126,7 +126,7 @@ void WidgetSpectrum::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 		graph(rend, r,
 				out_graph.data(), out_graph.size(), 1,
 				m_view.freq.from * npoints, m_view.freq.to * npoints,
-				db_range, 0.0f);
+				db_range, (int8_t)0);
 	}
 	
 	// cursor

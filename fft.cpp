@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <algorithm>
 
 #include "fft.hpp"
 
@@ -39,7 +40,7 @@ int Fft::out_size()
 }
 
 
-std::vector<float> Fft::run(Sample *input, size_t stride)
+std::vector<int8_t> Fft::run(Sample *input, size_t stride)
 {
 	double key = 0.0;
 	size_t size = m_in.size();
@@ -70,7 +71,7 @@ std::vector<float> Fft::run(Sample *input, size_t stride)
 		} else {
 			v = hypot(m_in[i], m_in[size - i]) * scale;
 		} 
-		m_out[i] = (v >= 1e-20f) ? 20.0f * log10f(v) : db_range;
+		m_out[i] = std::clamp(20.0f * log10f(v + 1e-10), -127.0f, 0.0f);
 	}
 
 	m_cache[key] = m_out;
