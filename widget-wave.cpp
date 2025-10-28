@@ -21,19 +21,15 @@ WidgetWaveform::~WidgetWaveform()
 }
 
 
-void WidgetWaveform::load(ConfigReader::Node *node)
+void WidgetWaveform::do_load(ConfigReader::Node *node)
 {
-	if(!node) return;
-	Widget::load(node);
-	if(auto *wnode = node->find("waveform")) {
-		wnode->read("agc", m_agc);
-	}
+	auto *wnode = node->find("waveform");
+	wnode->read("agc", m_agc);
 }
 
 
-void WidgetWaveform::save(ConfigWriter &cw)
+void WidgetWaveform::do_save(ConfigWriter &cw)
 {
-	Widget::save(cw);
 	cw.push("waveform");
 	cw.write("agc", m_agc);
 	cw.pop();

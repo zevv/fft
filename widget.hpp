@@ -21,8 +21,8 @@ public:
 	Widget(Type type);
 	virtual ~Widget();
 	
-	virtual void load(ConfigReader::Node *node);
-	virtual void save(ConfigWriter &cfg);
+	void load(ConfigReader::Node *node);
+	void save(ConfigWriter &cfg);
 	Widget *copy();
 	void copy_to(Widget *w);
 	Type get_type() { return m_type; }
@@ -41,6 +41,8 @@ protected:
 
 	virtual Widget *do_copy() = 0;
 	virtual void do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r) = 0;
+	virtual void do_load(ConfigReader::Node *node) {};
+	virtual void do_save(ConfigWriter &cfg) {};
 
 	template<typename T>
 	T graph(SDL_Renderer *rend, SDL_Rect &r,

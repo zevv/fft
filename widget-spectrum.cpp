@@ -21,31 +21,6 @@ WidgetSpectrum::~WidgetSpectrum()
 }
 
 
-void WidgetSpectrum::load(ConfigReader::Node *node)
-{
-	if(!node) return;
-	Widget::load(node);
-	if(auto *wnode = node->find("spectrum")) {
-		if(const char *window_type = wnode->read_str("window_type")) {
-			m_view.fft.window_type = Window::str_to_type(window_type);
-		}
-		wnode->read("window_beta", m_view.fft.window_beta);
-		wnode->read("fft_size", m_view.fft.size);
-	}
-}
-
-
-void WidgetSpectrum::save(ConfigWriter &cw)
-{
-	Widget::save(cw);
-	cw.push("spectrum");
-	cw.write("fft_size", (int)m_view.fft.size);
-	cw.write("window_type", Window::type_to_str(m_view.fft.window_type));
-	cw.write("window_beta", m_view.fft.window_beta);
-	cw.pop();
-}
-
-
 Widget *WidgetSpectrum::do_copy()
 {
 	auto *w = new WidgetSpectrum();

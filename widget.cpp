@@ -45,9 +45,10 @@ Widget *Widget::create(const char *type_str)
 
 void Widget::load(ConfigReader::Node *node)
 {
-	if(!node) return;
 	m_channel_map.load(node);
 	m_view.load(node);
+	node->read("lock_view", m_lock_view);
+	do_load(node);
 }
 
 
@@ -57,6 +58,7 @@ void Widget::save(ConfigWriter &cw)
 	cw.write("lock_view", m_lock_view);
 	m_view.save(cw);
 	m_channel_map.save(cw);
+	do_save(cw);
 }
 
 

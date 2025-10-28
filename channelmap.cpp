@@ -50,7 +50,7 @@ void ChannelMap::set_channel_count(int count)
 
 std::generator<int> ChannelMap::enabled_channels()
 {
-	for (size_t i=0; i<32; ++i) {
+	for (size_t i=0; i<m_channel_count; ++i) {
 		if (m_map & (1<<i)) {
 			co_yield i;
 		}

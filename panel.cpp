@@ -46,39 +46,36 @@ Panel::~Panel()
 
 void Panel::load(ConfigReader::Node *node)
 {
-	if(node) {
+	node->read("weight", m_weight);
+	
+	if(const char *type = node->read_str("type")) {
 
-		node->read("weight", m_weight);
-		
-		if(const char *type = node->read_str("type")) {
+		if(strcmp(type, "root") == 0) {
+			m_type = Type::Root;
+		}
 
-			if(strcmp(type, "root") == 0) {
-				m_type = Type::Root;
+		if(strcmp(type, "split_v") == 0) {
+			m_type = Type::SplitV;
+		}
+
+		if(strcmp(type, "split_h") == 0) {
+			m_type = Type::SplitH;
+		}
+
+		if(strcmp(type, "widget") == 0) {
+			m_type = Type::Widget;
+			if(const char *wtype = node->read_str("widget")) {
+				m_widget = Widget::create(wtype);
+				m_widget->load(node);
 			}
+		}
 
-			if(strcmp(type, "split_v") == 0) {
-				m_type = Type::SplitV;
-			}
-
-			if(strcmp(type, "split_h") == 0) {
-				m_type = Type::SplitH;
-			}
-
-			if(strcmp(type, "widget") == 0) {
-				m_type = Type::Widget;
-				if(const char *wtype = node->read_str("widget")) {
-					m_widget = Widget::create(wtype);
-					m_widget->load(node);
-				}
-			}
-
-			if(auto kids = node->find("kids")) {
-				for(auto &k : kids->kids) {
-					Panel *p = new Panel(Type::None);
-					p->load(k.second);
-					m_kids.push_back(p);
-					p->m_parent = this;
-				}
+		if(auto kids = node->find("kids")) {
+			for(auto &k : kids->kids) {
+				Panel *p = new Panel(Type::None);
+				p->load(k.second);
+				m_kids.push_back(p);
+				p->m_parent = this;
 			}
 		}
 	}

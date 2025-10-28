@@ -15,10 +15,10 @@ class WidgetHistogram : public Widget {
 public:
 	WidgetHistogram();
 	~WidgetHistogram() override;
-	void load(ConfigReader::Node *node) override;
-	void save(ConfigWriter &cfg) override;
 
 private:
+	void do_load(ConfigReader::Node *node) override;
+	void do_save(ConfigWriter &cfg) override;
 	Widget *do_copy() override;
 	void do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r) override;
 

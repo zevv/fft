@@ -21,20 +21,16 @@ WidgetHistogram::~WidgetHistogram()
 }
 
 
-void WidgetHistogram::load(ConfigReader::Node *node)
+void WidgetHistogram::do_load(ConfigReader::Node *node)
 {
-	if(!node) return;
-	Widget::load(node);
-	if(auto *wnode = node->find("waveform")) {
-		wnode->read("agc", m_agc);
-		wnode->read("nbins", m_nbins);
-	}
+	auto *wnode = node->find("waveform");
+	wnode->read("agc", m_agc);
+	wnode->read("nbins", m_nbins);
 }
 
 
-void WidgetHistogram::save(ConfigWriter &cw)
+void WidgetHistogram::do_save(ConfigWriter &cw)
 {
-	Widget::save(cw);
 	cw.push("waveform");
 	cw.write("agc", m_agc);
 	cw.write("nbins", m_nbins);

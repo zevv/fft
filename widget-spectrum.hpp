@@ -14,8 +14,6 @@ class WidgetSpectrum : public Widget {
 public:
 	WidgetSpectrum();
 	~WidgetSpectrum() override;
-	void load(ConfigReader::Node *node) override;
-	void save(ConfigWriter &cfg) override;
 
 private:
 	Widget *do_copy() override;

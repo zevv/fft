@@ -15,8 +15,6 @@ class WidgetWaterfall : public Widget {
 public:
 	WidgetWaterfall();
 	~WidgetWaterfall() override;
-	void load(ConfigReader::Node *node) override;
-	void save(ConfigWriter &cfg) override;
 
 private:
 	Widget *do_copy() override;
