@@ -134,29 +134,21 @@ void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 	// zero Y
 	SDL_SetRenderDrawColor(rend, 100, 100, 100, 255);
 	SDL_RenderLine(rend, r.x, r.y + r.h / 2, r.x + r.w, r.y + r.h / 2);
-
-	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
-
+	
 	// window
-	#if 0
-	if(0 && view.window) {
-		size_t wsize = view.window->size();
-		const Sample *wdata = view.window->data();
-		SDL_FPoint p[66];
-		p[0].x = t_to_x(view.cursor, r);
-		p[0].y = r.y + r.h - 1;
-		p[65].x = t_to_x(view.cursor - wsize, r);
-		p[65].y = r.y + r.h - 1;
-		for(int i=0; i<64; i++) {
-			int n = wsize * i / 64;
-			p[i+1].x = t_to_x(view.cursor - wsize * i / 63.0, r);
-			p[i+1].y = r.y + (r.h-1) * (1.0f - wdata[n]);
-		}
+	Window w = Window(m_view.fft.window_type, m_view.fft.size, m_view.fft.window_beta);
+	SDL_SetRenderDrawColor(rend, 128, 128, 128, 255);
 
-		SDL_SetRenderDrawColor(rend, 255, 255, 255, 128);
-		SDL_RenderLines(rend, p, 66);
-	}
-#endif
+	Time w_idx_span = (m_view.time.to - m_view.time.from) * m_view.srate;;
+	double w_idx_from = (m_view.x_to_t(r.x, r) - m_view.time.cursor) * view.srate;
+	double w_idx_to   = w_idx_from + w_idx_span;
+
+	
+	graph(rend, r, w.data().data(), w.size(), 1,
+			w_idx_from, w_idx_to,
+			-1.0, +1.0);
+	
+	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
 	m_peak *= 0.9f;
 }

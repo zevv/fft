@@ -3,6 +3,20 @@
 #include <stdio.h>
 #include "window.hpp"
 
+Window::Window()
+{
+}
+
+
+Window::Window(Window::Type type, size_t size, float beta)
+	: m_type(type)
+	, m_beta(beta)
+	, m_gain(1.0f)
+{
+	configure(type, size, beta);
+}
+
+
 float kaiser(float x, float beta)
 {
 	float I0_beta = 1.0f;

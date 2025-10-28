@@ -10,6 +10,8 @@ public:
 		Square, Hamming, Hanning, Blackman, Gauss, Kaiser
 	};
 
+	Window();
+	Window(Type type, size_t size, float beta);
 	static const char **type_names();
 	static size_t type_count();
 	static const char *type_to_str(Type t);
