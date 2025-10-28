@@ -49,7 +49,7 @@ Widget *WidgetWaveform::do_copy()
 }
 
 
-void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	ImGui::SameLine();
 	ImGui::ToggleButton("AGC", &m_agc);
@@ -74,7 +74,7 @@ void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
 			m_view.time.from = 0;
-			m_view.time.to   = frames_avail / view.srate;
+			m_view.time.to   = frames_avail / m_view.srate;
 		}
 
 		auto pos = ImGui::GetIO().MousePos;
@@ -90,8 +90,8 @@ void WidgetWaveform::do_draw(View &view, Streams &streams, SDL_Renderer *rend, S
 		scale = m_peak / 0.9;
 	}
 
-	float idx_from = m_view.x_to_t(r.x,       r) * view.srate;
-	float idx_to   = m_view.x_to_t(r.x + r.w, r) * view.srate;
+	float idx_from = m_view.x_to_t(r.x,       r) * m_view.srate;
+	float idx_to   = m_view.x_to_t(r.x + r.w, r) * m_view.srate;
 	float step = (idx_to - idx_from) / r.w;
 
 	ImGui::SameLine();

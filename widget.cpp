@@ -128,7 +128,7 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 	if(m_lock_view) m_view = view;
 	float t1 = SDL_GetPerformanceCounter();
-	do_draw(view, streams, rend, r);
+	do_draw(streams, rend, r);
 	float t2 = SDL_GetPerformanceCounter();
 	if(m_lock_view) view = m_view;
 

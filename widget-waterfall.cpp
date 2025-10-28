@@ -59,7 +59,7 @@ struct Pixel {
 };
 
 
-void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	
 	size_t stride = 0;
@@ -109,7 +109,7 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 	if(has_focus()) {
 	
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
-		ImGui::Text("f=%.6gHz", m_view.freq.cursor * view.srate * 0.5);
+		ImGui::Text("f=%.6gHz", m_view.freq.cursor * m_view.srate * 0.5);
 
 		auto pos = ImGui::GetIO().MousePos;
 		if(pos.x >= 0) {
@@ -165,7 +165,7 @@ void WidgetWaterfall::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 			if(!m_channel_map[ch]) continue;
 			SDL_Color col = channel_color(ch);
 	
-			int idx = (int)(view.srate * t - m_view.fft.size / 2) * stride + ch;
+			int idx = (int)(m_view.srate * t - m_view.fft.size / 2) * stride + ch;
 			if(idx < 0) continue;
 			if(idx >= (int)(frames_avail * stride)) break;
 

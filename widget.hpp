@@ -42,7 +42,7 @@ public:
 protected:
 
 	virtual Widget *do_copy() = 0;
-	virtual void do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r) = 0;
+	virtual void do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r) = 0;
 
 	template<typename T>
 	T graph(SDL_Renderer *rend, SDL_Rect &r,
@@ -73,7 +73,7 @@ protected:
 class WidgetNone : public Widget {
 public:
 	WidgetNone() : Widget(Widget::Type::None) {}
-	void do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r) { }
+	void do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r) { }
 	Widget *do_copy() { return new WidgetNone(); }
 };
 
@@ -81,7 +81,7 @@ public:
 class WidgetStyleEditor : public Widget {
 public:
 	WidgetStyleEditor() : Widget(Widget::Type::StyleEditor) {}
-	void do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r) { ImGui::ShowStyleEditor(); }
+	void do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r) { ImGui::ShowStyleEditor(); }
 	Widget *do_copy() { return new WidgetStyleEditor(); }
 };
 

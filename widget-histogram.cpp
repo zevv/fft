@@ -50,7 +50,7 @@ Widget *WidgetHistogram::do_copy()
 }
 
 
-void WidgetHistogram::do_draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+void WidgetHistogram::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	ImGui::SameLine();
 	ImGui::ToggleButton("AGC", &m_agc);
@@ -72,8 +72,8 @@ void WidgetHistogram::do_draw(View &view, Streams &streams, SDL_Renderer *rend, 
 	Sample vmin = frames_data[0];
 	Sample vmax = frames_data[0];
 
-	int idx_from = std::max(m_view.x_to_t(r.x,       r) * view.srate, 0.0);
-	int idx_to   = std::min(m_view.x_to_t(r.x + r.w, r) * view.srate, (double)frames_avail);
+	int idx_from = std::max(m_view.x_to_t(r.x,       r) * m_view.srate, 0.0);
+	int idx_to   = std::min(m_view.x_to_t(r.x + r.w, r) * m_view.srate, (double)frames_avail);
 
 	for(int idx=idx_from; idx<idx_to; idx++) {
 		for(int ch=0; ch<8; ch++) {
