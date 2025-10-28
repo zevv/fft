@@ -107,7 +107,7 @@ void WidgetSpectrum::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	grid_vertical(rend, r, db_range, 0);
 
 	for(int ch=0; ch<8; ch++) {
-		if(!m_channel_map[ch]) continue;
+		if(!m_channel_map.ch_enabled(ch)) continue;
 
 		size_t stride = 0;
 		size_t avail = 0;
@@ -121,7 +121,7 @@ void WidgetSpectrum::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		auto out_graph = m_fft.run(&data[idx], stride);
 
 		size_t npoints = m_view.fft.size / 2 + 1;
-		SDL_Color col = channel_color(ch);
+		SDL_Color col = m_channel_map.ch_color(ch);
 		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
 		graph(rend, r,
 				out_graph.data(), out_graph.size(), 1,

@@ -100,9 +100,9 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
 	for(int ch=0; ch<8; ch++) {
-		if(!m_channel_map[ch]) continue;
+		if(!m_channel_map.ch_enabled(ch)) continue;
 
-		SDL_Color col = channel_color(ch);
+		SDL_Color col = m_channel_map.ch_color(ch);
 		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
 
 		Sample peak;

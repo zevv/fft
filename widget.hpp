@@ -9,8 +9,7 @@
 #include "view.hpp"
 #include "stream.hpp"
 #include "config.hpp"
-
-class Flap;
+#include "channelmap.hpp"
 
 class Widget {
 public:
@@ -36,7 +35,6 @@ public:
 	static Type string_to_type(const char *str);
 	static const char **type_names();
 	static size_t type_count();
-	static SDL_Color channel_color(int channel);
 	
 
 protected:
@@ -62,11 +60,11 @@ protected:
 	
 
 	Widget::Type m_type{Widget::Type::None};
-	bool m_channel_map[8]{true, true, true, true, true, true, true, true};
 	bool m_lock_view{true};
 	bool m_has_focus{false};
 
 	View m_view{};
+	ChannelMap m_channel_map{};
 };
 
 
@@ -88,5 +86,3 @@ public:
 namespace ImGui {
 	bool ToggleButton(const char* str_id, bool* v);
 }
-
-

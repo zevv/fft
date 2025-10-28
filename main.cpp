@@ -62,7 +62,7 @@ private:
 Corrie::Corrie(SDL_Window *window, SDL_Renderer *renderer)
     : m_win(window)
     , m_rend(renderer)
-	, m_streams(Streams(512 * 1024 * 1024, 8))
+	, m_streams()
 {
     resize_window(800, 600);
 }
@@ -140,6 +140,7 @@ void Corrie::init()
 	m_streams.add_reader(new StreamReaderFd(2, fd));
 	m_streams.add_reader(new StreamReaderAudio(3, m_srate));
 	m_streams.add_reader(new StreamReaderGenerator(1, m_srate, 1));
+	m_streams.allocate(512 * 1024 * 1024);
 
 	m_capture = true;
 

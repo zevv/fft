@@ -9,8 +9,6 @@
 #include "types.hpp"
 
 
-// TODO: use int8_t instead of Sample
-
 class Wavecache {
 public:
 	struct Range {
@@ -18,7 +16,8 @@ public:
 		int8_t max;
 	};
 
-	Wavecache(size_t depth, size_t channel_count, size_t step);
+	Wavecache(size_t step);
+	void allocate(size_t depth, size_t channel_count);
 	Range *peek(size_t *frames_avail, size_t *stride);
 	void feed_frames(Sample *buf, size_t frame_count, size_t channel_count);
 private:
@@ -35,8 +34,10 @@ class StreamReader;
 class Streams {
 public:
 
-	Streams(size_t depth, size_t channel_count);
+	Streams();
 	~Streams();
+	size_t channel_count() { return m_channel_count; }
+	void allocate(size_t depth);
 	Sample *peek(size_t *stride, size_t *used = nullptr);
 	Wavecache::Range *peek_wavecache(size_t *stride, size_t *used = nullptr);
 	void add_reader(StreamReader *reader);
@@ -44,13 +45,10 @@ public:
 
 private:
 	size_t m_depth{};
-	size_t m_channels{};
+	size_t m_channel_count{};
 	size_t m_frame_size{};
 	Rb m_rb;
-
 	Wavecache m_wavecache;
-
-
 	std::vector<StreamReader *> m_readers{};
 };
 
@@ -61,6 +59,7 @@ public:
 	StreamReader(const char *name, size_t ch_count);
 	virtual ~StreamReader();
 	size_t frames_avail();
+	size_t channel_count() { return m_ch_count; }
 	size_t drain_into(Sample *buf, size_t ch_start, size_t frame_count, size_t stride);
 	virtual void poll() = 0;
 	const char *name() { return m_name; }

@@ -77,7 +77,7 @@ void WidgetHistogram::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 	for(int idx=idx_from; idx<idx_to; idx++) {
 		for(int ch=0; ch<8; ch++) {
-			if(m_channel_map[ch]) {
+			if(m_channel_map.ch_enabled(ch)) {
 				Sample v = frames_data[idx * frames_stride + ch];
 				m_hists[ch].add(v);
 				vmin = std::min(vmin, v);
@@ -92,8 +92,8 @@ void WidgetHistogram::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
 	for(int ch=0; ch<8; ch++) {
-		if(!m_channel_map[ch]) continue;
-		SDL_Color col = channel_color(ch);
+		if(!m_channel_map.ch_enabled(ch)) continue;
+		SDL_Color col = m_channel_map.ch_color(ch);
 		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
 		auto b = m_hists[ch].bins();
 		graph(rend, r,

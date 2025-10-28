@@ -46,27 +46,17 @@ Widget *Widget::create(const char *type_str)
 void Widget::load(ConfigReader::Node *node)
 {
 	if(!node) return;
-	int channel_map = 0;
-	if(node->read("channel_map", channel_map)) {
-		for(int i=0; i<8; i++) {
-			m_channel_map[i] = (channel_map & (1 << i)) ? true : false;
-		}
-	}
+	m_channel_map.load(node);
 	m_view.load(node);
 }
 
 
 void Widget::save(ConfigWriter &cw)
 {
-	int channel_map = 0;
-	for(int i=0; i<8; i++) {
-		if(m_channel_map[i]) channel_map |= (1 << i);
-	}
-
 	cw.write("widget", Widget::type_to_string(m_type));
-	cw.write("channel_map", channel_map);
 	cw.write("lock_view", m_lock_view);
 	m_view.save(cw);
+	m_channel_map.save(cw);
 }
 
 
@@ -82,9 +72,7 @@ void Widget::copy_to(Widget *w)
 {
 	w->m_lock_view = m_lock_view;
 	w->m_view = m_view;
-	for(int i=0; i<8; i++) {
-		w->m_channel_map[i] = m_channel_map[i];
-	}
+	w->m_channel_map = m_channel_map;
 }
 
 
@@ -92,37 +80,13 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	m_has_focus = ImGui::IsWindowFocused();
 
-	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3, 3));
-	for(size_t i=0; i<8; i++) {
-		if(i > 0) {
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-		}
-
-		ImGui::SameLine();
-		SDL_Color c = Widget::channel_color(i);
-		ImVec4 col = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
-		if(m_channel_map[i]) col = ImVec4(c.r / 255.0f, c.g / 255.0f, c.b / 255.0f, 1.0f);
-		ImGui::PushStyleColor(ImGuiCol_Button, col);
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, col);
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, col);
-		char label[2] = { (char)('1' + i), 0 };
-		ImGuiKey key = (ImGuiKey)(ImGuiKey_1 + i);
-		if(ImGui::Button(label) || (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(key))) {
-			if(ImGui::GetIO().KeyShift) for(int j=0; j<8; j++) m_channel_map[j] = 0;
-			m_channel_map[i] = !m_channel_map[i];
-		}
-		ImGui::PopStyleColor(3);
-		if(i > 0) ImGui::PopStyleVar(1);
-	}
-	ImGui::PopStyleVar(1);
+	m_channel_map.set_channel_count(streams.channel_count());
+	m_channel_map.draw();
 
 	ImGui::SameLine();
 	ImGui::ToggleButton("Lock", &m_lock_view);
 	
 	if(m_has_focus) {
-		if(ImGui::IsKeyPressed(ImGuiKey_0)) {
-			for(int i=0; i<8; i++) m_channel_map[i] ^= 1;
-		}
 		if(ImGui::IsKeyPressed(ImGuiKey_L)) m_lock_view = !m_lock_view;
 	}
 
@@ -337,27 +301,6 @@ void Widget::grid_vertical(SDL_Renderer *rend, SDL_Rect &r, float v_min, float v
 }
 
 
-SDL_Color Widget::channel_color(int channel)
-{
-	// https://medialab.github.io/iwanthue/
-	static const SDL_Color color[] = {
-		{  82, 202,  59, 255 },
-		{ 222,  85, 231, 255 },
-		{  68, 124, 254, 255 },
-		{ 244,  74,  54, 255 },
-		{ 175, 198,  31, 255 },
-		{ 163, 102, 248, 255 },
-		{ 242,  62, 173, 255 },
-		{ 239, 157,  22, 255 },
-	};
-	if(channel >= 0 && channel < 8) {
-		return color[channel];
-	} else {
-		return SDL_Color{ 255, 255, 255, 255 };
-	}
-}
-
-
 const char *k_type_str[] = {
 	"none", "wave", "spectrum", "waterfall", "histogram", "style editor"
 };
@@ -407,5 +350,3 @@ bool ToggleButton(const char* str_id, bool* v)
 	return pressed;
 }
 }
-
-

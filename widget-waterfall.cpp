@@ -162,8 +162,8 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		memset(row.data(), 0, sizeof(Pixel) * row.size());
 
 		for(int ch=0; ch<8; ch++) {
-			if(!m_channel_map[ch]) continue;
-			SDL_Color col = channel_color(ch);
+			if(!m_channel_map.ch_enabled(ch)) continue;
+			SDL_Color col = m_channel_map.ch_color(ch);
 	
 			int idx = (int)(m_view.srate * t - m_view.fft.size / 2) * stride + ch;
 			if(idx < 0) continue;

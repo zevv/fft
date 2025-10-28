@@ -10,13 +10,9 @@
 #include "stream.hpp"
 
 
-Streams::Streams(size_t depth, size_t channel_count)
-	: m_depth(depth)
-	, m_channels(channel_count)
-	, m_frame_size(m_channels * sizeof(Sample))
-	, m_wavecache(Wavecache(depth, channel_count, 256))
+Streams::Streams()
+	: m_wavecache(Wavecache(256))
 {
-	m_rb.set_size(m_depth * m_frame_size);
 }
 
 
@@ -29,11 +25,20 @@ Streams::~Streams()
 
 
 
+void Streams::allocate(size_t depth)
+{
+	m_frame_size = m_channel_count * sizeof(Sample);
+	m_depth = depth;
+	m_rb.set_size(m_depth * m_frame_size);
+	m_wavecache.allocate(depth, m_channel_count);
+}
+
+
 Sample *Streams::peek(size_t *stride, size_t *frames_avail)
 {
 	size_t bytes_used;
 	Sample *data = (Sample *)m_rb.peek(&bytes_used);
-	if(stride) *stride = m_channels;
+	if(stride) *stride = m_channel_count;
 	if(frames_avail) *frames_avail = bytes_used / m_frame_size;
 	return data;
 }
@@ -45,8 +50,10 @@ Wavecache::Range *Streams::peek_wavecache(size_t *stride, size_t *frames_avail)
 }
 
 
-void Streams::add_reader(StreamReader *reader) {
+void Streams::add_reader(StreamReader *reader)
+{
 	m_readers.push_back(reader);
+	m_channel_count += reader->channel_count();
 }
 
 
@@ -77,23 +84,28 @@ bool Streams::capture()
 	size_t channel = 0;
 	if(frame_count > 0) {
 		for(auto reader : m_readers) {
-			channel += reader->drain_into(buf, channel, frame_count, m_channels);
+			channel += reader->drain_into(buf, channel, frame_count, m_channel_count);
 		}
 		m_rb.write_done(frame_count * m_frame_size);
-		m_wavecache.feed_frames(buf, frame_count, m_channels);
+		m_wavecache.feed_frames(buf, frame_count, m_channel_count);
 		captured = true;
 	}
 	return captured;
 }
 
 
-Wavecache::Wavecache(size_t depth, size_t channel_count, size_t step)
-	: m_channel_count(channel_count)
-	, m_frame_size(channel_count * sizeof(Range))
-	, m_step(step)
-	, m_n(0)
+Wavecache::Wavecache(size_t step)
+	: m_step(step)
 {
-	m_rb.set_size(depth * m_frame_size / step);
+}
+
+
+void Wavecache::allocate(size_t depth, size_t channel_count)
+{
+	m_channel_count = channel_count;
+	m_frame_size = channel_count * sizeof(Range);
+	m_n = 0;
+	m_rb.set_size(depth * m_frame_size / m_step);
 }
 
 
