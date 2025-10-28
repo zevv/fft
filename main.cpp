@@ -72,7 +72,7 @@ void Corrie::load(const char *fname)
 {
 	ConfigReader cr;
 	cr.open(fname);
-	if(auto n = cr.find("config")) n->read("samplerate", m_srate, 48000);
+	if(auto n = cr.find("config")) n->read("samplerate", m_srate);
 	if(auto n = cr.find("view")) m_view.load(n);
 	if(auto n = cr.find("panel")) m_root_panel->load(n);
 }

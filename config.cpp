@@ -230,16 +230,6 @@ bool ConfigReader::Node::read(const char *key, bool &val)
 }
 
 
-bool ConfigReader::Node::read(const char *key, bool &val, bool defval)
-{
-	if(const char *buf = read_str(key)) {
-		val = strcmp(buf, "true") == 0 ? true : false;
-		return true;
-	} else {
-		return false;
-	}
-}
-
 bool ConfigReader::Node::read(const char *key, int &val)
 {
 	if(const char *buf = read_str(key)) {
@@ -250,15 +240,6 @@ bool ConfigReader::Node::read(const char *key, int &val)
 	}
 }
 
-
-bool ConfigReader::Node::read(const char *key, int &val, int defval)
-{
-	if(const char *buf = read_str(key)) {
-		return atoi(buf);
-	} else {
-		return defval;
-	}
-}
 
 bool ConfigReader::Node::read(const char *key, float &val)
 {
@@ -273,19 +254,6 @@ bool ConfigReader::Node::read(const char *key, float &val)
 }
 
 
-bool ConfigReader::Node::read(const char *key, float &val, float defval)
-{
-	char buf[32];
-
-	if(read(key, buf, sizeof(buf))) {
-		val = atof(buf);
-		return true;
-	} else {
-		val = defval;
-		return false;
-	}
-}
-
 bool ConfigReader::Node::read(const char *key, double &val)
 {
 	char buf[32];
@@ -299,20 +267,6 @@ bool ConfigReader::Node::read(const char *key, double &val)
 }
 
 
-bool ConfigReader::Node::read(const char *key, double &val, double defval)
-{
-	char buf[32];
-
-	if(read(key, buf, sizeof(buf))) {
-		val = atof(buf);
-		return true;
-	} else {
-		val = defval;
-		return false;
-	}
-}
-
-
 bool ConfigReader::Node::read(const char *key, char *val, size_t maxlen)
 {
 	auto it = m_attrs.find(key);
@@ -320,20 +274,6 @@ bool ConfigReader::Node::read(const char *key, char *val, size_t maxlen)
 		snprintf(val, maxlen, "%s", it->second);
 		return true;
 	} else {
-		return false;
-	}
-}
-
-
-bool ConfigReader::Node::read(const char *key, char *val, size_t maxlen, const char *defval)
-{
-	auto it = m_attrs.find(key);
-	if(it != m_attrs.end()) {
-		snprintf(val, maxlen, "%s", it->second);
-		val[maxlen - 1] = 0;
-		return true;
-	} else {
-		snprintf(val, maxlen, "%s", defval);
 		return false;
 	}
 }
