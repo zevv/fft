@@ -106,9 +106,7 @@ void WidgetSpectrum::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	int8_t db_range = -120.0;
 	grid_vertical(rend, r, db_range, 0);
 
-	for(int ch=0; ch<8; ch++) {
-		if(!m_channel_map.ch_enabled(ch)) continue;
-
+	for(int ch : m_channel_map.enabled_channels()) {
 		size_t stride = 0;
 		size_t avail = 0;
 		Sample *data = streams.peek(&stride, &avail);

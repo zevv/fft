@@ -94,13 +94,9 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	float idx_to   = m_view.x_to_t(r.x + r.w, r) * m_view.srate;
 	float step = (idx_to - idx_from) / r.w;
 
-	ImGui::SameLine();
-	ImGui::Text(" step: %.0f", step);
-
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
-	for(int ch=0; ch<8; ch++) {
-		if(!m_channel_map.ch_enabled(ch)) continue;
+	for(auto ch : m_channel_map.enabled_channels()) {
 
 		SDL_Color col = m_channel_map.ch_color(ch);
 		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
@@ -124,6 +120,7 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		m_peak = std::max(m_peak, peak);
 	}
 
+	// time grid
 	grid_time(rend, r, m_view.x_to_t(r.x, r), m_view.x_to_t(r.x + r.w, r));
 
 	// cursor
@@ -140,10 +137,7 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	SDL_SetRenderDrawColor(rend, 128, 128, 128, 255);
 	double w_idx_from = (m_view.time.from - m_view.time.cursor) * m_view.srate;
 	double w_idx_to   = (m_view.time.to   - m_view.time.cursor) * m_view.srate;
-
-	graph(rend, r, w.data().data(), w.size(), 1,
-			w_idx_from, w_idx_to,
-			-1.0, +1.0);
+	graph(rend, r, w.data().data(), w.size(), 1, w_idx_from, w_idx_to, 0.0, +1.0);
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 

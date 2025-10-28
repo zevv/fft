@@ -2,6 +2,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <generator>
 
 #include "config.hpp"
 
@@ -13,12 +14,12 @@ public:
 	void save(ConfigWriter &cfg);
 
 	void set_channel_count(int count);
-	bool ch_enabled(int channel);
-	void ch_set(int channel, bool enabled);
-	void ch_toggle(int channel);
 	void draw();
 	
+	std::generator<int> enabled_channels();
+	
 	static SDL_Color ch_color(int channel);
+
 
 private:
 	size_t m_channel_count{0};
