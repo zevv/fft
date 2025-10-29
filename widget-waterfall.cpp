@@ -19,9 +19,6 @@ WidgetWaterfall::WidgetWaterfall()
 
 WidgetWaterfall::~WidgetWaterfall()
 {
-	if(m_tex) {
-		SDL_DestroyTexture(m_tex);
-	}
 }
 
 
@@ -84,8 +81,11 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		db_max = m_db_max;
 	}
 
+	static ImVec4 color = ImVec4(114.0f / 255.0f, 144.0f / 255.0f, 154.0f / 255.0f, 200.0f / 255.0f);
+	ImGui::ColorEdit4("MyColor##3", (float*)&color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+
 	if(has_focus()) {
-	
+
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
 		ImGui::Text("f=%.6gHz", m_view.freq.cursor * m_view.srate * 0.5);
 
@@ -115,99 +115,91 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	}
 
 	m_fft.configure(m_view.fft.size, m_view.fft.window_type, m_view.fft.window_beta);
-	
+
 	int fft_w = m_fft.out_size();
-
-	// TODO: make tex match r.w, use 1p high tex instead of pixel array
-	// to do accumuation and horizontal scaling
-	if(m_tex == nullptr || m_tex->w != fft_w || m_tex->h != r.h) {
-		if(m_tex) SDL_DestroyTexture(m_tex);
-		m_tex = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA32,
-			SDL_TEXTUREACCESS_STREAMING, fft_w, r.h);
-	}
-	assert(m_tex);
-
-	uint32_t *pixels;
-	int pitch;
-	SDL_LockTexture(m_tex, nullptr, (void **)&pixels, &pitch);
-	memset(pixels, 0, pitch * r.h);
-
-	grid_time_v(rend, r, m_view.time.from, m_view.time.to);
-	
-	std::vector<Pixel> row(m_fft.out_size());
 
 	Histogram hist(64, -120.0, 0.0);
 
 	m_db_min = 0.0;
 	m_db_max = -200.0;
 
+	SDL_FRect src;
+	src.x = m_view.freq.from * fft_w;
+	src.y = 0;
+	src.w = (m_view.freq.to - m_view.freq.from) * fft_w;
+	src.h = 1;
+
+	SDL_FRect dst;
+	dst.x = 0;
+	dst.y = 0;
+	dst.w = r.w;
+	dst.h = 1.0f;
+
+	SDL_Texture *tex = SDL_CreateTexture(
+			rend, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, fft_w, 1);
+	SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_ADD);
+	SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_LINEAR);
+
 	for(int y=0; y<r.h; y++) {
 		Time t = m_view.y_to_t(r.y + y, r);
-		memset(row.data(), 0, sizeof(Pixel) * row.size());
 
 		for(int ch : m_channel_map.enabled_channels()) {
-			SDL_Color col = m_channel_map.ch_color(ch);
-	
+
 			int idx = (int)(m_view.srate * t - m_view.fft.size / 2) * stride + ch;
 			if(idx < 0) continue;
 			if(idx >= (int)(frames_avail * stride)) break;
 
-			auto out_graph = m_fft.run(&data[idx], stride);
+			auto fft_out = m_fft.run(&data[idx], stride);
+			SDL_Color col = m_channel_map.ch_color(ch);
+			uint32_t v = *(uint32_t *)&col & 0x00FFFFFF;
+
+			uint32_t *pixels;
+			int pitch;
+			SDL_LockTexture(tex, nullptr, (void **)&pixels, &pitch);
+			memset(pixels, 0, pitch);
 
 			for(int x=0; x<fft_w; x++) {
-				float db = out_graph[x];
+				float db = fft_out[x];
 				hist.add(db);
 				m_db_min = std::min(m_db_min, db);
 				m_db_max = std::max(m_db_max, db);
 				float intensity = 0.0;
 				if(db > db_min && db_max > db_min) {
-					intensity = (db - db_min) / (db_max - db_min);
+					intensity = std::clamp((db - db_min) / (db_max - db_min), 0.0f, 1.0f);
 				}
-				SDL_Color col2 = col;
-				col2.a = intensity;
-				row[x].r += col2.r * intensity;
-				row[x].g += col2.g * intensity;
-				row[x].b += col2.b * intensity;
+				pixels[x] = v | (uint32_t)(intensity * 255) << 24;
 			}
+
+			SDL_UnlockTexture(tex);
+			dst.y = r.y + y;
+			SDL_RenderTexture(rend, tex, &src, &dst);
 		}
 
-		for(int x=0; x<fft_w; x++) {
-			uint8_t r = std::min(row[x].r, 255.0f);
-			uint8_t g = std::min(row[x].g, 255.0f);
-			uint8_t b = std::min(row[x].b, 255.0f);
-			pixels[y * (pitch / 4) + x] = (0xff << 24) | (b << 16) | (g << 8) | r;
-		}
 	}
+
+	SDL_DestroyTexture(tex);
 
 	if(m_agc) {
 		m_db_min = hist.get_percentile(0.01);
 		m_db_max = hist.get_percentile(0.99);
 	}
 
-	SDL_UnlockTexture(m_tex);
-	SDL_FRect dest;
-	SDL_RectToFRect(&r, &dest);
+	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
-	SDL_FRect src;
-	src.x = m_view.freq.from * fft_w;
-	src.y = 0;
-	src.w = (m_view.freq.to - m_view.freq.from) * fft_w;
-	src.h = r.h;
+	// grid
+	grid_time_v(rend, r, m_view.time.from, m_view.time.to);
 
-	SDL_FRect dst;
-	SDL_RectToFRect(&r, &dst);
-	SDL_RenderTexture(rend, m_tex, &src, &dst);
-	
-	// cursor
+	// time cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
 	int cy = m_view.t_to_y(m_view.time.cursor, r);
 	SDL_RenderLine(rend, r.x, cy, r.x + r.w, cy);
-	
+
+	// freq cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
 	int cx = m_view.freq_to_x(m_view.freq.cursor, r);
 	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
 
-
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
+
 
 }
