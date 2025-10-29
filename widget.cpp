@@ -89,7 +89,29 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	ImGui::ToggleButton("Lock", &m_lock_view);
 	
 	if(m_has_focus) {
-		if(ImGui::IsKeyPressed(ImGuiKey_L)) m_lock_view = !m_lock_view;
+		if(ImGui::IsKeyPressed(ImGuiKey_L)) {
+			m_lock_view = !m_lock_view;
+		}
+		// left square bracked sets fft bin size to previous power of two
+		if(ImGui::IsKeyPressed(ImGuiKey_LeftBracket)) {
+			for(size_t i=30; i>1; i--) {
+				int s = 1<<i;
+				if(s < view.fft.size) {
+					view.fft.size = s;
+					break;
+				}
+			}
+		}
+		// right square bracket sets fft bin size to next power of two
+		if(ImGui::IsKeyPressed(ImGuiKey_RightBracket)) {
+			for(size_t i=1; i<30; i++) {
+				int s = 1<<i;
+				if(s > view.fft.size) {
+					view.fft.size = s;
+					break;
+				}
+			}
+		}
 	}
 
 	if(m_lock_view) m_view = view;

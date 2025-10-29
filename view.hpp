@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <algorithm>
+
 #include <SDL3/SDL.h>
 
 #include "config.hpp"
@@ -119,6 +121,7 @@ public:
 			freq.from = mid - 0.001;
 			freq.to   = mid + 0.001;
 		}
+		fft.size = std::clamp(fft.size, 16, 16384);
 	}
 
 
