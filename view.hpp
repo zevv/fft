@@ -151,9 +151,9 @@ public:
 	};
 	
 	Samplerate srate{48000};
-	VTime time;
-	VFreq freq;
-	VFft fft;
-	VAperture aperture;
-	bool lock;
+	bool lock{true};
+	VTime time{};
+	VFreq freq{};
+	VFft fft{};
+	VAperture aperture{};
 };
