@@ -34,6 +34,12 @@ void Streams::allocate(size_t depth)
 }
 
 
+size_t Streams::frames_avail()
+{
+	return m_rb.bytes_used() / m_frame_size;
+}
+
+
 Sample *Streams::peek(size_t *stride, size_t *frames_avail)
 {
 	size_t bytes_used;
