@@ -241,7 +241,6 @@ void Corrie::run()
 			req_redraw();
 		}
 
-
 		if(m_redraw > 0) {
 			m_redraw --;
 

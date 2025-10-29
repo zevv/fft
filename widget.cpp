@@ -81,6 +81,7 @@ void Widget::copy_to(Widget *w)
 void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	m_has_focus = ImGui::IsWindowFocused();
+	if(m_lock_view) m_view = view;
 
 	m_channel_map.set_channel_count(streams.channel_count());
 	m_channel_map.draw();
@@ -89,40 +90,70 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	ImGui::ToggleButton("Lock", &m_lock_view);
 	
 	if(m_has_focus) {
+
+		// 'L' toggles lock
 		if(ImGui::IsKeyPressed(ImGuiKey_L)) {
 			m_lock_view = !m_lock_view;
 		}
-		// left square bracked sets fft bin size to previous power of two
+
+		// left/right square bracked sets fft bin size to next power of two
 		if(ImGui::IsKeyPressed(ImGuiKey_LeftBracket)) {
 			for(size_t i=30; i>1; i--) {
 				int s = 1<<i;
-				if(s < view.fft.size) {
-					view.fft.size = s;
+				if(s < m_view.fft.size) {
+					m_view.fft.size = s;
 					break;
 				}
 			}
 		}
-		// right square bracket sets fft bin size to next power of two
 		if(ImGui::IsKeyPressed(ImGuiKey_RightBracket)) {
 			for(size_t i=1; i<30; i++) {
 				int s = 1<<i;
-				if(s > view.fft.size) {
-					view.fft.size = s;
+				if(s > m_view.fft.size) {
+					m_view.fft.size = s;
 					break;
 				}
 			}
 		}
+
+		// left/right arrow pan time, accelerating
+		bool panning = false;
+		if(ImGui::IsKeyDown(ImGuiKey_LeftArrow)) {
+			m_view.pan_t(+m_pan_speed);
+			panning = true;
+		}
+		if(ImGui::IsKeyDown(ImGuiKey_RightArrow)) {
+			m_view.pan_t(-m_pan_speed);
+			panning = true;
+		}
+
+		// up/down keys zoom time, accelerating
+		if(ImGui::IsKeyDown(ImGuiKey_UpArrow)) {
+			m_view.zoom_t(-m_pan_speed * 100);
+			panning = true;
+		}
+		if(ImGui::IsKeyDown(ImGuiKey_DownArrow)) {
+			m_view.zoom_t(+m_pan_speed * 100);
+			panning = true;
+		}
+		m_pan_speed = panning ? m_pan_speed + 0.002 : 0.0;
+
+		// mouse wheel scrolls time
+		ImGuiIO& io = ImGui::GetIO();
+		m_view.pan_t(io.MouseWheel * 0.1f);
 	}
 
-	if(m_lock_view) m_view = view;
 	float t1 = SDL_GetPerformanceCounter();
 	do_draw(streams, rend, r);
 	float t2 = SDL_GetPerformanceCounter();
-	if(m_lock_view) view = m_view;
 
-	// bottom right
-	ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 60, ImGui::GetWindowHeight() - 25));
-	ImGui::Text("%.2f ms", (t2 - t1) * 1000.0f / SDL_GetPerformanceFrequency());
+	// draw render time
+	if(0) {
+		ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 60, ImGui::GetWindowHeight() - 25));
+		ImGui::Text("%.2f ms", (t2 - t1) * 1000.0f / SDL_GetPerformanceFrequency());
+	}
+	
+	if(m_lock_view) view = m_view;
 }
 
 

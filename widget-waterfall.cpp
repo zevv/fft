@@ -108,8 +108,6 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 			m_view.pan_freq(-ImGui::GetIO().MouseDelta.x / r.w);
 			m_view.zoom_freq(ImGui::GetIO().MouseDelta.y);
 		}
-		ImGuiIO& io = ImGui::GetIO();
-		m_view.pan_t(io.MouseWheel * 0.1f);
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
 			m_view.freq.from = 0.0f;
 			m_view.freq.to = 1.0;
