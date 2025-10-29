@@ -61,7 +61,6 @@ private:
 	int m_redraw{1};
 	SDL_AudioStream *m_sdl_audio_stream{nullptr};
 	bool m_playback{false};
-	Time m_playback_t{};
 };
 
 
@@ -148,38 +147,32 @@ void Corrie::capture()
 
 void Corrie::playback()
 {
-	float buffer[2048]{};
+	float buffer[1024]{};
 	size_t stride = 0;
 	size_t avail = 0;
 	Sample *data = m_streams.peek(&stride, &avail);
-		
-	size_t frame_count = 256;
+	size_t frame_count = 0;
 
-	for(;;) {
+	while(SDL_GetAudioStreamQueued(m_sdl_audio_stream) < 10000) {
+		Time playback_t = m_view.time.cursor;
+		double playback_idx = playback_t * m_view.srate;
 
-		if(SDL_GetAudioStreamQueued(m_sdl_audio_stream) > 10000) {
-			break;
-		}
-
-		m_playback_t = m_view.time.cursor;
-		double playback_idx = m_playback_t * m_view.srate;
-
-		for(size_t i=0; i<frame_count; i++) {
-			if(playback_idx > 0 && (size_t)playback_idx < avail) {
-				buffer[i] = data[(size_t)playback_idx * stride] / 32768.0f;
-			}
+		for(size_t i=0; i<sizeof(buffer)/sizeof(float); i++) {
+			if(playback_idx < 0) continue;
+			if(playback_idx >= (double)avail) break;
+			buffer[i] = data[(size_t)playback_idx * stride] / (float)k_sample_max;
 			playback_idx += 1.0;
 		}
-		SDL_PutAudioStreamData(m_sdl_audio_stream, buffer, frame_count * sizeof(float));
-		Time dt = frame_count / m_view.srate;
-		m_playback_t += dt;
-		m_view.time.from += dt;
-		m_view.time.to += dt;
-		m_view.time.cursor += dt;
+
+		SDL_PutAudioStreamData(m_sdl_audio_stream, buffer, sizeof(buffer));
+		frame_count += sizeof(buffer) / sizeof(float);
 	}
 	SDL_FlushAudioStream(m_sdl_audio_stream);
 
-	req_redraw();
+	Time dt = (frame_count / m_view.srate);
+	m_view.time.from += dt;
+	m_view.time.to += dt;
+	m_view.time.cursor += dt;
 }
 
 
@@ -208,7 +201,6 @@ void Corrie::init()
 			//audio_callback,
 			nullptr,
 			(void *)this);
-	SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audio_stream));
 
 
 	ImGuiIO& io = ImGui::GetIO();
@@ -302,12 +294,18 @@ void Corrie::run()
 				m_capture = false;
 			} else {
 				m_playback ^= 1;
+				if(m_playback) {
+					SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audio_stream));
+				} else {
+					SDL_PauseAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audio_stream));
+				}
 				SDL_ClearAudioStream(m_sdl_audio_stream);
 			}
 		}
 
 		if(m_playback) {
 			playback();
+			req_redraw();
 		}
 
 		if(m_capture) {
