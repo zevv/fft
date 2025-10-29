@@ -74,7 +74,7 @@ std::vector<int8_t> Fft::run(Sample *input, size_t stride)
 		m_out[i] = std::clamp(20.0f * log10f(v + 1e-10), -127.0f, 0.0f);
 	}
 
-	m_cache[key] = m_out;
+	//m_cache[key] = m_out;
 
 	return m_out;
 }
