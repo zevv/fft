@@ -118,6 +118,8 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	
 	int fft_w = m_fft.out_size();
 
+	// TODO: make tex match r.w, use 1p high tex instead of pixel array
+	// to do accumuation and horizontal scaling
 	if(m_tex == nullptr || m_tex->w != fft_w || m_tex->h != r.h) {
 		if(m_tex) SDL_DestroyTexture(m_tex);
 		m_tex = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA32,
