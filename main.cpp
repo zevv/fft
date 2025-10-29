@@ -35,6 +35,9 @@ public:
 	void run();
 	void exit();
 
+	void capture();
+	void playback();
+
 	void init_video();
 	void req_redraw();
 
@@ -56,6 +59,9 @@ private:
 	View m_view{};
 	ImFont *m_font{};
 	int m_redraw{1};
+	SDL_AudioStream *m_sdl_audio_stream{nullptr};
+	bool m_playback{false};
+	Time m_playback_t{};
 };
 
 
@@ -120,6 +126,70 @@ void Corrie::draw()
 }
 
 
+void Corrie::capture()
+{
+	Uint64 t_now = SDL_GetTicks();
+	Uint64 t_until = t_now + 10;
+	while(m_capture && SDL_GetTicks() < t_until) {
+		size_t frames = m_streams.capture();
+		if(frames > 0) {
+			Time t_to = m_streams.frames_avail() / m_view.srate;
+			Time dt = t_to - m_view.time.to;
+			m_view.time.from += dt;
+			m_view.time.to += dt;
+			m_view.time.cursor += dt;
+			req_redraw();
+		} else {
+			break;
+		}
+	}
+}
+
+
+void Corrie::playback()
+{
+	float buffer[2048]{};
+	size_t stride = 0;
+	size_t avail = 0;
+	Sample *data = m_streams.peek(&stride, &avail);
+		
+	size_t frame_count = 256;
+
+	for(;;) {
+
+		if(SDL_GetAudioStreamQueued(m_sdl_audio_stream) > 10000) {
+			break;
+		}
+
+		m_playback_t = m_view.time.cursor;
+		double playback_idx = m_playback_t * m_view.srate;
+
+		for(size_t i=0; i<frame_count; i++) {
+			if(playback_idx > 0 && (size_t)playback_idx < avail) {
+				buffer[i] = data[(size_t)playback_idx * stride] / 32768.0f;
+			}
+			playback_idx += 1.0;
+		}
+		SDL_PutAudioStreamData(m_sdl_audio_stream, buffer, frame_count * sizeof(float));
+		Time dt = frame_count / m_view.srate;
+		m_playback_t += dt;
+		m_view.time.from += dt;
+		m_view.time.to += dt;
+		m_view.time.cursor += dt;
+	}
+	SDL_FlushAudioStream(m_sdl_audio_stream);
+
+	req_redraw();
+}
+
+
+void audio_callback(void *userdata, SDL_AudioStream *stream, int additional_amount, int total_amount)
+{
+	Corrie *cor = (Corrie *)userdata;
+	cor->playback();
+}
+
+	
 void Corrie::init()
 {
 	fcntl(0, F_SETFL, O_NONBLOCK);
@@ -127,6 +197,19 @@ void Corrie::init()
 	init_video();
 
 	m_view.srate = m_srate;
+
+	SDL_AudioSpec fmt{};
+	fmt.freq = 44100;
+	fmt.format = SDL_AUDIO_F32;
+	fmt.channels = 1;
+    m_sdl_audio_stream = SDL_OpenAudioDeviceStream(            
+            SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK,
+            &fmt,
+			//audio_callback,
+			nullptr,
+			(void *)this);
+	SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audio_stream));
+
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
@@ -138,7 +221,7 @@ void Corrie::init()
 	int fd = open("/home/ico/tmp/1.float", O_RDONLY);
 #endif
 	m_streams.add_reader(new StreamReaderFd(2, fd));
-	m_streams.add_reader(new StreamReaderAudio(3, m_srate));
+	//m_streams.add_reader(new StreamReaderAudio(3, m_srate));
 	m_streams.add_reader(new StreamReaderGenerator(1, m_srate, 1));
 	m_streams.allocate(512 * 1024 * 1024);
 
@@ -208,25 +291,27 @@ void Corrie::run()
 	bool done = false;
 	while (!done)
 	{
-		Uint64 t_now = SDL_GetTicks();
-
-		if(ImGui::IsKeyPressed(ImGuiKey_Space)) {
+		
+		if(ImGui::IsKeyPressed(ImGuiKey_C)) {
 			m_capture ^= 1;
+			m_playback = false;
 		}
 
-		Uint64 t_until = t_now + 10;
-		while(m_capture && SDL_GetTicks() < t_until) {
-			size_t frames = m_streams.capture();
-			if(frames > 0) {
-				Time t_to = m_streams.frames_avail() / m_view.srate;
-				Time dt = t_to - m_view.time.to;
-				m_view.time.from += dt;
-				m_view.time.to += dt;
-				m_view.time.cursor += dt;
-				req_redraw();
+		if(ImGui::IsKeyPressed(ImGuiKey_Space)) {
+			if(m_capture) {
+				m_capture = false;
 			} else {
-				break;
+				m_playback ^= 1;
+				SDL_ClearAudioStream(m_sdl_audio_stream);
 			}
+		}
+
+		if(m_playback) {
+			playback();
+		}
+
+		if(m_capture) {
+			capture();
 		}
 
 		SDL_Event event;
