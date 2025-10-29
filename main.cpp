@@ -222,6 +222,7 @@ void Corrie::run()
 				Time dt = t_to - m_view.time.to;
 				m_view.time.from += dt;
 				m_view.time.to += dt;
+				m_view.time.cursor += dt;
 				req_redraw();
 			} else {
 				break;

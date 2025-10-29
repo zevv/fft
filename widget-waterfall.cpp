@@ -184,7 +184,7 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
 	// grid
-	grid_time_v(rend, r, m_view.time.from, m_view.time.to);
+	//grid_time_v(rend, r, m_view.time.from, m_view.time.to);
 
 	// time cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
