@@ -216,7 +216,11 @@ void Corrie::run()
 
 		Uint64 t_until = t_now + 10;
 		while(m_capture && SDL_GetTicks() < t_until) {
-			if(m_streams.capture()) {
+			size_t frames = m_streams.capture();
+			Time dt = Time(frames) / m_view.srate;
+			m_view.time.from += dt;
+			m_view.time.to += dt;
+			if(frames > 0) {
 				req_redraw();
 			} else {
 				break;

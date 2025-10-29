@@ -41,7 +41,7 @@ public:
 	Sample *peek(size_t *stride, size_t *used = nullptr);
 	Wavecache::Range *peek_wavecache(size_t *stride, size_t *used = nullptr);
 	void add_reader(StreamReader *reader);
-	bool capture();
+	size_t capture();
 
 private:
 	size_t m_depth{};

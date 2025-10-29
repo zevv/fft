@@ -57,7 +57,7 @@ void Streams::add_reader(StreamReader *reader)
 }
 
 
-bool Streams::capture()
+size_t Streams::capture()
 {
 	bool captured = false;
 	size_t frame_count = SIZE_MAX;
@@ -90,7 +90,7 @@ bool Streams::capture()
 		m_wavecache.feed_frames(buf, frame_count, m_channel_count);
 		captured = true;
 	}
-	return captured;
+	return frame_count;
 }
 
 
