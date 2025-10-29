@@ -127,7 +127,7 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	src.h = 1;
 
 	SDL_FRect dst;
-	dst.x = 0;
+	dst.x = r.x;
 	dst.y = 0;
 	dst.w = r.w;
 	dst.h = 1.0f;
