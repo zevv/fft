@@ -47,7 +47,6 @@ void Widget::load(ConfigReader::Node *node)
 {
 	m_channel_map.load(node);
 	m_view.load(node);
-	node->read("lock_view", m_lock_view);
 	do_load(node);
 }
 
@@ -55,7 +54,6 @@ void Widget::load(ConfigReader::Node *node)
 void Widget::save(ConfigWriter &cw)
 {
 	cw.write("widget", Widget::type_to_string(m_type));
-	cw.write("lock_view", m_lock_view);
 	m_view.save(cw);
 	m_channel_map.save(cw);
 	do_save(cw);
@@ -72,7 +70,6 @@ Widget *Widget::copy()
 
 void Widget::copy_to(Widget *w)
 {
-	w->m_lock_view = m_lock_view;
 	w->m_view = m_view;
 	w->m_channel_map = m_channel_map;
 }
@@ -81,19 +78,20 @@ void Widget::copy_to(Widget *w)
 void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	m_has_focus = ImGui::IsWindowFocused();
-	if(m_lock_view) m_view = view;
+	if(m_view.lock) m_view = view;
 
 	m_channel_map.set_channel_count(streams.channel_count());
 	m_channel_map.draw();
 
 	ImGui::SameLine();
-	ImGui::ToggleButton("Lock", &m_lock_view);
+	ImGui::ToggleButton("L##ock", &m_view.lock);
+	ImGui::SameLine();
 	
 	if(m_has_focus) {
 
 		// 'L' toggles lock
 		if(ImGui::IsKeyPressed(ImGuiKey_L)) {
-			m_lock_view = !m_lock_view;
+			m_view.lock = !m_view.lock;
 		}
 
 		// left/right square bracked sets fft bin size to next power of two
@@ -153,7 +151,7 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		ImGui::Text("%.2f ms", (t2 - t1) * 1000.0f / SDL_GetPerformanceFrequency());
 	}
 	
-	if(m_lock_view) view = m_view;
+	if(m_view.lock) view = m_view;
 }
 
 

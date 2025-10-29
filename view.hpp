@@ -29,6 +29,7 @@ public:
 			fft.window_type = Window::str_to_type(tmp);
 		}
 		n->read("fft_window_beta", fft.window_beta);
+		n->read("lock", lock);
 	}
 
 	void save(ConfigWriter &cfg)
@@ -42,6 +43,7 @@ public:
 		cfg.write("fft_size", fft.size);
 		cfg.write("fft_window_type", Window::type_to_str(fft.window_type));
 		cfg.write("fft_window_beta", fft.window_beta);
+		cfg.write("lock", lock);
 	}
 
 	Time x_to_t(float x, SDL_Rect &r) {
@@ -153,4 +155,5 @@ public:
 	VFreq freq;
 	VFft fft;
 	VAperture aperture;
+	bool lock;
 };

@@ -62,7 +62,6 @@ protected:
 	
 
 	Widget::Type m_type{Widget::Type::None};
-	bool m_lock_view{true};
 	bool m_has_focus{false};
 	View m_view{};
 	ChannelMap m_channel_map{};
