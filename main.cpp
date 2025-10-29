@@ -199,7 +199,7 @@ void Corrie::init_video(void)
 
 void Corrie::req_redraw()
 {
-	m_redraw = 4;
+	m_redraw = 40; // TODO for smooth key zoom/pan
 }
 
 
