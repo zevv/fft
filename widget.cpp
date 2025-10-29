@@ -200,7 +200,7 @@ T Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
 
 	int npoints = 0;
 	int nrects = 0;
-	int step = 2;
+	int step = 1;
 	double idx_scale = (idx_to - idx_from) / r.w;
 	int max_points = r.w / step + 1;
 
