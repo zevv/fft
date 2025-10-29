@@ -93,12 +93,14 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 			} else {
 				m_view.freq.cursor = m_view.x_to_freq(pos.x, r);
 			}
-
-			auto pos = ImGui::GetIO().MousePos;
-			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				m_view.time.cursor += m_view.dy_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
-			} else {
-				m_view.time.cursor = m_view.y_to_t(pos.y, r);
+		
+			if(ImGui::GetIO().MouseDelta.y != 0) {
+				auto pos = ImGui::GetIO().MousePos;
+				if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+					m_view.time.cursor += m_view.dy_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
+				} else {
+					m_view.time.cursor = m_view.y_to_t(pos.y, r);
+				}
 			}
 		}
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {

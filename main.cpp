@@ -61,6 +61,7 @@ private:
 	int m_redraw{1};
 	SDL_AudioStream *m_sdl_audio_stream{nullptr};
 	bool m_playback{false};
+	size_t m_playback_idx{};
 };
 
 
@@ -154,14 +155,16 @@ void Corrie::playback()
 	size_t frame_count = 0;
 
 	while(SDL_GetAudioStreamQueued(m_sdl_audio_stream) < 10000) {
-		Time playback_t = m_view.time.cursor;
-		double playback_idx = playback_t * m_view.srate;
+
+		size_t playback_idx = m_view.time.cursor * m_view.srate;
+		int delta = abs((int)playback_idx - (int)m_playback_idx);
+		if(delta > 2000) m_playback_idx = playback_idx;
 
 		for(size_t i=0; i<sizeof(buffer)/sizeof(float); i++) {
-			if(playback_idx < 0) continue;
-			if(playback_idx >= (double)avail) break;
-			buffer[i] = data[(size_t)playback_idx * stride] / (float)k_sample_max;
-			playback_idx += 1.0;
+			if(m_playback_idx < 0) continue;
+			if(m_playback_idx >= (double)avail) break;
+			buffer[i] = data[(size_t)m_playback_idx * stride] / (float)k_sample_max;
+			m_playback_idx += 1.0;
 		}
 
 		SDL_PutAudioStreamData(m_sdl_audio_stream, buffer, sizeof(buffer));
