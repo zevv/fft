@@ -34,7 +34,7 @@ void ConfigWriter::close()
 void ConfigWriter::push(int key)
 {
 	char buf[16];
-	snprintf(buf, sizeof(buf), "%d", key);
+	snprintf(buf, sizeof(buf), "[%d]", key);
 	push(buf);
 }
 
@@ -86,9 +86,12 @@ void ConfigWriter::write(const char *key, double val)
 void ConfigWriter::write(const char *key, const char *val)
 {
 	if(m_f) {
+		size_t i = 0;
 		for(auto p : m_prefixes) {
-			fprintf(m_f, "%s.", p);
+			if(i++ >0 && p[0] != '[') fprintf(m_f, ".");
+			fprintf(m_f, "%s", p);
 		}
+		fprintf(m_f, ".");
 		fprintf(m_f, "%s=%s\n", key, val);
 	}
 }
@@ -194,25 +197,24 @@ void ConfigReader::parse_line(char *line)
 	char *eq = strchr(line, '=');
 	if(eq == nullptr) return;
 	*eq = '\0';
-	char *key = line;
 	const char *val = eq + 1;
 	Node * node = m_root;
-	for(;;) {
-		char *dot = strchr(key, '.');
-		if(dot) {
-			*dot = 0;
+
+	char *save;
+	char *key = strtok_r(line, ".[]", &save);
+	while(key) {
+		char *key_next = strtok_r(nullptr, ".[]", &save);
+		if(key_next) {
 			if(node->kids.find(key) == node->kids.end()) {
 				node->kids[strdup(key)] = new Node();
 			}
 			node = node->kids[key];
-			key = dot + 1;
 		} else {
+			node->m_attrs[strdup(key)] = strdup(val);
 			break;
 		}
+		key = key_next;
 	}
-
-	node->m_attrs[strdup(key)] = strdup(val);
-
 }
 
 		

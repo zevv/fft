@@ -70,8 +70,8 @@ void Panel::load(ConfigReader::Node *node)
 			}
 		}
 
-		if(auto kids = node->find("kids")) {
-			for(auto &k : kids->kids) {
+		for(auto &k : node->kids) {
+			if(isdigit(k.first[0])) {
 				Panel *p = new Panel(Type::None);
 				p->load(k.second);
 				m_kids.push_back(p);
@@ -101,13 +101,11 @@ void Panel::save(ConfigWriter &cw)
 		cw.write("weight", m_weight);
 	}
 	if(m_kids.size() > 0) {
-		cw.push("kids");
 		for(size_t i=0; i<m_kids.size(); i++) {
 			cw.push(i);
 			m_kids[i]->save(cw);
 			cw.pop();
 		}
-		cw.pop();
 	}
 }
 
