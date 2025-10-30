@@ -160,8 +160,7 @@ void Corrie::playback()
 	size_t frame_count = 0;
 
 	size_t playback_idx = m_view.time.playpos * m_view.srate;
-	int delta = abs((int)playback_idx - (int)m_playback_idx);
-	if(delta > 2000 && m_playback_xfade <= 0.0) {
+	if(playback_idx != m_playback_idx && m_playback_xfade <= 0.0) {
 		m_playback_idx_prev = m_playback_idx;
 		m_playback_idx = playback_idx;
 		m_playback_xfade = 1.0;
