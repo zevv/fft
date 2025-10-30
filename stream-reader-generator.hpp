@@ -1,5 +1,5 @@
 
-#include "stream.hpp"
+#include "stream-reader.hpp"
 
 class StreamReaderGenerator : public StreamReader {
 public:
