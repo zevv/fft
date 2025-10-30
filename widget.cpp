@@ -80,6 +80,7 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	m_has_focus = ImGui::IsWindowFocused();
 	if(m_view.lock) m_view = view;
 	m_view.time.cursor = view.time.cursor;
+	m_view.time.playpos = view.time.playpos;
 
 	m_channel_map.set_channel_count(streams.channel_count());
 	m_channel_map.draw();
@@ -154,6 +155,7 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	
 	if(m_view.lock) view = m_view;
 	view.time.cursor = m_view.time.cursor;
+	view.time.playpos = m_view.time.playpos;
 }
 
 

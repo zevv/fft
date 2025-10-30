@@ -154,7 +154,7 @@ void Corrie::playback()
 
 	while(SDL_GetAudioStreamQueued(m_sdl_audio_stream) < 10000) {
 
-		size_t playback_idx = m_view.time.cursor * m_view.srate;
+		size_t playback_idx = m_view.time.playpos * m_view.srate;
 		int delta = abs((int)playback_idx - (int)m_playback_idx);
 		if(delta > 2000) m_playback_idx = playback_idx;
 
@@ -173,7 +173,7 @@ void Corrie::playback()
 	Time dt = (frame_count / m_view.srate);
 	m_view.time.from += dt;
 	m_view.time.to += dt;
-	m_view.time.cursor += dt;
+	m_view.time.playpos += dt;
 }
 
 

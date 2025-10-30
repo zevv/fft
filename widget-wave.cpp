@@ -81,6 +81,11 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 				m_view.time.cursor = m_view.x_to_t(pos.x, r);
 			}
 		}
+
+		if(ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+			auto pos = ImGui::GetIO().MousePos;
+			m_view.time.playpos = m_view.x_to_t(pos.x, r);
+		}
 	}
 
 	Sample scale = k_sample_max;
@@ -125,6 +130,11 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
 	int cx = m_view.t_to_x(m_view.time.cursor, r);
 	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
+	
+	// play position
+	SDL_SetRenderDrawColor(rend, 0, 128, 128, 255);
+	int px = m_view.t_to_x(m_view.time.playpos, r);
+	SDL_RenderLine(rend, px, r.y, px, r.y + r.h);
 
 	// zero Y
 	SDL_SetRenderDrawColor(rend, 100, 100, 100, 255);

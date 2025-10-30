@@ -131,6 +131,7 @@ public:
 		Time from{0.0};
 		Time to{1.0};
 		Time cursor{0.5};
+		Time playpos{0.0};
 	};
 
 	struct VFreq {
