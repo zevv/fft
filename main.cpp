@@ -65,6 +65,8 @@ private:
 	SDL_AudioStream *m_sdl_audio_stream{nullptr};
 	bool m_playback{false};
 	size_t m_playback_idx{};
+	size_t m_playback_idx_prev{};
+	double m_playback_xfade{0.0};
 };
 
 
@@ -159,19 +161,34 @@ void Corrie::playback()
 
 	size_t playback_idx = m_view.time.playpos * m_view.srate;
 	int delta = abs((int)playback_idx - (int)m_playback_idx);
-	if(delta > 2000) m_playback_idx = playback_idx;
+	if(delta > 2000 && m_playback_xfade <= 0.0) {
+		m_playback_idx_prev = m_playback_idx;
+		m_playback_idx = playback_idx;
+		m_playback_xfade = 1.0;
+	}
 
 	while(SDL_GetAudioStreamQueued(m_sdl_audio_stream) < 10000) {
 		for(size_t i=0; i<sizeof(buffer)/sizeof(float); i++) {
-			if(m_playback_idx < 0) continue;
-			if(m_playback_idx >= (double)avail) break;
-			buffer[i] = data[(size_t)m_playback_idx * stride] / (float)k_sample_max;
+			float v = 0.0;
+			if(m_playback_idx >= 0 && m_playback_idx < avail) {
+				v = data[m_playback_idx * stride] / (float)k_sample_max;
+			}
+			if(m_playback_xfade > 0.0) {
+				float v_prev = 0.0;
+				if(m_playback_idx_prev >= 0 && m_playback_idx_prev < avail) {
+					v_prev = data[m_playback_idx_prev * stride] / (float)k_sample_max;
+				}
+				v = v_prev * m_playback_xfade + v * (1.0 - m_playback_xfade);
+				m_playback_xfade -= 1.0 / (m_view.srate * 0.005);
+			}
+
+			buffer[i] = v;
 			m_playback_idx += 1.0;
+			m_playback_idx_prev += 1.0;
 		}
 		SDL_PutAudioStreamData(m_sdl_audio_stream, buffer, sizeof(buffer));
 		frame_count += sizeof(buffer) / sizeof(float);
 	}
-	SDL_FlushAudioStream(m_sdl_audio_stream);
 
 	if(frame_count > 0) {
 		req_redraw();
