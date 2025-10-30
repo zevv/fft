@@ -19,6 +19,7 @@ public:
 	void load(ConfigReader::Node *n)
 	{
 		n->read("t_cursor", time.cursor);
+		n->read("t_playpos", time.playpos);
 		n->read("t_from", time.from);
 		n->read("t_to", time.to);
 		n->read("freq_from", freq.from);
@@ -35,6 +36,7 @@ public:
 	void save(ConfigWriter &cfg)
 	{
 		cfg.write("t_cursor", time.cursor);
+		cfg.write("t_playpos", time.playpos);
 		cfg.write("t_from", time.from);
 		cfg.write("t_to", time.to);
 		cfg.write("freq_from", freq.from);
