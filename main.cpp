@@ -133,13 +133,18 @@ void Corrie::capture()
 {
 	Uint64 t_now = SDL_GetTicks();
 	Uint64 t_until = t_now + 10;
+	size_t frame_count = 0;
 	while(m_capture && SDL_GetTicks() < t_until) {
 		size_t frames = m_streams.capture();
-		if(frames > 0) {
-			req_redraw();
-		} else {
-			break;
-		}
+		frame_count += frames;
+		if(frame_count == 0) break;
+	}
+	if(frame_count > 0) {
+		Time t_to = m_streams.frames_avail() / m_view.srate;
+		Time dt = t_to - m_view.time.to;
+		m_view.time.from += dt;
+		m_view.time.to += dt;
+		req_redraw();
 	}
 }
 
@@ -152,28 +157,29 @@ void Corrie::playback()
 	Sample *data = m_streams.peek(&stride, &avail);
 	size_t frame_count = 0;
 
+	size_t playback_idx = m_view.time.playpos * m_view.srate;
+	int delta = abs((int)playback_idx - (int)m_playback_idx);
+	if(delta > 2000) m_playback_idx = playback_idx;
+
 	while(SDL_GetAudioStreamQueued(m_sdl_audio_stream) < 10000) {
-
-		size_t playback_idx = m_view.time.playpos * m_view.srate;
-		int delta = abs((int)playback_idx - (int)m_playback_idx);
-		if(delta > 2000) m_playback_idx = playback_idx;
-
 		for(size_t i=0; i<sizeof(buffer)/sizeof(float); i++) {
 			if(m_playback_idx < 0) continue;
 			if(m_playback_idx >= (double)avail) break;
 			buffer[i] = data[(size_t)m_playback_idx * stride] / (float)k_sample_max;
 			m_playback_idx += 1.0;
 		}
-
 		SDL_PutAudioStreamData(m_sdl_audio_stream, buffer, sizeof(buffer));
 		frame_count += sizeof(buffer) / sizeof(float);
 	}
 	SDL_FlushAudioStream(m_sdl_audio_stream);
 
-	Time dt = (frame_count / m_view.srate);
-	m_view.time.from += dt;
-	m_view.time.to += dt;
-	m_view.time.playpos += dt;
+	if(frame_count > 0) {
+		req_redraw();
+		Time dt = (frame_count / m_view.srate);
+		m_view.time.from += dt;
+		m_view.time.to += dt;
+		m_view.time.playpos += dt;
+	}
 }
 
 
@@ -306,15 +312,10 @@ void Corrie::run()
 
 		if(m_playback) {
 			playback();
-			req_redraw();
 		}
 
 		if(m_capture) {
 			capture();
-			Time t_to = m_streams.frames_avail() / m_view.srate;
-			Time dt = t_to - m_view.time.to;
-			m_view.time.from += dt;
-			m_view.time.to += dt;
 		}
 
 		SDL_Event event;
