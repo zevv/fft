@@ -46,12 +46,12 @@ struct ConfigReader {
 		Node();
 		~Node();
 		Node *find(const char *key);
-		bool read(const char *key, bool &val);
-		bool read(const char *key, int &val);
-		bool read(const char *key, size_t &val);
-		bool read(const char *key, float &val);
-		bool read(const char *key, double &val);
-		bool read(const char *key, char *val, size_t maxlen);
+		void read(const char *key, bool &val);
+		void read(const char *key, int &val);
+		void read(const char *key, size_t &val);
+		void read(const char *key, float &val);
+		void read(const char *key, double &val);
+		void read(const char *key, char *val, size_t maxlen);
 		const char *read_str(const char *key);
 		void dump(int depth = 0);
 
