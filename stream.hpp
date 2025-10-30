@@ -72,37 +72,5 @@ protected:
 };
 
 
-class StreamReaderFd : public StreamReader {
-public:
-	StreamReaderFd(size_t ch_count, int fd);
-	~StreamReaderFd();
-	void poll() override;
-private:
-	int m_fd{-1};
-};
 
-
-class StreamReaderAudio : public StreamReader {
-public:
-	StreamReaderAudio(size_t ch_count, float srate);
-	~StreamReaderAudio();
-	void poll() override;
-private:
-	SDL_AudioStream *m_sdl_audiostream{};
-};
-
-
-class StreamReaderGenerator : public StreamReader {
-public:
-
-	StreamReaderGenerator(size_t ch_count, float srate, int type);
-	~StreamReaderGenerator();
-	void poll() override;
-private:
-
-	Sample run();
-	Samplerate m_srate{};
-	Time m_phase{};
-	int m_type{};
-};
 

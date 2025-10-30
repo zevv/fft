@@ -17,6 +17,9 @@
 
 #include "panel.hpp"
 #include "stream.hpp"
+#include "stream-reader-audio.hpp"
+#include "stream-reader-file.hpp"
+#include "stream-reader-generator.hpp"
 #include "view.hpp"
 #include "config.hpp"
 #include "widget-wave.hpp"
@@ -210,7 +213,7 @@ void Corrie::init()
 #else
 	int fd = open("/home/ico/tmp/1.float", O_RDONLY);
 #endif
-	m_streams.add_reader(new StreamReaderFd(2, fd));
+	m_streams.add_reader(new StreamReaderFile(2, fd));
 	m_streams.add_reader(new StreamReaderAudio(3, m_srate));
 	m_streams.add_reader(new StreamReaderGenerator(1, m_srate, 1));
 	m_streams.allocate(512 * 1024 * 1024);
