@@ -133,11 +133,6 @@ void Corrie::capture()
 	while(m_capture && SDL_GetTicks() < t_until) {
 		size_t frames = m_streams.capture();
 		if(frames > 0) {
-			Time t_to = m_streams.frames_avail() / m_view.srate;
-			Time dt = t_to - m_view.time.to;
-			m_view.time.from += dt;
-			m_view.time.to += dt;
-			m_view.time.cursor += dt;
 			req_redraw();
 		} else {
 			break;
@@ -216,7 +211,7 @@ void Corrie::init()
 	int fd = open("/home/ico/tmp/1.float", O_RDONLY);
 #endif
 	m_streams.add_reader(new StreamReaderFd(2, fd));
-	//m_streams.add_reader(new StreamReaderAudio(3, m_srate));
+	m_streams.add_reader(new StreamReaderAudio(3, m_srate));
 	m_streams.add_reader(new StreamReaderGenerator(1, m_srate, 1));
 	m_streams.allocate(512 * 1024 * 1024);
 
@@ -289,21 +284,21 @@ void Corrie::run()
 		
 		if(ImGui::IsKeyPressed(ImGuiKey_C)) {
 			m_capture ^= 1;
-			m_playback = false;
+
+			Time t_to = m_streams.frames_avail() / m_view.srate;
+			Time dt = t_to - m_view.time.to;
+			m_view.time.from += dt;
+			m_view.time.to += dt;
 		}
 
 		if(ImGui::IsKeyPressed(ImGuiKey_Space)) {
-			if(m_capture) {
-				m_capture = false;
+			m_playback ^= 1;
+			if(m_playback) {
+				SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audio_stream));
 			} else {
-				m_playback ^= 1;
-				if(m_playback) {
-					SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audio_stream));
-				} else {
-					SDL_PauseAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audio_stream));
-				}
-				SDL_ClearAudioStream(m_sdl_audio_stream);
+				SDL_PauseAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audio_stream));
 			}
+			SDL_ClearAudioStream(m_sdl_audio_stream);
 		}
 
 		if(m_playback) {
@@ -313,6 +308,10 @@ void Corrie::run()
 
 		if(m_capture) {
 			capture();
+			Time t_to = m_streams.frames_avail() / m_view.srate;
+			Time dt = t_to - m_view.time.to;
+			m_view.time.from += dt;
+			m_view.time.to += dt;
 		}
 
 		SDL_Event event;
