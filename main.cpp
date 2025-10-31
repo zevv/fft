@@ -236,7 +236,7 @@ void Corrie::init()
 	int fd = open("/home/ico/tmp/1.float", O_RDONLY);
 #endif
 	m_streams.add_reader(new StreamReaderFile(2, fd));
-	//m_streams.add_reader(new StreamReaderAudio(3, m_srate));
+	m_streams.add_reader(new StreamReaderAudio(3, m_srate));
 	m_streams.add_reader(new StreamReaderGenerator(1, m_srate, 1));
 	m_streams.allocate(512 * 1024 * 1024);
 

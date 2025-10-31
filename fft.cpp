@@ -65,7 +65,7 @@ std::vector<int8_t> Fft::run(Sample *input, size_t stride)
 	for(size_t i=0; i<=m_size/2; i++) {
 		float v = 0.0;
 		if(i == 0) {
-			v = m_in[0] * scale / 2;
+			v = fabs(m_in[0] * scale) / 2;
 		} else if(i == m_size / 2) {
 			v = fabs(m_in[m_size / 2]) * scale / 2;
 		} else {
