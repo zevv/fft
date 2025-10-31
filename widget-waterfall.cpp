@@ -192,6 +192,11 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
 	int cy = m_view.t_to_y(m_view.time.cursor, r);
 	SDL_RenderLine(rend, r.x, cy, r.x + r.w, cy);
+	
+	// play position
+	SDL_SetRenderDrawColor(rend, 0, 128, 128, 255);
+	int py = m_view.t_to_y(m_view.time.playpos, r);
+	SDL_RenderLine(rend, r.x, py, r.x + r.w, py);
 
 	// freq cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);

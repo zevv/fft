@@ -28,7 +28,6 @@ Streams::~Streams()
 }
 
 
-
 void Streams::allocate(size_t depth)
 {
 	m_frame_size = m_channel_count * sizeof(Sample);
