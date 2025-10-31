@@ -11,9 +11,8 @@ Fft::Fft()
 
 Fft::~Fft()
 {
-	if(m_plan) {
-		fftwf_destroy_plan(m_plan);
-	}
+	if(m_plan) fftwf_destroy_plan(m_plan);
+	if(m_in) fftwf_free(m_in);
 }
 
 
@@ -24,11 +23,13 @@ void Fft::configure(size_t size, Window::Type window_type, float window_beta)
 		m_cache.clear();
 	}
 
-	if(m_in.size() != size) {
-		m_in.resize(size);
+	if(m_size != size) {
+		m_size = size;
+		if(m_in) free(m_in);
+		m_in = (float*)fftwf_malloc(sizeof(float) * size);
 		m_out.resize(size / 2 + 1);
 		if(m_plan) fftwf_destroy_plan(m_plan);
-		m_plan = fftwf_plan_r2r_1d(size, m_in.data(), m_in.data(), FFTW_R2HC, FFTW_ESTIMATE);
+		m_plan = fftwf_plan_r2r_1d(size, m_in, m_in, FFTW_R2HC, FFTW_ESTIMATE);
 		m_cache.clear();
 	}
 }
@@ -43,8 +44,7 @@ int Fft::out_size()
 std::vector<int8_t> Fft::run(Sample *input, size_t stride)
 {
 	double key = 0.0;
-	size_t size = m_in.size();
-	for(size_t i=0; i<size; i++) {
+	for(size_t i=0; i<m_size; i++) {
 		key += static_cast<double>(input[i * stride]) * 1e-6;
 	}
 
@@ -54,22 +54,22 @@ std::vector<int8_t> Fft::run(Sample *input, size_t stride)
 	}
 
 	auto window = m_window.data();
-	for(size_t i=0; i<size; i++) {
+	for(size_t i=0; i<m_size; i++) {
 		m_in[i] = input[i * stride] * window[i] / k_sample_max;
 	}
 	fftwf_execute(m_plan);
 
-	float scale = m_window.gain() * 2.0f / size;
+	float scale = m_window.gain() * 2.0f / m_size;
 	float db_range = -120.0;
 
-	for(size_t i=0; i<=size/2; i++) {
+	for(size_t i=0; i<=m_size/2; i++) {
 		float v = 0.0;
 		if(i == 0) {
 			v = m_in[0] * scale / 2;
-		} else if(i == size / 2) {
-			v = fabs(m_in[size / 2]) * scale / 2;
+		} else if(i == m_size / 2) {
+			v = fabs(m_in[m_size / 2]) * scale / 2;
 		} else {
-			v = hypot(m_in[i], m_in[size - i]) * scale;
+			v = hypot(m_in[i], m_in[m_size - i]) * scale;
 		} 
 		m_out[i] = std::clamp(20.0f * log10f(v + 1e-10), -127.0f, 0.0f);
 	}

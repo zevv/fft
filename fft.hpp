@@ -21,7 +21,8 @@ public:
 private:
 	fftwf_plan m_plan{nullptr};
 	Window m_window{};
-	std::vector<float> m_in;
-	std::vector<int8_t> m_out;
-	std::map<double, std::vector<int8_t>> m_cache;
+	size_t m_size{};
+	float *m_in{};
+	std::vector<int8_t> m_out{};
+	std::map<double, std::vector<int8_t>> m_cache{};
 };
