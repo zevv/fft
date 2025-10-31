@@ -58,7 +58,6 @@ private:
 	Time m_srate{48000.0};
 	Streams m_streams;
 	View m_view{};
-	ImFont *m_font{};
 	int m_redraw{1};
 
 	// capture
@@ -127,11 +126,26 @@ void Corrie::resize_window(int w, int h)
 
 void Corrie::draw()
 {
-    SDL_SetRenderTarget(m_rend, m_tex);
+	ImGui_ImplSDLRenderer3_NewFrame();
+	ImGui_ImplSDL3_NewFrame();
+	ImGui::NewFrame();
+
+	SDL_SetRenderTarget(m_rend, m_tex);
 	SDL_SetRenderDrawColor(m_rend, 10, 10, 10, 255);
 	SDL_RenderClear(m_rend);
+
 	m_root_panel->draw(m_view, m_streams, m_rend, 0, 0, m_w, m_h);
+
 	SDL_SetRenderTarget(m_rend, nullptr);
+
+	ImGui::Render();
+	ImGuiIO& io = ImGui::GetIO();
+	SDL_SetRenderScale(m_rend, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+	SDL_SetRenderDrawColor(m_rend, 0, 0, 0, 255);
+	SDL_RenderClear(m_rend);
+	SDL_RenderTexture(m_rend, m_tex, nullptr, nullptr);
+	ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_rend);
+	SDL_RenderPresent(m_rend);
 }
 
 
@@ -199,7 +213,7 @@ void Corrie::init()
 	m_view.srate = m_srate;
 
 	SDL_AudioSpec fmt{};
-	fmt.freq = 44100;
+	fmt.freq = 48000;
 	fmt.format = SDL_AUDIO_F32;
 	fmt.channels = 1;
     m_sdl_audio_stream = SDL_OpenAudioDeviceStream(            
@@ -215,12 +229,12 @@ void Corrie::init()
 	io.LogFilename = NULL;
 
 #ifdef SAMPLE_S16
-	int fd = open("/home/ico/tmp/1.s16", O_RDONLY);
+	int fd = open("/home/ico/tmp/2.s16", O_RDONLY);
 #else
 	int fd = open("/home/ico/tmp/1.float", O_RDONLY);
 #endif
 	m_streams.add_reader(new StreamReaderFile(2, fd));
-	m_streams.add_reader(new StreamReaderAudio(3, m_srate));
+	//m_streams.add_reader(new StreamReaderAudio(3, m_srate));
 	m_streams.add_reader(new StreamReaderGenerator(1, m_srate, 1));
 	m_streams.allocate(512 * 1024 * 1024);
 	m_streams.capture_enable(true);
@@ -267,7 +281,6 @@ void Corrie::init_video(void)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-	//m_font = io.Fonts->AddFontFromFileTTF("font.ttf");
 
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer3_Init(renderer);
@@ -338,24 +351,8 @@ void Corrie::run()
 		}
 
 		if(m_redraw > 0) {
-			m_redraw --;
-
-			ImGui_ImplSDLRenderer3_NewFrame();
-			ImGui_ImplSDL3_NewFrame();
-			ImGui::NewFrame();
-
-			if(m_font) ImGui::PushFont(m_font, 14);
 			draw();
-			if(m_font) ImGui::PopFont();
-
-			ImGui::Render();
-			ImGuiIO& io = ImGui::GetIO();
-			SDL_SetRenderScale(m_rend, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
-			SDL_SetRenderDrawColor(m_rend, 0, 0, 0, 255);
-			SDL_RenderClear(m_rend);
-			SDL_RenderTexture(m_rend, m_tex, nullptr, nullptr);
-			ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_rend);
-			SDL_RenderPresent(m_rend);
+			m_redraw --;
 		} else {
 			SDL_Delay(10);
 		}
