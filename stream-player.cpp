@@ -45,13 +45,13 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 	size_t avail = 0;
 	Sample *data = m_streams.peek(&stride, &avail);
 
-	Time t1 = m_play_pos.load();
-	Time t2 = m_idx / srate;
-	Time delta = fabs(t2 - t1);
-	if(delta > 0.01) {
-		m_idx = t1 * srate;
-		m_idx_prev = m_idx;
-		m_xfade = 1.0;
+	if(m_xfade <= 0.0) {
+		Time delta = fabs(m_play_pos - m_idx / srate);
+		if(delta > 0.01) {
+			m_idx_prev = m_idx;
+			m_idx = m_play_pos * srate;
+			m_xfade = 1.0;
+		}
 	}
 
 	for(size_t i=0; i<frame_count; i++) {
@@ -65,7 +65,7 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 				v_prev = data[m_idx_prev * stride] / (float)k_sample_max;
 			}
 			v = v_prev * m_xfade + v * (1.0 - m_xfade);
-			m_xfade -= 1.0 / (srate * 0.005);
+			m_xfade -= 1.0 / (srate * 0.050);
 		}
 
 		buffer[i] = v;

@@ -169,7 +169,7 @@ void Corrie::init()
 		m_root_panel->add(p1);
 	}
 
-	int fd = open("/home/ico/tmp/2.s16", O_RDONLY);
+	int fd = open("/home/ico/tmp/1.s16", O_RDONLY);
 	m_streams.add_reader(new StreamReaderFile(2, fd));
 	//m_streams.add_reader(new StreamReaderAudio(3, m_srate));
 	m_streams.add_reader(new StreamReaderGenerator(1, m_srate, 1));
