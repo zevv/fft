@@ -38,8 +38,6 @@ public:
 	void run();
 	void exit();
 
-	void playback();
-
 	void init_video();
 	void req_redraw();
 
@@ -60,15 +58,8 @@ private:
 	View m_view{};
 	int m_redraw{1};
 
-	// capture
 	bool m_capturing{true};
-
-	// playback
-	SDL_AudioStream *m_sdl_audio_stream{nullptr};
 	bool m_playback{false};
-	size_t m_playback_idx{};
-	size_t m_playback_idx_prev{};
-	double m_playback_xfade{0.0};
 };
 
 
@@ -149,61 +140,6 @@ void Corrie::draw()
 }
 
 
-void Corrie::playback()
-{
-	float buffer[1024]{};
-	size_t stride = 0;
-	size_t avail = 0;
-	Sample *data = m_streams.peek(&stride, &avail);
-	size_t frame_count = 0;
-
-	size_t playback_idx = m_view.time.playpos * m_view.srate;
-	if(playback_idx != m_playback_idx && m_playback_xfade <= 0.0) {
-		m_playback_idx_prev = m_playback_idx;
-		m_playback_idx = playback_idx;
-		m_playback_xfade = 1.0;
-	}
-
-	while(SDL_GetAudioStreamQueued(m_sdl_audio_stream) < 10000) {
-		for(size_t i=0; i<sizeof(buffer)/sizeof(float); i++) {
-			float v = 0.0;
-			if(m_playback_idx >= 0 && m_playback_idx < avail) {
-				v = data[m_playback_idx * stride] / (float)k_sample_max;
-			}
-			if(m_playback_xfade > 0.0) {
-				float v_prev = 0.0;
-				if(m_playback_idx_prev >= 0 && m_playback_idx_prev < avail) {
-					v_prev = data[m_playback_idx_prev * stride] / (float)k_sample_max;
-				}
-				v = v_prev * m_playback_xfade + v * (1.0 - m_playback_xfade);
-				m_playback_xfade -= 1.0 / (m_view.srate * 0.005);
-			}
-
-			buffer[i] = v;
-			m_playback_idx += 1.0;
-			m_playback_idx_prev += 1.0;
-		}
-		SDL_PutAudioStreamData(m_sdl_audio_stream, buffer, sizeof(buffer));
-		frame_count += sizeof(buffer) / sizeof(float);
-	}
-
-	if(frame_count > 0) {
-		req_redraw();
-		Time dt = (frame_count / m_view.srate);
-		m_view.time.from += dt;
-		m_view.time.to += dt;
-		m_view.time.playpos += dt;
-	}
-}
-
-
-void audio_callback(void *userdata, SDL_AudioStream *stream, int additional_amount, int total_amount)
-{
-	Corrie *cor = (Corrie *)userdata;
-	cor->playback();
-}
-
-	
 void Corrie::init()
 {
 	fcntl(0, F_SETFL, O_NONBLOCK);
@@ -212,32 +148,10 @@ void Corrie::init()
 
 	m_view.srate = m_srate;
 
-	SDL_AudioSpec fmt{};
-	fmt.freq = 48000;
-	fmt.format = SDL_AUDIO_F32;
-	fmt.channels = 1;
-    m_sdl_audio_stream = SDL_OpenAudioDeviceStream(            
-            SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK,
-            &fmt,
-			//audio_callback,
-			nullptr,
-			(void *)this);
-
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
 	io.LogFilename = NULL;
-
-#ifdef SAMPLE_S16
-	int fd = open("/home/ico/tmp/2.s16", O_RDONLY);
-#else
-	int fd = open("/home/ico/tmp/1.float", O_RDONLY);
-#endif
-	m_streams.add_reader(new StreamReaderFile(2, fd));
-	//m_streams.add_reader(new StreamReaderAudio(3, m_srate));
-	m_streams.add_reader(new StreamReaderGenerator(1, m_srate, 1));
-	m_streams.allocate(512 * 1024 * 1024);
-	m_streams.capture_enable(true);
 
 	Panel *tmp_root_panel = new Panel(Panel::Type::Root);
 	m_root_panel = tmp_root_panel;
@@ -254,6 +168,14 @@ void Corrie::init()
 		p1->add(new WidgetWaveform());
 		m_root_panel->add(p1);
 	}
+
+	int fd = open("/home/ico/tmp/2.s16", O_RDONLY);
+	m_streams.add_reader(new StreamReaderFile(2, fd));
+	//m_streams.add_reader(new StreamReaderAudio(3, m_srate));
+	m_streams.add_reader(new StreamReaderGenerator(1, m_srate, 1));
+	m_streams.allocate(512 * 1024 * 1024);
+	m_streams.capture_enable(true);
+	m_streams.playback_seek(m_view.time.playpos);
 }
 
 
@@ -310,18 +232,8 @@ void Corrie::run()
 
 		if(ImGui::IsKeyPressed(ImGuiKey_Space)) {
 			m_playback ^= 1;
-			if(m_playback) {
-				SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audio_stream));
-			} else {
-				SDL_PauseAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audio_stream));
-			}
-			SDL_ClearAudioStream(m_sdl_audio_stream);
+			m_streams.playback_enable(m_playback);
 		}
-
-		if(m_playback) {
-			playback();
-		}
-
 
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
@@ -339,9 +251,19 @@ void Corrie::run()
 				resize_window(event.window.data1, event.window.data2);
 			if(event.type == SDL_EVENT_USER) {
 				if(event.user.code == k_user_event_audio_capture) {
-					size_t frame_count = (size_t)(uintptr_t)event.user.data1;
-					Time t_to = frame_count / m_view.srate;
+					size_t frame_idx = (size_t)(uintptr_t)event.user.data1;
+					Time t_to = frame_idx / m_view.srate;
 					Time dt = t_to - m_view.time.to;
+					if(0) {
+						m_view.time.from += dt;
+						m_view.time.to += dt;
+					}
+				}
+				if(event.user.code == k_user_event_audio_playback) {
+					size_t frame_idx = (size_t)(uintptr_t)event.user.data1;
+					m_view.time.playpos = frame_idx / m_srate;
+					size_t frame_count = (size_t)(uintptr_t)event.user.data2;
+					Time dt = (frame_count / m_srate);
 					m_view.time.from += dt;
 					m_view.time.to += dt;
 				}

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <SDL3/SDL.h>
+
 #include <stdio.h>
 #include <vector>
 #include <stddef.h>
@@ -24,10 +26,11 @@ public:
 	Wavecache::Range *peek_wavecache(size_t *stride, size_t *used = nullptr);
 	void add_reader(StreamReader *reader);
 	void capture_enable(bool onoff);
+	void playback_enable(bool onoff);
+	void playback_seek(Time tpos);
 
 private:
 
-	void capture_thread();
 	size_t m_depth{};
 	size_t m_channel_count{};
 	size_t m_frame_size{};
@@ -35,9 +38,25 @@ private:
 	Wavecache m_wavecache;
 	std::vector<StreamReader *> m_readers{};
 
-	std::thread m_thread;
-	std::atomic<bool> m_enabled{false};
-	std::atomic<bool> m_running{false};
+	struct {
+		std::thread thread;
+		std::atomic<bool> enabled{false};
+		std::atomic<bool> running{false};
+	} m_capture{};
+
+	void capture_thread();
+
+	struct {
+		std::atomic<Time> play_pos{0};
+		SDL_AudioStream *sdl_audio_stream{nullptr};
+		size_t idx{};
+		size_t idx_prev{};
+		double xfade{};
+		uint32_t t_event{};
+	} m_playback{};
+
+public:
+	void playback_callback(SDL_AudioStream *stream, int additional_amount, int total_amount);
 };
 
 

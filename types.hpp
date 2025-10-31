@@ -6,6 +6,7 @@ typedef double Frequency;
 typedef double Samplerate;
 
 static const int k_user_event_audio_capture = 1;
+static const int k_user_event_audio_playback = 2;
 
 #define SAMPLE_S16
 //#define SAMPLE_FLOAT16
