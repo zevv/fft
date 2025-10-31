@@ -83,7 +83,7 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) ||
 		   (ImGui::GetIO().MouseDelta.x != 0 && ImGui::IsMouseDown(ImGuiMouseButton_Left))) {
 			auto pos = ImGui::GetIO().MousePos;
-			streams.playback_seek(m_view.x_to_t(pos.x, r));
+			streams.player.seek(m_view.x_to_t(pos.x, r));
 		}
 	}
 

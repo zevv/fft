@@ -175,7 +175,7 @@ void Corrie::init()
 	m_streams.add_reader(new StreamReaderGenerator(1, m_srate, 1));
 	m_streams.allocate(512 * 1024 * 1024);
 	m_streams.capture_enable(true);
-	m_streams.playback_seek(m_view.time.playpos);
+	m_streams.player.seek(m_view.time.playpos);
 }
 
 
@@ -232,7 +232,7 @@ void Corrie::run()
 
 		if(ImGui::IsKeyPressed(ImGuiKey_Space)) {
 			m_playback ^= 1;
-			m_streams.playback_enable(m_playback);
+			m_streams.player.enable(m_playback);
 		}
 
 		SDL_Event event;

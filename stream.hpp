@@ -12,6 +12,28 @@
 #include "types.hpp"
 #include "wavecache.hpp"
 
+
+
+class Streams;
+
+class StreamPlayer {
+public:
+	StreamPlayer(Streams &streams);
+	void enable(bool onoff);
+	void seek(Time tpos);
+	void audio_callback(SDL_AudioStream *stream, int additional_amount, int total_amount);
+
+private:
+	Streams &m_streams;	
+	std::atomic<Time> m_play_pos{0};
+	SDL_AudioStream *m_sdl_audio_stream{nullptr};
+	size_t m_idx{};
+	size_t m_idx_prev{};
+	double m_xfade{};
+	uint32_t m_t_event{};
+};
+
+
 class StreamReader;
 
 class Streams {
@@ -26,8 +48,8 @@ public:
 	Wavecache::Range *peek_wavecache(size_t *stride, size_t *used = nullptr);
 	void add_reader(StreamReader *reader);
 	void capture_enable(bool onoff);
-	void playback_enable(bool onoff);
-	void playback_seek(Time tpos);
+	
+	class StreamPlayer player;
 
 private:
 
@@ -46,17 +68,7 @@ private:
 
 	void capture_thread();
 
-	struct {
-		std::atomic<Time> play_pos{0};
-		SDL_AudioStream *sdl_audio_stream{nullptr};
-		size_t idx{};
-		size_t idx_prev{};
-		double xfade{};
-		uint32_t t_event{};
-	} m_playback{};
-
 public:
-	void playback_callback(SDL_AudioStream *stream, int additional_amount, int total_amount);
 };
 
 
