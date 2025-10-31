@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 
 typedef double Time;
 typedef double Frequency;
