@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <experimental/simd>
 
+#include <SDL3/SDL.h>
 #include <SDL3/SDL_audio.h>
 
 #include "stream.hpp"
@@ -19,6 +20,8 @@ Streams::Streams()
 
 Streams::~Streams()
 {
+	m_running = false;
+	m_thread.join();
 	for(auto reader : m_readers) {
 		delete reader;
 	}
@@ -64,40 +67,59 @@ void Streams::add_reader(StreamReader *reader)
 }
 
 
-size_t Streams::capture()
+void Streams::capture_thread()
 {
-	bool captured = false;
-	size_t frame_count = SIZE_MAX;
-	for(auto reader : m_readers) {
-		reader->poll();
-		frame_count = std::min(frame_count, reader->frames_avail());
-	}
+	uint64_t t_event = SDL_GetTicks() + 10;
 
-	if(false) {
+	while(m_running) {
+
+		while(!m_enabled && m_running) {
+			usleep(10000);
+		}
+
+		size_t frame_count = SIZE_MAX;
 		for(auto reader : m_readers) {
-			printf("%s:", reader->name());
-			size_t frames_avail = reader->frames_avail();
-			for(size_t i=0; i<4096; i+=512) {
-				putchar((frames_avail > i) ? '#' : '.');
+			reader->poll();
+			frame_count = std::min(frame_count, reader->frames_avail());
+		}
+
+		size_t bytes_max = 0;
+		Sample *buf = (Sample *)m_rb.get_write_ptr(&bytes_max);
+
+		size_t channel = 0;
+		if(frame_count > 0) {
+			for(auto reader : m_readers) {
+				channel += reader->drain_into(buf, channel, frame_count, m_channel_count);
 			}
-			printf(" ");
+			m_rb.write_done(frame_count * m_frame_size);
+			m_wavecache.feed_frames(buf, frame_count, m_channel_count);
 		}
-		printf("\n");
-	}
 
-	size_t bytes_max = 0;
-	Sample *buf = (Sample *)m_rb.get_write_ptr(&bytes_max);
-
-	size_t channel = 0;
-	if(frame_count > 0) {
-		for(auto reader : m_readers) {
-			channel += reader->drain_into(buf, channel, frame_count, m_channel_count);
+		if(frame_count > 0) {
+			uint64_t t_now = SDL_GetTicks();
+			if(t_now > t_event) {
+				t_event += 10;
+				SDL_Event event;
+				SDL_zero(event);
+				event.type = SDL_EVENT_USER;
+				event.user.code = k_user_event_audio_capture;
+				event.user.data1 = (void *)(m_rb.bytes_used() / m_frame_size);
+				SDL_PushEvent(&event);
+			}
+		} else {
+			usleep(1000);
 		}
-		m_rb.write_done(frame_count * m_frame_size);
-		m_wavecache.feed_frames(buf, frame_count, m_channel_count);
-		captured = true;
 	}
-	return frame_count;
+}
+
+
+void Streams::capture_enable(bool enable)
+{
+	if(enable && !m_running) {
+		m_running = true;
+		m_thread = std::thread(&Streams::capture_thread, this);
+	}
+	m_enabled = enable;
 }
 
 

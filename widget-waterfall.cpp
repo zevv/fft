@@ -179,8 +179,8 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	SDL_DestroyTexture(tex);
 
 	if(m_agc) {
-		m_db_min = hist.get_percentile(0.01);
-		m_db_max = hist.get_percentile(0.99);
+		m_db_min = hist.get_percentile(0.05);
+		m_db_max = hist.get_percentile(1.00);
 	}
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);

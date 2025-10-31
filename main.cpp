@@ -38,7 +38,6 @@ public:
 	void run();
 	void exit();
 
-	void capture();
 	void playback();
 
 	void init_video();
@@ -57,11 +56,15 @@ private:
 	int m_w = 800;
 	int m_h = 600;
 	Time m_srate{48000.0};
-	bool m_capture{false};
 	Streams m_streams;
 	View m_view{};
 	ImFont *m_font{};
 	int m_redraw{1};
+
+	// capture
+	bool m_capturing{true};
+
+	// playback
 	SDL_AudioStream *m_sdl_audio_stream{nullptr};
 	bool m_playback{false};
 	size_t m_playback_idx{};
@@ -76,6 +79,7 @@ Corrie::Corrie(SDL_Window *window, SDL_Renderer *renderer)
 	, m_streams()
 {
     resize_window(800, 600);
+	m_view.srate = m_srate;
 }
 
 
@@ -128,26 +132,6 @@ void Corrie::draw()
 	SDL_RenderClear(m_rend);
 	m_root_panel->draw(m_view, m_streams, m_rend, 0, 0, m_w, m_h);
 	SDL_SetRenderTarget(m_rend, nullptr);
-}
-
-
-void Corrie::capture()
-{
-	Uint64 t_now = SDL_GetTicks();
-	Uint64 t_until = t_now + 10;
-	size_t frame_count = 0;
-	while(m_capture && SDL_GetTicks() < t_until) {
-		size_t frames = m_streams.capture();
-		frame_count += frames;
-		if(frame_count == 0) break;
-	}
-	if(frame_count > 0) {
-		Time t_to = m_streams.frames_avail() / m_view.srate;
-		Time dt = t_to - m_view.time.to;
-		m_view.time.from += dt;
-		m_view.time.to += dt;
-		req_redraw();
-	}
 }
 
 
@@ -239,8 +223,7 @@ void Corrie::init()
 	m_streams.add_reader(new StreamReaderAudio(3, m_srate));
 	m_streams.add_reader(new StreamReaderGenerator(1, m_srate, 1));
 	m_streams.allocate(512 * 1024 * 1024);
-
-	m_capture = true;
+	m_streams.capture_enable(true);
 
 	Panel *tmp_root_panel = new Panel(Panel::Type::Root);
 	m_root_panel = tmp_root_panel;
@@ -306,14 +289,10 @@ void Corrie::run()
 	bool done = false;
 	while (!done)
 	{
-		
-		if(ImGui::IsKeyPressed(ImGuiKey_C)) {
-			m_capture ^= 1;
 
-			Time t_to = m_streams.frames_avail() / m_view.srate;
-			Time dt = t_to - m_view.time.to;
-			m_view.time.from += dt;
-			m_view.time.to += dt;
+		if(ImGui::IsKeyPressed(ImGuiKey_C)) {
+			m_capturing ^= 1;
+			m_streams.capture_enable(m_capturing);
 		}
 
 		if(ImGui::IsKeyPressed(ImGuiKey_Space)) {
@@ -330,9 +309,6 @@ void Corrie::run()
 			playback();
 		}
 
-		if(m_capture) {
-			capture();
-		}
 
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
@@ -348,6 +324,15 @@ void Corrie::run()
 			if(event.type == SDL_EVENT_WINDOW_RESIZED && 
 			   event.window.windowID == SDL_GetWindowID(m_win))
 				resize_window(event.window.data1, event.window.data2);
+			if(event.type == SDL_EVENT_USER) {
+				if(event.user.code == k_user_event_audio_capture) {
+					size_t frame_count = (size_t)(uintptr_t)event.user.data1;
+					Time t_to = frame_count / m_view.srate;
+					Time dt = t_to - m_view.time.to;
+					m_view.time.from += dt;
+					m_view.time.to += dt;
+				}
+			}
 
 			req_redraw();
 		}
