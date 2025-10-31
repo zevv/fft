@@ -13,6 +13,7 @@ SRC += widget-spectrum.cpp
 SRC += widget-waterfall.cpp
 SRC += widget-histogram.cpp
 SRC += stream.cpp
+SRC += wavecache.cpp
 SRC += stream-reader.cpp
 SRC += stream-reader-audio.cpp
 SRC += stream-reader-file.cpp
