@@ -24,5 +24,4 @@ private:
 	size_t m_size{};
 	float *m_in{};
 	std::vector<int8_t> m_out{};
-	std::map<double, std::vector<int8_t>> m_cache{};
 };

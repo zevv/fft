@@ -20,7 +20,6 @@ void Fft::configure(size_t size, Window::Type window_type, float window_beta)
 {
 	if(m_window.size() != size || m_window.type() != window_type || m_window.beta() != window_beta) {
 		m_window.configure(window_type, size, window_beta);
-		m_cache.clear();
 	}
 
 	if(m_size != size) {
@@ -30,7 +29,6 @@ void Fft::configure(size_t size, Window::Type window_type, float window_beta)
 		m_out.resize(size / 2 + 1);
 		if(m_plan) fftwf_destroy_plan(m_plan);
 		m_plan = fftwf_plan_r2r_1d(size, m_in, m_in, FFTW_R2HC, FFTW_ESTIMATE);
-		m_cache.clear();
 	}
 }
 
@@ -43,16 +41,6 @@ int Fft::out_size()
 
 std::vector<int8_t> Fft::run(Sample *input, size_t stride)
 {
-	double key = 0.0;
-	for(size_t i=0; i<m_size; i++) {
-		key += static_cast<double>(input[i * stride]) * 1e-6;
-	}
-
-	auto it = m_cache.find(key);
-	if(it != m_cache.end()) {
-		return it->second;
-	}
-
 	auto window = m_window.data();
 	for(size_t i=0; i<m_size; i++) {
 		m_in[i] = input[i * stride] * window[i] / k_sample_max;
@@ -74,8 +62,6 @@ std::vector<int8_t> Fft::run(Sample *input, size_t stride)
 		int32_t i_v = std::bit_cast<int32_t>(v + 1e-10f);
 		m_out[i] = std::clamp((float)i_v * 7.17897e-7f - 764.616f, -127.0f, 0.0f);
 	}
-
-	//m_cache[key] = m_out;
 
 	return m_out;
 }
