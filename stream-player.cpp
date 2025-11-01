@@ -51,13 +51,11 @@ void StreamPlayer::load(ConfigReader::Node *n)
 	auto nc = n->find("player")->find("channel");
 
 	for(auto &k : nc->kids) {
-		printf("kid %s\n", k.first);
 		if(isdigit(k.first[0])) {
 			size_t ch = atoi(k.first);
 			m_channels.resize(ch+1);
 			k.second->read("volume", m_channels[ch].volume);
 			k.second->read("pan", m_channels[ch].pan);
-			printf("ch %zu: %f %f\n", ch, m_channels[ch].volume, m_channels[ch].pan);
 		}
 	}
 }
@@ -104,6 +102,14 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 		}
 	}
 
+	std::vector<float> gain_l(m_streams.channel_count());
+	std::vector<float> gain_r(m_streams.channel_count());
+
+	for(size_t ch=0; ch<m_streams.channel_count(); ch++) {
+		gain_l[ch] = m_channels[ch].volume * (m_channels[ch].pan <= 0.0f ? 1.0f : (1.0f - m_channels[ch].pan));
+		gain_r[ch] = m_channels[ch].volume * (m_channels[ch].pan >= 0.0f ? 1.0f : (1.0f + m_channels[ch].pan));
+	}
+
 	for(size_t i=0; i<frame_count; i++) {
 
 		float vl = 0.0;
@@ -125,8 +131,8 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 				m_xfade -= 1.0 / (m_srate * 0.050);
 			}
 
-			vl += v * m_channels[ch].volume * (m_channels[ch].pan <= 0.0f ? 1.0f : (1.0f - m_channels[ch].pan));
-			vr += v * m_channels[ch].volume * (m_channels[ch].pan >= 0.0f ? 1.0f : (1.0f + m_channels[ch].pan));
+			vl += v * gain_l[ch];
+			vr += v * gain_r[ch];
 		}
 		
 		m_buf[i*2 + 0] = vl;

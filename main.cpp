@@ -92,6 +92,10 @@ void Corrie::save(const char *fname)
 	cw.push("config");
 	cw.write("samplerate", m_srate);
 	cw.pop();
+	
+	cw.push("stream");
+	m_streams.save(cw);
+	cw.pop();
 
 	cw.push("view");
 	m_view.save(cw);
@@ -99,10 +103,6 @@ void Corrie::save(const char *fname)
 
 	cw.push("panel");
 	m_root_panel->save(cw);
-	cw.pop();
-
-	cw.push("stream");
-	m_streams.save(cw);
 	cw.pop();
 
 	cw.close();
