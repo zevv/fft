@@ -10,6 +10,7 @@
 #include "widget-waterfall.hpp"
 #include "widget-histogram.hpp"
 #include "widget-channels.hpp"
+#include "misc.hpp"
 
 
 Widget::Widget(Type type)
@@ -144,14 +145,14 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		m_view.pan_t(io.MouseWheel * 0.1f);
 	}
 
-	float t1 = SDL_GetPerformanceCounter();
+	float t1 = hirestime();
 	do_draw(streams, rend, r);
-	float t2 = SDL_GetPerformanceCounter();
+	float t2 = hirestime();
 
 	// draw render time
-	if(0) {
+	if(1) {
 		ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 60, ImGui::GetWindowHeight() - 25));
-		ImGui::Text("%.2f ms", (t2 - t1) * 1000.0f / SDL_GetPerformanceFrequency());
+		ImGui::Text("%.2f ms", (t2 - t1) * 1000.0f);
 	}
 	
 	if(m_view.lock) view = m_view;
