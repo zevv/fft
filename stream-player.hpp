@@ -18,6 +18,7 @@ public:
 
 private:
 	Streams &m_streams;	
+	Samplerate m_srate;
 	std::atomic<Time> m_play_pos{0};
 	SDL_AudioStream *m_sdl_audio_stream{nullptr};
 	size_t m_idx{};

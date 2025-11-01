@@ -14,9 +14,10 @@ static void audio_callback_(void *userdata, SDL_AudioStream *stream, int additio
 
 StreamPlayer::StreamPlayer(Streams &streams)
 	: m_streams(streams)
+	, m_srate(48000)
 {
 	SDL_AudioSpec fmt{};
-	fmt.freq = 48000;
+	fmt.freq = m_srate;
 	fmt.format = SDL_AUDIO_F32;
 	fmt.channels = 1;
 	m_sdl_audio_stream = SDL_OpenAudioDeviceStream(            
@@ -44,7 +45,6 @@ void StreamPlayer::seek(Time t)
 void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount, int total_amount)
 {
 	float buffer[1024]{};
-	double srate = 48000.0;
 
 	size_t frame_count = total_amount / sizeof(float);
 	if(frame_count > 1024) frame_count = 1024;
@@ -54,10 +54,10 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 	Sample *data = m_streams.peek(&stride, &avail);
 
 	if(m_xfade <= 0.0) {
-		Time delta = fabs(m_play_pos - m_idx / srate);
+		Time delta = fabs(m_play_pos - m_idx / m_srate);
 		if(delta > 0.01) {
 			m_idx_prev = m_idx;
-			m_idx = m_play_pos * srate;
+			m_idx = m_play_pos * m_srate;
 			m_xfade = 1.0;
 		}
 	}
@@ -73,7 +73,7 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 				v_prev = data[m_idx_prev * stride] / (float)k_sample_max;
 			}
 			v = v_prev * m_xfade + v * (1.0 - m_xfade);
-			m_xfade -= 1.0 / (srate * 0.050);
+			m_xfade -= 1.0 / (m_srate * 0.050);
 		}
 
 		buffer[i] = v;
@@ -82,7 +82,7 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 	}
 
 	SDL_PutAudioStreamData(m_sdl_audio_stream, buffer, frame_count * sizeof(float));
-	m_play_pos += (Time)frame_count / srate;
+	m_play_pos += (Time)frame_count / m_srate;
 	
 	uint64_t t_now = SDL_GetTicks();
 	if(t_now > m_t_event) {
