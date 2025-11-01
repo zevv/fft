@@ -16,7 +16,8 @@ StreamPlayer::StreamPlayer(Streams &streams)
 	: m_streams(streams)
 	, m_srate(48000)
 	, m_frame_size(2 * sizeof(float))
-	, m_buf_frames(2048)
+	, m_buf_frames(4096)
+	, m_speed(1.0)
 {
 	SDL_AudioSpec fmt{};
 	fmt.freq = m_srate;
@@ -48,9 +49,12 @@ void StreamPlayer::set_channel_count(size_t count)
 	
 void StreamPlayer::load(ConfigReader::Node *n)
 {
-	auto nc = n->find("player")->find("channel");
+	auto nc = n->find("player");
+	float speed = 1.0f;
+	nc->read("speed", speed);
+	m_speed = speed;
 
-	for(auto &k : nc->kids) {
+	for(auto &k : nc->find("channel")->kids) {
 		if(isdigit(k.first[0])) {
 			size_t ch = atoi(k.first);
 			m_channels.resize(ch+1);
@@ -64,6 +68,7 @@ void StreamPlayer::load(ConfigReader::Node *n)
 void StreamPlayer::save(ConfigWriter &cw)
 {
 	cw.push("player");
+	cw.write("speed", m_speed);
 	cw.push("channel");
 	for(size_t ch=0; ch<m_channels.size(); ch++) {
 		cw.push(ch);
@@ -109,6 +114,8 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 		gain_l[ch] = m_channels[ch].volume * (m_channels[ch].pan <= 0.0f ? 1.0f : (1.0f - m_channels[ch].pan));
 		gain_r[ch] = m_channels[ch].volume * (m_channels[ch].pan >= 0.0f ? 1.0f : (1.0f + m_channels[ch].pan));
 	}
+
+	SDL_SetAudioStreamFrequencyRatio(m_sdl_audio_stream, m_speed);
 
 	for(size_t i=0; i<frame_count; i++) {
 

@@ -41,6 +41,8 @@ Widget *WidgetChannels::do_copy()
 void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	auto &channels = streams.player.get_channels();
+	auto &player = streams.player;
+	float speed = player.get_speed();
 
 	if(channels.size() != streams.channel_count()) {
 		return;
@@ -50,6 +52,11 @@ void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 	for(size_t ch=0; ch<streams.channel_count(); ch++) {
 		channels[ch].enabled = false;
+	}
+		
+	ImGui::SetNextItemWidth(150);
+	if(ImGui::SliderFloat("speed", &speed, 0.25, 4.0, "Speed %.2fx", ImGuiSliderFlags_Logarithmic)) {
+		player.set_speed(speed);
 	}
 
 	for(size_t ch=0; ch<streams.channel_count(); ch++) {

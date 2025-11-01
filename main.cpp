@@ -243,6 +243,12 @@ void Corrie::run()
 			m_streams.player.enable(m_playback);
 		}
 
+		auto &player = m_streams.player;
+		float speed = player.get_speed();
+		if(ImGui::IsKeyPressed(ImGuiKey_Comma)) player.set_speed(speed / 1.2f);
+		if(ImGui::IsKeyPressed(ImGuiKey_Period)) player.set_speed(1.0);
+		if(ImGui::IsKeyPressed(ImGuiKey_Slash)) player.set_speed(speed * 1.2f);
+
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
 		{
