@@ -9,7 +9,7 @@
 #include "widget-spectrum.hpp"
 #include "widget-waterfall.hpp"
 #include "widget-histogram.hpp"
-#include "widget.hpp"
+#include "widget-channels.hpp"
 
 
 Widget::Widget(Type type)
@@ -30,6 +30,7 @@ Widget *Widget::create(Widget::Type type)
 	if(type == Widget::Type::Spectrum) return new WidgetSpectrum();
 	if(type == Widget::Type::Waterfall) return new WidgetWaterfall();
 	if(type == Widget::Type::Histogram) return new WidgetHistogram();
+	if(type == Widget::Type::Channels) return new WidgetChannels();
 	if(type == Widget::Type::StyleEditor) return new WidgetStyleEditor();
 	assert(false && "unknown widget type");
 	return nullptr;
@@ -359,7 +360,7 @@ void Widget::grid_vertical(SDL_Renderer *rend, SDL_Rect &r, float v_min, float v
 
 
 const char *k_type_str[] = {
-	"none", "wave", "spectrum", "waterfall", "histogram", "style editor"
+	"none", "wave", "spectrum", "waterfall", "histogram", "channels", "style editor"
 };
 
 const char **Widget::type_names()

@@ -15,7 +15,7 @@ class Widget {
 public:
 	
 	enum class Type : int {
-		None, Waveform, Spectrum, Waterfall, Histogram, StyleEditor
+		None, Waveform, Spectrum, Waterfall, Histogram, Channels, StyleEditor
 	};
 
 	Widget(Type type);

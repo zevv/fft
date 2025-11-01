@@ -58,6 +58,12 @@ std::generator<int> ChannelMap::enabled_channels()
 }
 
 
+bool ChannelMap::is_channel_enabled(int channel)
+{
+	return (m_map & (1 << channel)) != 0;
+}
+
+
 void ChannelMap::draw()
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3, 3));

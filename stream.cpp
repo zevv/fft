@@ -31,6 +31,18 @@ Streams::~Streams()
 }
 
 
+void Streams::load(ConfigReader::Node *n)
+{
+	player.load(n);
+}
+
+
+void Streams::save(ConfigWriter &cw)
+{
+	player.save(cw);
+}
+
+
 void Streams::allocate(size_t depth)
 {
 	m_frame_size = m_channel_count * sizeof(Sample);
@@ -66,6 +78,7 @@ void Streams::add_reader(StreamReader *reader)
 {
 	m_readers.push_back(reader);
 	m_channel_count += reader->channel_count();
+	player.set_channel_count(m_channel_count);
 }
 
 

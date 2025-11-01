@@ -9,6 +9,7 @@
 #include <atomic>
 
 #include "rb.hpp"
+#include "config.hpp"
 #include "types.hpp"
 #include "wavecache.hpp"
 #include "stream-reader.hpp"
@@ -22,6 +23,9 @@ public:
 
 	Streams();
 	~Streams();
+	void load(ConfigReader::Node *node);
+	void save(ConfigWriter &cfg);
+
 	size_t channel_count() { return m_channel_count; }
 	void allocate(size_t depth);
 	size_t frames_avail();

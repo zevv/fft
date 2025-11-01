@@ -15,16 +15,20 @@ static void audio_callback_(void *userdata, SDL_AudioStream *stream, int additio
 StreamPlayer::StreamPlayer(Streams &streams)
 	: m_streams(streams)
 	, m_srate(48000)
+	, m_frame_size(2 * sizeof(float))
+	, m_buf_frames(2048)
 {
 	SDL_AudioSpec fmt{};
 	fmt.freq = m_srate;
 	fmt.format = SDL_AUDIO_F32;
-	fmt.channels = 1;
+	fmt.channels = 2;
 	m_sdl_audio_stream = SDL_OpenAudioDeviceStream(            
 			SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK,
 			&fmt,
 			audio_callback_,
 			(void *)this);
+
+	m_buf.resize(m_buf_frames * sizeof(float) * fmt.channels);
 }
 
 
@@ -36,6 +40,44 @@ StreamPlayer::~StreamPlayer()
 }
 
 
+void StreamPlayer::set_channel_count(size_t count)
+{
+	m_channels.resize(std::max(count, m_channels.size()));
+}
+
+	
+void StreamPlayer::load(ConfigReader::Node *n)
+{
+	auto nc = n->find("player")->find("channel");
+
+	for(auto &k : nc->kids) {
+		printf("kid %s\n", k.first);
+		if(isdigit(k.first[0])) {
+			size_t ch = atoi(k.first);
+			m_channels.resize(ch+1);
+			k.second->read("volume", m_channels[ch].volume);
+			k.second->read("pan", m_channels[ch].pan);
+			printf("ch %zu: %f %f\n", ch, m_channels[ch].volume, m_channels[ch].pan);
+		}
+	}
+}
+
+
+void StreamPlayer::save(ConfigWriter &cw)
+{
+	cw.push("player");
+	cw.push("channel");
+	for(size_t ch=0; ch<m_channels.size(); ch++) {
+		cw.push(ch);
+		cw.write("volume", m_channels[ch].volume);
+		cw.write("pan", m_channels[ch].pan);
+		cw.pop();
+	}
+	cw.pop();
+	cw.pop();
+}
+
+
 void StreamPlayer::seek(Time t)
 {
 	m_play_pos = t;
@@ -44,10 +86,10 @@ void StreamPlayer::seek(Time t)
 
 void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount, int total_amount)
 {
-	float buffer[1024]{};
+	m_channels.resize(m_streams.channel_count());
 
-	size_t frame_count = total_amount / sizeof(float);
-	if(frame_count > 1024) frame_count = 1024;
+	size_t frame_count = total_amount / m_frame_size;
+	if(frame_count > m_buf_frames) frame_count = m_buf_frames;
 
 	size_t stride = 0;
 	size_t avail = 0;
@@ -63,25 +105,37 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 	}
 
 	for(size_t i=0; i<frame_count; i++) {
-		float v = 0.0;
-		if(m_idx >= 0 && m_idx < avail) {
-			v = data[m_idx * stride] / (float)k_sample_max;
-		}
-		if(m_xfade > 0.0) {
-			float v_prev = 0.0;
-			if(m_idx_prev >= 0 && m_idx_prev < avail) {
-				v_prev = data[m_idx_prev * stride] / (float)k_sample_max;
-			}
-			v = v_prev * m_xfade + v * (1.0 - m_xfade);
-			m_xfade -= 1.0 / (m_srate * 0.050);
-		}
 
-		buffer[i] = v;
+		float vl = 0.0;
+		float vr = 0.0;
+
+		for(size_t ch=0; ch<m_streams.channel_count(); ch++) {
+
+			if(m_channels[ch].enabled == false) continue;
+
+			float v = 0.0f;
+			if(m_idx >= 0 && m_idx < avail) {
+				v = data[m_idx * stride + ch] / (float)k_sample_max;
+			}
+			if(m_xfade > 0.0) {
+				if(m_idx_prev >= 0 && m_idx_prev < avail) {
+					float v_prev = data[m_idx_prev * stride + ch] / (float)k_sample_max;
+					v = v_prev * m_xfade + v * (1.0 - m_xfade);
+				}
+				m_xfade -= 1.0 / (m_srate * 0.050);
+			}
+
+			vl += v * m_channels[ch].volume * (m_channels[ch].pan <= 0.0f ? 1.0f : (1.0f - m_channels[ch].pan));
+			vr += v * m_channels[ch].volume * (m_channels[ch].pan >= 0.0f ? 1.0f : (1.0f + m_channels[ch].pan));
+		}
+		
+		m_buf[i*2 + 0] = vl;
+		m_buf[i*2 + 1] = vr;
 		m_idx ++;
 		m_idx_prev ++;
 	}
 
-	SDL_PutAudioStreamData(m_sdl_audio_stream, buffer, frame_count * sizeof(float));
+	SDL_PutAudioStreamData(m_sdl_audio_stream, m_buf.data(), frame_count * m_frame_size);
 	m_play_pos += (Time)frame_count / m_srate;
 	
 	uint64_t t_now = SDL_GetTicks();

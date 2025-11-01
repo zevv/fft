@@ -17,6 +17,7 @@ public:
 	void draw();
 	
 	std::generator<int> enabled_channels();
+	bool is_channel_enabled(int channel);
 	
 	static SDL_Color ch_color(int channel);
 
