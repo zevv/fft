@@ -11,6 +11,7 @@ class Streams;
 class StreamPlayer {
 public:
 	StreamPlayer(Streams &streams);
+	~StreamPlayer();
 	void enable(bool onoff);
 	void seek(Time tpos);
 	void audio_callback(SDL_AudioStream *stream, int additional_amount, int total_amount);

@@ -30,7 +30,7 @@ public:
 	void add_reader(StreamReader *reader);
 	void capture_enable(bool onoff);
 	
-	class StreamPlayer player;
+	StreamPlayer player;
 
 private:
 

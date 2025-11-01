@@ -27,6 +27,14 @@ StreamPlayer::StreamPlayer(Streams &streams)
 }
 
 
+StreamPlayer::~StreamPlayer()
+{
+	if(m_sdl_audio_stream) {
+		SDL_DestroyAudioStream(m_sdl_audio_stream);
+	}
+}
+
+
 void StreamPlayer::seek(Time t)
 {
 	m_play_pos = t;

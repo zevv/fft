@@ -23,6 +23,8 @@ Streams::~Streams()
 	m_capture.running = false;
 	m_capture.thread.join();
 
+	player.enable(false);
+
 	for(auto reader : m_readers) {
 		delete reader;
 	}
