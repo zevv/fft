@@ -245,9 +245,10 @@ void Corrie::run()
 
 		auto &player = m_streams.player;
 		float speed = player.get_speed();
-		if(ImGui::IsKeyPressed(ImGuiKey_Comma)) player.set_speed(speed / 1.059463);
+		float factor = ImGui::IsKeyDown(ImGuiKey_LeftShift) ? 2.0 : 1.059463;
+		if(ImGui::IsKeyPressed(ImGuiKey_Comma)) player.set_speed(speed / factor);
 		if(ImGui::IsKeyPressed(ImGuiKey_Period)) player.set_speed(1.0);
-		if(ImGui::IsKeyPressed(ImGuiKey_Slash)) player.set_speed(speed * 1.059463);
+		if(ImGui::IsKeyPressed(ImGuiKey_Slash)) player.set_speed(speed * factor);
 
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
