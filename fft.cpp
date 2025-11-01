@@ -60,7 +60,6 @@ std::vector<int8_t> Fft::run(Sample *input, size_t stride)
 	fftwf_execute(m_plan);
 
 	float scale = m_window.gain() * 2.0f / m_size;
-	float db_range = -120.0;
 
 	for(size_t i=0; i<=m_size/2; i++) {
 		float v = 0.0;
@@ -71,7 +70,9 @@ std::vector<int8_t> Fft::run(Sample *input, size_t stride)
 		} else {
 			v = hypot(m_in[i], m_in[m_size - i]) * scale;
 		} 
-		m_out[i] = std::clamp(20.0f * log10f(v + 1e-10), -127.0f, 0.0f);
+		//m_out[i] = std::clamp(20.0f * log10f(v + 1e-10), -127.0f, 0.0f);
+		int32_t i_v = std::bit_cast<int32_t>(v + 1e-10f);
+		m_out[i] = std::clamp((float)i_v * 7.17897e-7f - 764.616f, -127.0f, 0.0f);
 	}
 
 	//m_cache[key] = m_out;
