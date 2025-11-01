@@ -49,6 +49,7 @@ void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	}
 		
 	ImGui::NewLine();
+	ImGui::NewLine();
 
 	for(size_t ch=0; ch<streams.channel_count(); ch++) {
 		channels[ch].enabled = false;
@@ -58,6 +59,8 @@ void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	if(ImGui::SliderFloat("speed", &speed, 0.25, 4.0, "Speed %.2fx", ImGuiSliderFlags_Logarithmic)) {
 		player.set_speed(speed);
 	}
+	
+	ImGui::NewLine();
 
 	for(size_t ch=0; ch<streams.channel_count(); ch++) {
 		SDL_Color col = m_channel_map.ch_color(ch);
