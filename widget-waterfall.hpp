@@ -24,4 +24,5 @@ private:
 	float m_db_min{};
 	float m_db_max{};
 	bool m_agc{true};
+	bool m_fft_approximate{true};
 };

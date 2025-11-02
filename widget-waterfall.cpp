@@ -13,6 +13,7 @@
 
 WidgetWaterfall::WidgetWaterfall()
 	: Widget(Widget::Type::Waterfall)
+	, m_fft(true)
 {
 }
 
@@ -60,6 +61,10 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 				0.0f, 5.0f, "%.2f", ImGuiSliderFlags_Logarithmic);
 		m_view.fft.window_beta = beta;
 	}
+	
+	ImGui::SameLine();
+	ImGui::ToggleButton("A##pproximate FFT", &m_fft_approximate);
+	m_fft.set_approximate(m_fft_approximate);
 
 	ImGui::SameLine();
 	ImGui::ToggleButton("AGC", &m_agc);

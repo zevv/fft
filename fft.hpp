@@ -11,14 +11,16 @@ class Fft {
 
 public:
 
-	Fft();
+	Fft(bool approximate=false);
 	~Fft();
 
 	void configure(size_t size, Window::Type type, float beta=5.0f);
 	int out_size();
 	std::vector<int8_t> run(Sample *input, size_t stride=1);
+	void set_approximate(bool v) { m_approximate = v; }
 
 private:
+	bool m_approximate{false};
 	fftwf_plan m_plan{nullptr};
 	Window m_window{};
 	size_t m_size{};
