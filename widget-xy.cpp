@@ -73,8 +73,8 @@ void WidgetXY::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	std::vector<SDL_FPoint> point(idx_to - idx_from);
 	size_t npoints = 0;
 
-	int cx = r.x + r.w / 2;
-	int cy = r.y + r.h / 2;
+	int cx = r.w / 2;
+	int cy = r.h / 2;
 	double sx = (double)(r.w / 2) / m_peak;
 	double sy = (double)(r.h / 2) / m_peak;
 	m_peak *= 0.99;
@@ -88,7 +88,6 @@ void WidgetXY::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		point[npoints].y = cy - vy * sy;
 		npoints++;
 	}
-
 	
 	SDL_Color col = m_channel_map.ch_color(ch_x);
 	auto rt_prev = SDL_GetRenderTarget(rend);
