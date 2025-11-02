@@ -12,6 +12,7 @@ SRC += widget-wave.cpp
 SRC += widget-spectrum.cpp
 SRC += widget-waterfall.cpp
 SRC += widget-histogram.cpp
+SRC += widget-xy.cpp
 SRC += widget-channels.cpp
 SRC += stream.cpp
 SRC += wavecache.cpp

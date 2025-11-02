@@ -298,6 +298,7 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 			if(ImGui::IsKeyPressed(ImGuiKey_F3)) widget_new = Widget::create(Widget::Type::Waterfall);
 			if(ImGui::IsKeyPressed(ImGuiKey_F4)) widget_new = Widget::create(Widget::Type::Histogram);
 			if(ImGui::IsKeyPressed(ImGuiKey_F5)) widget_new = Widget::create(Widget::Type::Channels);
+			if(ImGui::IsKeyPressed(ImGuiKey_F6)) widget_new = Widget::create(Widget::Type::XY);
 			if(widget_new) {
 				m_widget->copy_to(widget_new);
 				delete m_widget;
