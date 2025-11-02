@@ -1,5 +1,5 @@
 
-EXE = fft
+BIN = fft
 
 IMGUI_DIR = /home/ico/external/imgui
 
@@ -76,13 +76,21 @@ CFLAGS = $(CXXFLAGS)
 %.o:$(IMGUI_DIR)/backends/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-all: $(EXE)
+all: $(BIN)
 
-$(EXE): $(OBJS)
+$(BIN): $(OBJS)
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LIBS)
 
+perf: 
+	perf record -F 99 -g -- ./$(BIN)
+
+flamegraph: perf.data
+	perf script \
+		| /home/ico/external/FlameGraph/stackcollapse-perf.pl \
+		| /home/ico/external/FlameGraph/flamegraph.pl > flamegraph.svg
+
 clean:
-	rm -f $(EXE) $(OBJS) $(DEPS)
-	rm -f perf.data*
+	rm -f $(BIN) $(OBJS) $(DEPS)
+	rm -f perf.data* flamegraph.svg
 
 -include $(DEPS)
