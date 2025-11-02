@@ -42,6 +42,7 @@ Widget *WidgetHistogram::do_copy()
 {
 	WidgetHistogram *w = new WidgetHistogram();
 	w->m_agc = m_agc;
+	w->m_nbins = m_nbins;
 	return w;
 }
 
