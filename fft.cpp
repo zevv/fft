@@ -59,32 +59,35 @@ static inline float fast_hypot(float x, float y)
 {
 	float vmax = std::max(fabs(x), fabs(y));
 	float vmin = std::min(fabs(x), fabs(y));
-	return vmax + vmin * (0.5f + (vmin * 0.25f) / (vmax + 1e-10f));	
+	return vmax * 0.96 + vmin * 0.4f;
 }
 
 
 std::vector<int8_t> Fft::run(Sample *input, size_t stride)
 {
+	// window input data
 	auto window = m_window.data();
 	for(size_t i=0; i<m_size; i++) {
 		m_in[i] = input[i * stride] * window[i] / k_sample_max;
 	}
+
+	// run fft
 	fftwf_execute(m_plan);
 
+	// convert half complex to magnitude dB, fast or proper
 	float scale = m_window.gain() * 2.0f / m_size;
-
 	if(m_approximate) {
-		m_out[0] = fast_20log10(fabs(m_in[0]) * scale / 2);
+		m_out[0] = fast_20log10(fabs(m_in[0]) * scale * 0.5);
 		for(size_t i=1; i<m_size/2; i++) {
 			m_out[i] = fast_20log10(fast_hypot(m_in[i], m_in[m_size - i]) * scale);
 		}
-		m_out[m_size / 2] = fast_20log10(fabs(m_in[m_size / 2]) * scale / 2);
+		m_out[m_size / 2] = fast_20log10(fabs(m_in[m_size / 2]) * scale *0.5);
 	} else {
-		m_out[0] = real_20log10(fabs(m_in[0]) * scale / 2);
+		m_out[0] = real_20log10(fabs(m_in[0]) * scale *0.5);
 		for(size_t i=1; i<m_size/2; i++) {
 			m_out[i] = real_20log10(hypot(m_in[i], m_in[m_size - i]) * scale);
 		}
-		m_out[m_size / 2] = real_20log10(fabs(m_in[m_size / 2]) * scale / 2);
+		m_out[m_size / 2] = real_20log10(fabs(m_in[m_size / 2]) * scale *0.5);
 	}
 
 
