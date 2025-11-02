@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <SDL3/SDL.h>
 #include <imgui.h>
+#include <generator>
 
 #include "misc.hpp"
 #include "widget.hpp"
@@ -316,7 +317,7 @@ void Widget::grid_time_v(SDL_Renderer *rend, SDL_Rect &r, Time t_min, Time t_max
 }
 
 
-static void draw_float(int x, int y, float v)
+void draw_float(int x, int y, float v)
 {
 	ImDrawList* dl = ImGui::GetWindowDrawList();
 	char buf[32];
@@ -325,51 +326,54 @@ static void draw_float(int x, int y, float v)
 }
 
 
-void Widget::grid_horizontal(SDL_Renderer *rend, SDL_Rect &r, float v_min, float v_max)
+
+static void grid_aux(SDL_Renderer *rend, SDL_Rect &r, float v_min, float v_max, bool hor)
 {
-	for(int n=6; n>=-6; n--) {
-		float base = pow(10.0f, n);
-		float dx = (base / (v_max - v_min)) * r.w;
-		if(dx < 10) break;
-		int col = std::clamp((int)(dx-10) * 4, 0, 64);
-		SDL_SetRenderDrawColor(rend, col, col, col, 255);
-		float v_start = ceilf(v_min / base) * base;
-		float v_end   = floorf(v_max / base) * base;
-		float v = v_start;
-		while(v <= v_end) {
-			int x = r.x + (int)((v - v_min) / (v_max - v_min) * r.w);
-			SDL_RenderLine(rend, x, r.y, x, r.y + r.h);
-			if(dx > 20) {
-				draw_float(x, r.y + 2, v);
+	int p_min = hor ? r.x : r.y;
+	int p_max = hor ? r.x + r.w : r.y + r.h;
+
+	float subs[] = { 1.0, 5.0 };
+	int ngrids = 0;
+	for(int n=-6; n<=6; n++) {
+		for(int s=0; s<2; s++) {
+			float base = subs[s] * pow(10.0f, n);
+			float dpx = fabs((base / (v_max - v_min)) * (p_max - p_min));
+			if(dpx >= 20) {
+				float v1 = ceilf(v_min / base) * base;
+				float v2   = floorf(v_max / base) * base;
+				float v_start = fmin(v1, v2);
+				float v_end   = fmax(v1, v2);
+				float v = v_start;
+				int col = std::clamp((int)(dpx-20) * 4, 0, 16);
+				SDL_SetRenderDrawColor(rend, col, col, col, 255);
+				while(v <= v_end) {
+					if(hor) {
+						int x = r.x + (int)((v - v_min) / (v_max - v_min) * r.w);
+						SDL_RenderLine(rend, x, r.y, x, r.y + r.h);
+						if(dpx > 40) draw_float(x, r.y + 2, v);
+					} else {
+						int y = r.y + (int)((v - v_min) / (v_max - v_min) * r.h);
+						SDL_RenderLine(rend, r.x, y, r.x + r.w, y);
+						if(dpx > 40) draw_float(r.x + 2, y, v);
+					}
+					v += base;
+				}
+				if(ngrids++ >= 1) return;
 			}
-			v += base;
+
 		}
-	}	
+	}
 }
 
 
 void Widget::grid_vertical(SDL_Renderer *rend, SDL_Rect &r, float v_min, float v_max)
 {
-	for(int n=6; n>=-6; n--) {
-		float base = pow(10.0f, n);
-		float dy = (base / (v_max - v_min)) * r.h;
-		if(dy < 10) break;
-		int col = std::clamp((int)(dy-10) * 4, 0, 64);
-		SDL_SetRenderDrawColor(rend, col, col, col, 255);
-		float v_start = ceilf(v_min / base) * base;
-		float v_end   = floorf(v_max / base) * base;
-		float v = v_start;
-		while(v <= v_end) {
-			int y = r.y + r.h - (int)((v - v_min) / (v_max - v_min) * r.h);
-			SDL_RenderLine(rend, r.x, y, r.x + r.w, y);
-			if(dy > 20) {
-				draw_float(r.x + 2, y, v);
-			}
-			v += base;
-		}
-	}
-
+	grid_aux(rend, r, v_max, v_min, false);
 }
 
 
+void Widget::grid_horizontal(SDL_Renderer *rend, SDL_Rect &r, float v_min, float v_max)
+{
+	grid_aux(rend, r, v_min, v_max, true);
+}
 
