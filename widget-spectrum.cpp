@@ -7,11 +7,12 @@
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
+#include "widgetinfo.hpp"
 #include "widget-spectrum.hpp"
 
 
 WidgetSpectrum::WidgetSpectrum()
-	: Widget(Widget::Type::Spectrum)
+	: Widget("spectrum")
 {
 }
 
@@ -111,3 +112,11 @@ void WidgetSpectrum::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
 }
+
+
+REGISTER_WIDGET(WidgetSpectrum,
+	.name = "spectrum",
+	.description = "FFT spectrum graph",
+	.hotkey = ImGuiKey_F2,
+);
+

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <imgui.h>
 
+#include "widgetinfo.hpp"
 #include "panel.hpp"
 	
 
@@ -65,7 +66,7 @@ void Panel::load(ConfigReader::Node *node)
 		if(strcmp(type, "widget") == 0) {
 			m_type = Type::Widget;
 			if(const char *wtype = node->read_str("widget")) {
-				m_widget = Widget::create(wtype);
+				m_widget = WidgetRegistrar::create_widget(wtype);
 				m_widget->load(node);
 			}
 		}
@@ -253,15 +254,13 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 			ImGui::SetWindowFocus();
 		}
 
-		Widget::Type type = m_widget->get_type();
-		ImGui::SetNextItemWidth(100);
-		ImGui::Combo("##type", (int *)&type, Widget::type_names(), Widget::type_count());
-		if(type != m_widget->get_type()) {
-			Widget *widget_new = Widget::create(type);
+		Widget *widget_new = WidgetRegistrar::draw(m_widget->get_name());
+		if(widget_new) {
 			m_widget->copy_to(widget_new);
 			delete m_widget;
 			m_widget = widget_new;
 		}
+
 
 		// Handle keyboard shortcuts
 		if(ImGui::IsWindowFocused()) {
@@ -291,18 +290,6 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 				if(m_parent && m_parent->get_type() != Type::Root) {
 					m_parent->remove(this);
 				}
-			}
-			Widget *widget_new = nullptr;
-			if(ImGui::IsKeyPressed(ImGuiKey_F1)) widget_new = Widget::create(Widget::Type::Waveform);
-			if(ImGui::IsKeyPressed(ImGuiKey_F2)) widget_new = Widget::create(Widget::Type::Spectrum);
-			if(ImGui::IsKeyPressed(ImGuiKey_F3)) widget_new = Widget::create(Widget::Type::Waterfall);
-			if(ImGui::IsKeyPressed(ImGuiKey_F4)) widget_new = Widget::create(Widget::Type::Histogram);
-			if(ImGui::IsKeyPressed(ImGuiKey_F5)) widget_new = Widget::create(Widget::Type::Channels);
-			if(ImGui::IsKeyPressed(ImGuiKey_F6)) widget_new = Widget::create(Widget::Type::XY);
-			if(widget_new) {
-				m_widget->copy_to(widget_new);
-				delete m_widget;
-				m_widget = widget_new;
 			}
 		}
 

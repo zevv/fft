@@ -8,6 +8,7 @@ SRC += window.cpp
 SRC += panel.cpp
 SRC += channelmap.cpp
 SRC += widget.cpp
+SRC += widgetinfo.cpp
 SRC += widget-wave.cpp
 SRC += widget-spectrum.cpp
 SRC += widget-waterfall.cpp

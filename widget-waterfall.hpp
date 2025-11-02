@@ -9,7 +9,7 @@
 #include "fft.hpp"
 #include "widget.hpp"
 
-class Flap;
+class WidgetRegistrar;
 
 class WidgetWaterfall : public Widget {
 public:

@@ -7,12 +7,14 @@
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
+#include "misc.hpp"
+#include "widgetinfo.hpp"
 #include "widget-waterfall.hpp"
 #include "histogram.hpp"
 
 
 WidgetWaterfall::WidgetWaterfall()
-	: Widget(Widget::Type::Waterfall)
+	: Widget("waterfall")
 	, m_fft(true)
 {
 }
@@ -210,5 +212,12 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
-
 }
+
+
+REGISTER_WIDGET(WidgetWaterfall,
+	.name = "waterfall",
+	.description = "FFT spectrum waterfall",
+	.hotkey = ImGuiKey_F3,
+);
+

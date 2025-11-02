@@ -7,11 +7,13 @@
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
+#include "misc.hpp"
+#include "widgetinfo.hpp"
 #include "widget-wave.hpp"
 
 
 WidgetWaveform::WidgetWaveform()
-	: Widget(Widget::Type::Waveform)
+	: Widget("waveform")
 {
 }
 
@@ -150,3 +152,11 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 	m_peak *= 0.9f;
 }
+
+
+REGISTER_WIDGET(WidgetWaveform,
+	.name = "waveform",
+	.description = "Waveform display",
+	.hotkey = ImGuiKey_F1,
+);
+

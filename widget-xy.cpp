@@ -7,11 +7,12 @@
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
+#include "widgetinfo.hpp"
 #include "widget-xy.hpp"
 
 
 WidgetXY::WidgetXY()
-	: Widget(Widget::Type::XY)
+	: Widget("xy")
 {
 }
 
@@ -118,3 +119,11 @@ void WidgetXY::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	SDL_RenderTexture(rend, m_tex, nullptr, &dstf);
 
 }
+
+
+REGISTER_WIDGET(WidgetXY,
+	.name = "xy",
+	.description = "X/Y constallation display",
+	.hotkey = ImGuiKey_F6,
+);
+

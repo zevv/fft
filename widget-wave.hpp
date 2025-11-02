@@ -24,3 +24,4 @@ private:
 	bool m_agc{true};
 	Sample m_peak{};
 };
+

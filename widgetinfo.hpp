@@ -1,0 +1,35 @@
+
+#pragma once
+
+#include <vector>
+#include <generator>
+
+#include <imgui.h>
+
+class WidgetRegistrar;
+class Widget;
+
+struct WidgetInfo {
+	const char *name;
+	const char *description;
+	enum ImGuiKey hotkey;
+	Widget *(*fn_create)();
+};
+
+
+class WidgetRegistrar {
+public:
+	WidgetRegistrar(WidgetInfo reg);
+	static Widget *draw(const char *name);
+	static Widget *create_widget(const char *name);
+};
+
+
+#define REGISTER_WIDGET(class, ...) \
+	static WidgetInfo reg = { \
+		__VA_ARGS__ \
+		.fn_create = []() -> Widget* { return new class(); }, \
+	}; \
+	static WidgetRegistrar info(reg);
+
+

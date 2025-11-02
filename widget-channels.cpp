@@ -7,11 +7,12 @@
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
+#include "widgetinfo.hpp"
 #include "widget-channels.hpp"
 
 
 WidgetChannels::WidgetChannels()
-	: Widget(Widget::Type::Channels)
+	: Widget("channels")
 {
 }
 
@@ -85,3 +86,11 @@ void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		ImGui::PopID();
 	}
 }
+
+
+REGISTER_WIDGET(WidgetChannels,
+	.name = "channels",
+	.description = "Channel settings",
+	.hotkey = ImGuiKey_F5,
+);
+

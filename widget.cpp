@@ -5,45 +5,19 @@
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
-#include "widget-wave.hpp"
-#include "widget-spectrum.hpp"
-#include "widget-waterfall.hpp"
-#include "widget-histogram.hpp"
-#include "widget-channels.hpp"
-#include "widget-xy.hpp"
 #include "misc.hpp"
+#include "widget.hpp"
 
 
-Widget::Widget(Type type)
-	: m_type(type)
+Widget::Widget(const char *name)
+	: m_name(name)
 {
 }
+
 
 
 Widget::~Widget()
 {
-}
-
-
-Widget *Widget::create(Widget::Type type)
-{
-	if(type == Widget::Type::None) return new WidgetNone();
-	if(type == Widget::Type::Waveform) return new WidgetWaveform();
-	if(type == Widget::Type::Spectrum) return new WidgetSpectrum();
-	if(type == Widget::Type::Waterfall) return new WidgetWaterfall();
-	if(type == Widget::Type::Histogram) return new WidgetHistogram();
-	if(type == Widget::Type::Channels) return new WidgetChannels();
-	if(type == Widget::Type::XY) return new WidgetXY();
-	if(type == Widget::Type::StyleEditor) return new WidgetStyleEditor();
-	assert(false && "unknown widget type");
-	return nullptr;
-}
-
-
-Widget *Widget::create(const char *type_str)
-{
-	Widget::Type type = Widget::string_to_type(type_str);
-	return Widget::create(type);
 }
 
 
@@ -57,7 +31,7 @@ void Widget::load(ConfigReader::Node *node)
 
 void Widget::save(ConfigWriter &cw)
 {
-	cw.write("widget", Widget::type_to_string(m_type));
+	cw.write("widget", m_name);
 	m_view.save(cw);
 	m_channel_map.save(cw);
 	do_save(cw);
@@ -362,52 +336,5 @@ void Widget::grid_vertical(SDL_Renderer *rend, SDL_Rect &r, float v_min, float v
 }
 
 
-const char *k_type_str[] = {
-	"none", "wave", "spectrum", "waterfall", "histogram", "channels", "xy", "style editor"
-};
-
-const char **Widget::type_names()
-{
-	return k_type_str;
-}
-
-size_t Widget::type_count()
-{
-	return IM_ARRAYSIZE(k_type_str);
-}
-
-const char *Widget::type_to_string(Type type)
-{
-	size_t count = type_count();
-	const char **names = type_names();
-	for(size_t i=0; i<count; i++) {
-		if((Type)i == type) return names[i];
-	}
-	return "none";
-}
 
 
-Widget::Type Widget::string_to_type(const char *str)
-{
-	size_t count = type_count();
-	const char **names = type_names();
-	for(size_t i=0; i<count; i++) {
-		if(strcmp(names[i], str) == 0) return (Type)i;
-	}
-	return Type::None;
-}
-
-
-namespace ImGui {
-bool ToggleButton(const char* str_id, bool* v)
-{
-	ImVec4 col = *v ? ImVec4(0.26f, 0.59f, 0.98f, 1.0f) : ImVec4(0.26f, 0.26f, 0.38f, 1.0f);
-	ImGui::PushStyleColor(ImGuiCol_Button, col);
-	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, col);
-	ImGui::PushStyleColor(ImGuiCol_ButtonActive, col);
-	bool pressed = ImGui::Button(str_id);
-	if(pressed) *v = !*v;
-	ImGui::PopStyleColor(3);
-	return pressed;
-}
-}

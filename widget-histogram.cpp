@@ -7,11 +7,13 @@
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
+#include "misc.hpp"
+#include "widgetinfo.hpp"
 #include "widget-histogram.hpp"
 
 
 WidgetHistogram::WidgetHistogram()
-	: Widget(Widget::Type::Histogram)
+	: Widget("histogram")
 {
 }
 
@@ -99,3 +101,11 @@ void WidgetHistogram::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 }
+
+
+REGISTER_WIDGET(WidgetHistogram,
+	.name = "histogram",
+	.description = "Value histogram",
+	.hotkey = ImGuiKey_F4,
+);
+
