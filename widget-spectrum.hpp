@@ -12,7 +12,7 @@
 
 class WidgetSpectrum : public Widget {
 public:
-	WidgetSpectrum();
+	WidgetSpectrum(WidgetInfo &info);
 	~WidgetSpectrum() override;
 
 private:

@@ -11,8 +11,8 @@
 #include "widget-spectrum.hpp"
 
 
-WidgetSpectrum::WidgetSpectrum()
-	: Widget("spectrum")
+WidgetSpectrum::WidgetSpectrum(WidgetInfo &info)
+	: Widget(info)
 {
 }
 

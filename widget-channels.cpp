@@ -11,8 +11,8 @@
 #include "widget-channels.hpp"
 
 
-WidgetChannels::WidgetChannels()
-	: Widget("channels")
+WidgetChannels::WidgetChannels(WidgetInfo &info)
+	: Widget(info)
 {
 }
 

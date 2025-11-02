@@ -12,8 +12,8 @@
 #include "widget-wave.hpp"
 
 
-WidgetWaveform::WidgetWaveform()
-	: Widget("waveform")
+WidgetWaveform::WidgetWaveform(WidgetInfo &info)
+	: Widget(info)
 {
 }
 

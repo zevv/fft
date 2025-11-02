@@ -15,7 +15,7 @@
 class Widget {
 public:
 	
-	Widget(const char *name);
+	Widget(WidgetInfo &info);
 	virtual ~Widget();
 	
 	void load(ConfigReader::Node *node);
@@ -23,7 +23,7 @@ public:
 	Widget *copy();
 	void copy_to(Widget *w);
 
-	const char *get_name() { return m_name ? m_name : "?"; }
+	const char *get_name() { return m_info.name; }
 	bool has_focus() { return m_has_focus; }
 	void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 
@@ -50,8 +50,7 @@ protected:
 	void grid_time(SDL_Renderer *rend, SDL_Rect &r, Time t_from, Time t_to);
 	void grid_time_v(SDL_Renderer *rend, SDL_Rect &r, Time t_from, Time t_to);
 	
-
-	const char *m_name{};
+	WidgetInfo &m_info;
 	bool m_has_focus{false};
 	View m_view{};
 	ChannelMap m_channel_map{};

@@ -12,8 +12,8 @@
 #include "widget-histogram.hpp"
 
 
-WidgetHistogram::WidgetHistogram()
-	: Widget("histogram")
+WidgetHistogram::WidgetHistogram(WidgetInfo &info)
+	: Widget(info)
 {
 }
 

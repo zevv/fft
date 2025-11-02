@@ -13,8 +13,8 @@
 #include "histogram.hpp"
 
 
-WidgetWaterfall::WidgetWaterfall()
-	: Widget("waterfall")
+WidgetWaterfall::WidgetWaterfall(WidgetInfo &info)
+	: Widget(info)
 	, m_fft(true)
 {
 }

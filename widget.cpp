@@ -9,11 +9,10 @@
 #include "widget.hpp"
 
 
-Widget::Widget(const char *name)
-	: m_name(name)
+Widget::Widget(WidgetInfo &info)
+	: m_info(info)
 {
 }
-
 
 
 Widget::~Widget()
@@ -31,7 +30,7 @@ void Widget::load(ConfigReader::Node *node)
 
 void Widget::save(ConfigWriter &cw)
 {
-	cw.write("widget", m_name);
+	cw.write("widget", m_info.name);
 	m_view.save(cw);
 	m_channel_map.save(cw);
 	do_save(cw);
@@ -40,7 +39,7 @@ void Widget::save(ConfigWriter &cw)
 
 Widget *Widget::copy()
 {
-	Widget *w_new = Widgets::create_widget(m_name);
+	Widget *w_new = Widgets::create_widget(m_info.name);
 	do_copy(w_new);
 	copy_to(w_new);
 	return w_new;

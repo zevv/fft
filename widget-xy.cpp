@@ -11,8 +11,8 @@
 #include "widget-xy.hpp"
 
 
-WidgetXY::WidgetXY()
-	: Widget("xy")
+WidgetXY::WidgetXY(WidgetInfo &info)
+	: Widget(info)
 {
 }
 

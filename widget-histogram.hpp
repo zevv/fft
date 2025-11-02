@@ -13,7 +13,7 @@
 class WidgetHistogram : public Widget {
 
 public:
-	WidgetHistogram();
+	WidgetHistogram(WidgetInfo &info);
 	~WidgetHistogram() override;
 
 private:

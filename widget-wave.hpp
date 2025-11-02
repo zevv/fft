@@ -12,7 +12,7 @@
 class WidgetWaveform : public Widget {
 
 public:
-	WidgetWaveform();
+	WidgetWaveform(WidgetInfo &info);
 	~WidgetWaveform() override;
 
 private:
