@@ -93,8 +93,10 @@ void WidgetXY::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		point[npoints].y = cy - vy * sy;
 		npoints++;
 	}
-	
-	SDL_Color col = m_channel_map.ch_color(ch_x);
+
+	static bool n = false;
+	SDL_Color col = m_channel_map.ch_color(n ? ch_x : ch_y);
+	n = 1-n;
 	auto rt_prev = SDL_GetRenderTarget(rend);
 
 	// phosphor decay
