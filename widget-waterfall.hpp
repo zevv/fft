@@ -9,7 +9,7 @@
 #include "fft.hpp"
 #include "widget.hpp"
 
-class WidgetRegistrar;
+class Widgets;
 
 class WidgetWaterfall : public Widget {
 public:
@@ -17,7 +17,6 @@ public:
 	~WidgetWaterfall() override;
 
 private:
-	Widget *do_copy() override;
 	void do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r) override;
 
 	Fft m_fft{};

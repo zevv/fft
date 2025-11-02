@@ -6,13 +6,13 @@
 static std::vector<WidgetInfo> widget_reg_list;
 
 
-WidgetRegistrar::WidgetRegistrar(WidgetInfo reg)
+Widgets::Widgets(WidgetInfo reg)
 {
 	widget_reg_list.push_back(reg);
 }
 
 
-Widget* WidgetRegistrar::draw(const char *cur_name)
+Widget* Widgets::draw(const char *cur_name)
 {
 	ImGui::SetNextItemWidth(100);
 	if(ImGui::BeginCombo("##widget_type", cur_name)) {
@@ -41,7 +41,7 @@ Widget* WidgetRegistrar::draw(const char *cur_name)
 }
 
 
-Widget* WidgetRegistrar::create_widget(const char *name)
+Widget* Widgets::create_widget(const char *name)
 {
 	for(auto &wi : widget_reg_list) {
 		if(strcmp(wi.name, name) == 0) {

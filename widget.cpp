@@ -40,9 +40,10 @@ void Widget::save(ConfigWriter &cw)
 
 Widget *Widget::copy()
 {
-	Widget *w = do_copy();
-	copy_to(w);
-	return w;
+	Widget *w_new = Widgets::create_widget(m_name);
+	do_copy(w_new);
+	copy_to(w_new);
+	return w_new;
 }
 
 

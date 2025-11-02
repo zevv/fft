@@ -38,12 +38,11 @@ void WidgetWaveform::do_save(ConfigWriter &cw)
 }
 
 
-Widget *WidgetWaveform::do_copy()
+void WidgetWaveform::do_copy(Widget *w)
 {
-	WidgetWaveform *w = new WidgetWaveform();
-	w->m_agc = m_agc;
-	w->m_peak = m_peak;
-	return w;
+	WidgetWaveform *ww = dynamic_cast<WidgetWaveform*>(w);
+	ww->m_agc = m_agc;
+	ww->m_peak = m_peak;
 }
 
 

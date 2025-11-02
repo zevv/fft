@@ -22,22 +22,6 @@ WidgetChannels::~WidgetChannels()
 }
 
 
-void WidgetChannels::do_load(ConfigReader::Node *node)
-{
-}
-
-
-void WidgetChannels::do_save(ConfigWriter &cw)
-{
-}
-
-
-Widget *WidgetChannels::do_copy()
-{
-	WidgetChannels *w = new WidgetChannels();
-	return w;
-}
-
 
 void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {

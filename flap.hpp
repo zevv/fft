@@ -13,16 +13,16 @@
 #include "widget-waterfall.hpp"
 
 
-class WidgetRegistrar {
+class Widgets {
 	
 
 public:
-	WidgetRegistrar(Widget::Type type);
-	~WidgetRegistrar();
+	Widgets(Widget::Type type);
+	~Widgets();
 
 	void load(ConfigReader::Node *node);
 	void save(ConfigWriter &cfg);
-	WidgetRegistrar *copy();
+	Widgets *copy();
 
 	void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 	bool has_focus() const { return m_has_focus; }

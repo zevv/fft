@@ -66,7 +66,7 @@ void Panel::load(ConfigReader::Node *node)
 		if(strcmp(type, "widget") == 0) {
 			m_type = Type::Widget;
 			if(const char *wtype = node->read_str("widget")) {
-				m_widget = WidgetRegistrar::create_widget(wtype);
+				m_widget = Widgets::create_widget(wtype);
 				m_widget->load(node);
 			}
 		}
@@ -254,7 +254,7 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 			ImGui::SetWindowFocus();
 		}
 
-		Widget *widget_new = WidgetRegistrar::draw(m_widget->get_name());
+		Widget *widget_new = Widgets::draw(m_widget->get_name());
 		if(widget_new) {
 			m_widget->copy_to(widget_new);
 			delete m_widget;

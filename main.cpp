@@ -22,9 +22,6 @@
 #include "stream-reader-generator.hpp"
 #include "view.hpp"
 #include "config.hpp"
-#include "widget-wave.hpp"
-#include "widget-spectrum.hpp"
-#include "widget-waterfall.hpp"
 
 
 class Corrie {
@@ -165,12 +162,12 @@ void Corrie::init()
 
 	if(m_root_panel->nkids() == 0) {
 		Panel *p2 = new Panel(Panel::Type::SplitH);
-		p2->add(new WidgetWaterfall());
-		p2->add(new WidgetSpectrum());
+		p2->add(Widgets::create_widget("waterfall"));
+		p2->add(Widgets::create_widget("spectrum"));
 		Panel *p1 = new Panel(Panel::Type::SplitV);
 		p1->add(p2);
-		p1->add(new WidgetWaveform());
-		p1->add(new WidgetWaveform());
+		p1->add(Widgets::create_widget("waveform"));
+		p1->add(Widgets::create_widget("waveform"));
 		m_root_panel->add(p1);
 	}
 

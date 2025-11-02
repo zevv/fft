@@ -29,8 +29,8 @@ public:
 
 protected:
 
-	virtual Widget *do_copy() = 0;
-	virtual void do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r) = 0;
+	virtual void do_copy(Widget *w) {};
+	virtual void do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r) {};
 	virtual void do_load(ConfigReader::Node *node) {};
 	virtual void do_save(ConfigWriter &cfg) {};
 

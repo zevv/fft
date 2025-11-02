@@ -40,12 +40,11 @@ void WidgetHistogram::do_save(ConfigWriter &cw)
 }
 
 
-Widget *WidgetHistogram::do_copy()
+void WidgetHistogram::do_copy(Widget *w)
 {
-	WidgetHistogram *w = new WidgetHistogram();
-	w->m_agc = m_agc;
-	w->m_nbins = m_nbins;
-	return w;
+	WidgetHistogram *wh = dynamic_cast<WidgetHistogram*>(w);
+	wh->m_agc = m_agc;
+	wh->m_nbins = m_nbins;
 }
 
 

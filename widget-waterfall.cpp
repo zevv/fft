@@ -25,13 +25,6 @@ WidgetWaterfall::~WidgetWaterfall()
 }
 
 
-Widget *WidgetWaterfall::do_copy()
-{
-	WidgetWaterfall *w = new WidgetWaterfall();
-	return w;
-};
-
-
 struct Pixel {
 	float r, g, b;
 };

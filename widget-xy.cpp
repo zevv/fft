@@ -38,13 +38,6 @@ void WidgetXY::do_save(ConfigWriter &cw)
 }
 
 
-Widget *WidgetXY::do_copy()
-{
-	WidgetXY *w = new WidgetXY();
-	return w;
-}
-
-
 void WidgetXY::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 

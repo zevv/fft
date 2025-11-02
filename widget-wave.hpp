@@ -18,7 +18,7 @@ public:
 private:
 	void do_load(ConfigReader::Node *node) override;
 	void do_save(ConfigWriter &cfg) override;
-	Widget *do_copy() override;
+	void do_copy(Widget *w) override;
 	void do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r) override;
 
 	bool m_agc{true};

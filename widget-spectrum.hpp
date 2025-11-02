@@ -16,7 +16,6 @@ public:
 	~WidgetSpectrum() override;
 
 private:
-	Widget *do_copy() override;
 	void do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r) override;
 
 	float m_amp_cursor{0.0};

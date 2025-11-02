@@ -6,7 +6,7 @@
 
 #include <imgui.h>
 
-class WidgetRegistrar;
+class Widgets;
 class Widget;
 
 struct WidgetInfo {
@@ -17,9 +17,9 @@ struct WidgetInfo {
 };
 
 
-class WidgetRegistrar {
+class Widgets {
 public:
-	WidgetRegistrar(WidgetInfo reg);
+	Widgets(WidgetInfo reg);
 	static Widget *draw(const char *name);
 	static Widget *create_widget(const char *name);
 };
@@ -30,6 +30,6 @@ public:
 		__VA_ARGS__ \
 		.fn_create = []() -> Widget* { return new class(); }, \
 	}; \
-	static WidgetRegistrar info(reg);
+	static Widgets info(reg);
 
 

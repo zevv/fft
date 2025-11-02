@@ -22,13 +22,6 @@ WidgetSpectrum::~WidgetSpectrum()
 }
 
 
-Widget *WidgetSpectrum::do_copy()
-{
-	auto *w = new WidgetSpectrum();
-	return w;
-};
-
-
 void WidgetSpectrum::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	ImGui::SetNextItemWidth(100);
