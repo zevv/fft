@@ -106,5 +106,6 @@ REGISTER_WIDGET(WidgetHistogram,
 	.name = "histogram",
 	.description = "Value histogram",
 	.hotkey = ImGuiKey_F4,
+	.flags = WidgetInfo::Flags::ChannelMap | WidgetInfo::Flags::Lockable,
 );
 

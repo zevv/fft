@@ -111,5 +111,6 @@ REGISTER_WIDGET(WidgetSpectrum,
 	.name = "spectrum",
 	.description = "FFT spectrum graph",
 	.hotkey = ImGuiKey_F2,
+	.flags = WidgetInfo::Flags::ChannelMap | WidgetInfo::Flags::Lockable,
 );
 

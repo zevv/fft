@@ -212,5 +212,6 @@ REGISTER_WIDGET(WidgetWaterfall,
 	.name = "waterfall",
 	.description = "FFT spectrum waterfall",
 	.hotkey = ImGuiKey_F3,
+	.flags = WidgetInfo::Flags::ChannelMap | WidgetInfo::Flags::Lockable,
 );
 

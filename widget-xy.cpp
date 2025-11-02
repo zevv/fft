@@ -118,5 +118,6 @@ REGISTER_WIDGET(WidgetXY,
 	.name = "xy",
 	.description = "X/Y constallation display",
 	.hotkey = ImGuiKey_F6,
+	.flags = WidgetInfo::Flags::ChannelMap | WidgetInfo::Flags::Lockable,
 );
 

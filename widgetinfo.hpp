@@ -10,9 +10,16 @@ class Widgets;
 class Widget;
 
 struct WidgetInfo {
+
+	enum Flags {
+		ChannelMap	   = 1 << 0,
+		Lockable	   = 1 << 1,
+	};
+
 	const char *name;
 	const char *description;
 	enum ImGuiKey hotkey;
+	int flags;
 	Widget *(*fn_create)();
 };
 

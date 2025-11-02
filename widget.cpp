@@ -60,21 +60,25 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	m_view.time.cursor = view.time.cursor;
 	m_view.time.playpos = view.time.playpos;
 
-	m_channel_map.set_channel_count(streams.channel_count());
-	m_channel_map.draw();
+	if(m_info.flags & WidgetInfo::Flags::ChannelMap) {
+		m_channel_map.set_channel_count(streams.channel_count());
+		m_channel_map.draw();
+	}
 
-	ImGui::SameLine();
-	ImGui::ToggleButton("L##ock", &m_view.lock);
+	if(m_info.flags & WidgetInfo::Flags::Lockable) {
+		ImGui::SameLine();
+		ImGui::ToggleButton("L##ock", &m_view.lock);
+		// key 'L': toggle lock
+		if(m_has_focus && ImGui::IsKeyPressed(ImGuiKey_L)) {
+			m_view.lock = !m_view.lock;
+		}
+	}
+
 	ImGui::SameLine();
 	
 	if(m_has_focus) {
 
-		// 'L' toggles lock
-		if(ImGui::IsKeyPressed(ImGuiKey_L)) {
-			m_view.lock = !m_view.lock;
-		}
-
-		// left/right square bracked sets fft bin size to next power of two
+		// key '[': decrease FFT size
 		if(ImGui::IsKeyPressed(ImGuiKey_LeftBracket)) {
 			for(size_t i=30; i>1; i--) {
 				int s = 1<<i;
@@ -84,6 +88,7 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 				}
 			}
 		}
+		// key ']': increase FFT size
 		if(ImGui::IsKeyPressed(ImGuiKey_RightBracket)) {
 			for(size_t i=1; i<30; i++) {
 				int s = 1<<i;
@@ -94,22 +99,24 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 			}
 		}
 
-		// left/right arrow pan time, accelerating
+		// key 'left': pan time
 		bool panning = false;
 		if(ImGui::IsKeyDown(ImGuiKey_LeftArrow)) {
 			m_view.pan_t(+m_pan_speed);
 			panning = true;
 		}
+		// key 'right': pan time
 		if(ImGui::IsKeyDown(ImGuiKey_RightArrow)) {
 			m_view.pan_t(-m_pan_speed);
 			panning = true;
 		}
 
-		// up/down keys zoom time, accelerating
+		// key 'up': zoom in time
 		if(ImGui::IsKeyDown(ImGuiKey_UpArrow)) {
 			m_view.zoom_t(-m_pan_speed * 100);
 			panning = true;
 		}
+		// key 'down': zoom out time
 		if(ImGui::IsKeyDown(ImGuiKey_DownArrow)) {
 			m_view.zoom_t(+m_pan_speed * 100);
 			panning = true;

@@ -157,5 +157,6 @@ REGISTER_WIDGET(WidgetWaveform,
 	.name = "waveform",
 	.description = "Waveform display",
 	.hotkey = ImGuiKey_F1,
+	.flags = WidgetInfo::Flags::ChannelMap | WidgetInfo::Flags::Lockable,
 );
 
