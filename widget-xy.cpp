@@ -24,11 +24,16 @@ WidgetXY::~WidgetXY()
 
 void WidgetXY::do_load(ConfigReader::Node *node)
 {
+	auto *wnode = node->find("xy");
+	wnode->read("decay", m_decay);
 }
 
 
 void WidgetXY::do_save(ConfigWriter &cw)
 {
+	cw.push("xy");
+	cw.write("decay", m_decay);
+	cw.pop();
 }
 
 
@@ -41,6 +46,11 @@ Widget *WidgetXY::do_copy()
 
 void WidgetXY::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
+
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(100);
+	ImGui::SliderFloat("Decay", &m_decay, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_Logarithmic);
+
 	int ch_x = -1;
 	int ch_y = -1;
 
@@ -95,7 +105,7 @@ void WidgetXY::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	// phosphor decay
 	SDL_SetRenderTarget(rend, m_tex);
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
-	SDL_SetRenderDrawColor(rend, 0, 0, 0, 16);
+	SDL_SetRenderDrawColor(rend, 0, 0, 0, m_decay * 255);
 	SDL_RenderFillRect(rend, nullptr);
 
 	// draw new points

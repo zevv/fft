@@ -26,4 +26,5 @@ private:
 
 	SDL_Texture *m_tex{};
 	double m_peak{1.0};
+	float m_decay{0.2};
 };

@@ -69,6 +69,7 @@ void WidgetHistogram::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	Sample vmin = frames_data[0];
 	Sample vmax = frames_data[0];
 
+	// TODO use processing size instead of view
 	int idx_from = std::max(m_view.x_to_t(r.x,       r) * m_view.srate, 0.0);
 	int idx_to   = std::min(m_view.x_to_t(r.x + r.w, r) * m_view.srate, (double)frames_avail);
 
