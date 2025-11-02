@@ -125,6 +125,9 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 	// time grid
 	grid_time(rend, r, m_view.x_to_t(r.x, r), m_view.x_to_t(r.x + r.w, r));
+	
+	// value grid
+	grid_vertical(rend, r, -scale / k_sample_max, +scale / k_sample_max);
 
 	// cursor
 	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
@@ -135,10 +138,6 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	SDL_SetRenderDrawColor(rend, 0, 128, 128, 255);
 	int px = m_view.t_to_x(m_view.time.playpos, r);
 	SDL_RenderLine(rend, px, r.y, px, r.y + r.h);
-
-	// zero Y
-	SDL_SetRenderDrawColor(rend, 100, 100, 100, 255);
-	SDL_RenderLine(rend, r.x, r.y + r.h / 2, r.x + r.w, r.y + r.h / 2);
 	
 	// window
 	Window w = Window(m_view.fft.window_type, m_view.fft.size, m_view.fft.window_beta);

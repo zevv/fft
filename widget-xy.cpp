@@ -82,6 +82,7 @@ void WidgetXY::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	double sx = (double)(r.w / 2) / m_peak;
 	double sy = (double)(r.h / 2) / m_peak;
 	m_peak *= 0.99;
+	m_peak = k_sample_max;
 		
 	for(int idx=idx_from; idx<idx_to; idx++) {
 		Sample vx = frames_data[idx * frames_stride + ch_x];
@@ -111,6 +112,8 @@ void WidgetXY::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	SDL_FRect dstf = {(float)r.x, (float)r.y, (float)r.w, (float)r.h};
 	SDL_RenderTexture(rend, m_tex, nullptr, &dstf);
 
+	grid_vertical(rend, r, -m_peak / k_sample_max, m_peak / k_sample_max);
+	grid_horizontal(rend, r, -m_peak / k_sample_max, m_peak / k_sample_max);
 }
 
 

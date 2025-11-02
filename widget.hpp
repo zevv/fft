@@ -47,9 +47,10 @@ protected:
 						 T y_min, T y_max);
 
 	void grid_vertical(SDL_Renderer *rend, SDL_Rect &r, float v_from, float v_to);
+	void grid_horizontal(SDL_Renderer *rend, SDL_Rect &r, float v_from, float v_to);
 	void grid_time(SDL_Renderer *rend, SDL_Rect &r, Time t_from, Time t_to);
 	void grid_time_v(SDL_Renderer *rend, SDL_Rect &r, Time t_from, Time t_to);
-	
+
 	WidgetInfo &m_info;
 	bool m_has_focus{false};
 	View m_view{};
