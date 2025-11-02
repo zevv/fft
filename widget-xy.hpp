@@ -25,4 +25,5 @@ private:
 	void do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r) override;
 
 	SDL_Texture *m_tex{};
+	double m_peak{1.0};
 };

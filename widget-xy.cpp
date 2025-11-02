@@ -75,13 +75,17 @@ void WidgetXY::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 	int cx = r.x + r.w / 2;
 	int cy = r.y + r.h / 2;
-	double scale = (double)(r.w / 2) / k_sample_max;
+	double sx = (double)(r.w / 2) / m_peak;
+	double sy = (double)(r.h / 2) / m_peak;
+	m_peak *= 0.99;
 		
 	for(int idx=idx_from; idx<idx_to; idx++) {
 		Sample vx = frames_data[idx * frames_stride + ch_x];
 		Sample vy = frames_data[idx * frames_stride + ch_y];
-		point[npoints].x = cx + vx * scale;
-		point[npoints].y = cy - vy * scale;
+		m_peak = std::max(m_peak, (double)fabs(vx));
+		m_peak = std::max(m_peak, (double)fabs(vy));
+		point[npoints].x = cx + vx * sx;
+		point[npoints].y = cy - vy * sy;
 		npoints++;
 	}
 
