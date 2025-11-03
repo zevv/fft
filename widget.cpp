@@ -56,7 +56,6 @@ void Widget::copy_to(Widget *w)
 
 void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
-	m_has_focus = ImGui::IsWindowFocused();
 	if(m_view.lock) m_view = view;
 	m_view.time.cursor = view.time.cursor;
 	m_view.time.playpos = view.time.playpos;
@@ -70,7 +69,7 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		ImGui::SameLine();
 		ImGui::ToggleButton("L##ock", &m_view.lock);
 		// key 'L': toggle lock
-		if(m_has_focus && ImGui::IsKeyPressed(ImGuiKey_L)) {
+		if(ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey_L)) {
 			m_view.lock = !m_view.lock;
 		}
 	}
@@ -101,7 +100,7 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 	ImGui::SameLine();
 	
-	if(m_has_focus) {
+	if(ImGui::IsWindowFocused()) {
 
 		// key '[': decrease window size
 		if(ImGui::IsKeyPressed(ImGuiKey_LeftBracket)) {

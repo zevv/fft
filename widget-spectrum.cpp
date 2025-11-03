@@ -24,7 +24,7 @@ WidgetSpectrum::~WidgetSpectrum()
 
 void WidgetSpectrum::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
-	if(has_focus()) {
+	if(ImGui::IsWindowFocused()) {
 	
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
 		ImGui::Text("f=%.6gHz amp=%.2fdB", m_view.freq.cursor * m_view.srate * 0.5, m_amp_cursor);

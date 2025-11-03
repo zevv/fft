@@ -25,7 +25,6 @@ public:
 	Widgets *copy();
 
 	void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
-	bool has_focus() const { return m_has_focus; }
 
 public:
 
@@ -39,6 +38,4 @@ private:
 	Waveform m_waveform;
 	Spectrum m_spectrum;
 	Waterfall m_waterfall;
-
-	bool m_has_focus;
 };

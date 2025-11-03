@@ -61,7 +61,7 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		db_max = m_db_max;
 	}
 
-	if(has_focus()) {
+	if(ImGui::IsWindowFocused()) {
 
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
 		ImGui::Text("f=%.6gHz", m_view.freq.cursor * m_view.srate * 0.5);

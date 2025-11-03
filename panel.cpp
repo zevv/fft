@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
 #include <imgui.h>
+#include <algorithm>
 
 #include "widgetinfo.hpp"
 #include "panel.hpp"
@@ -225,6 +226,8 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 
 		assert(m_widget);
 
+		m_background_alpha = std::clamp(m_background_alpha, 0.0f, 0.2f);
+
 		// setup window
 		ImGuiWindowFlags flags = 0;
 		flags |= ImGuiWindowFlags_NoCollapse;
@@ -235,21 +238,24 @@ void Panel::draw(View &view, Streams &streams, SDL_Renderer *rend, int x, int y,
 
 		ImGui::SetNextWindowPos(ImVec2((float)x, (float)y));
 		ImGui::SetNextWindowSize(ImVec2((float)w, (float)h));
+		ImGui::SetNextWindowBgAlpha(m_background_alpha);
 
-		if(m_widget->has_focus()) {
-			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-			ImGui::SetNextWindowBgAlpha(0.0f);
+		if(m_has_focus) {
+			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.0f, 0.5f, 0.5f, 1.0f));
 			ImGui::Begin(m_title, nullptr, flags);
 			ImGui::PopStyleColor();
+			m_background_alpha -= 0.03;
 		} else {
-			ImGui::SetNextWindowBgAlpha(0.25f);
+			m_background_alpha += 0.03;
 			ImGui::Begin(m_title, nullptr, flags);
 		}
 
+		m_has_focus = ImGui::IsWindowFocused();
+
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 2.0f);
 
-		if(ImGui::IsWindowHovered() && 
-		   !ImGui::IsMouseDragging(ImGuiMouseButton_Left) && 
+		if(ImGui::IsWindowHovered() &&
+		   !ImGui::IsMouseDragging(ImGuiMouseButton_Left) &&
 		   !ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
 			ImGui::SetWindowFocus();
 		}

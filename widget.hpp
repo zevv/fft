@@ -24,7 +24,6 @@ public:
 	void copy_to(Widget *w);
 
 	const char *get_name() { return m_info.name; }
-	bool has_focus() { return m_has_focus; }
 	void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
 
 protected:
@@ -52,7 +51,6 @@ protected:
 	void grid_time_v(SDL_Renderer *rend, SDL_Rect &r, Time t_from, Time t_to);
 
 	WidgetInfo &m_info;
-	bool m_has_focus{false};
 	View m_view{};
 	ShowChannelMap m_channel_map{};
 	double m_pan_speed{};

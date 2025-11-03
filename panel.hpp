@@ -51,4 +51,6 @@ private:
 	std::vector<Panel *> m_kids{};
 	std::vector<Panel *> m_kids_remove{};
 	std::vector<AddRequest> m_add_requests{};
+	bool m_has_focus{};
+	float m_background_alpha{0};
 };
