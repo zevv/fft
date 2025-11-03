@@ -72,7 +72,7 @@ void WidgetXY::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	int idx_to   = idx_from + m_view.window.size;
 
 	if(idx_to < 0) return;
-	if(idx_from > frames_avail) return;
+	if(idx_from > (int)frames_avail) return;
 
 	std::vector<SDL_FPoint> point(idx_to - idx_from);
 	size_t npoints = 0;
