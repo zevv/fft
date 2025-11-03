@@ -25,5 +25,6 @@ private:
 	Window m_window{};
 	size_t m_size{};
 	float *m_in{};
+	std::vector<float> m_outf{};
 	std::vector<int8_t> m_out{};
 };

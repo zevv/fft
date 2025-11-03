@@ -24,11 +24,11 @@ public:
 	double gain() const { return m_gain; };
 	Type type() const { return m_type; };
 
-	std::vector<double> &data() { return m_data; };
+	std::vector<float> &data() { return m_data; };
 
 private:
 	Type m_type;
 	double m_beta;
 	double m_gain;
-	std::vector<double> m_data;
+	std::vector<float> m_data;
 };

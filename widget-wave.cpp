@@ -143,7 +143,7 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	SDL_SetRenderDrawColor(rend, 128, 128, 128, 255);
 	double w_idx_from = (m_view.time.from - m_view.time.cursor) * m_view.srate + m_view.window.size * 0.5;
 	double w_idx_to   = (m_view.time.to   - m_view.time.cursor) * m_view.srate + m_view.window.size * 0.5;
-	graph(rend, r, w.data().data(), w.size(), 1, w_idx_from, w_idx_to, 0.0, +1.0);
+	graph(rend, r, w.data().data(), w.size(), 1, w_idx_from, w_idx_to, 0.0f, +1.0f);
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
