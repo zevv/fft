@@ -15,7 +15,7 @@ public:
 	
 	struct Channel {
 		bool enabled{true};
-		float volume{0.3f};
+		float gain{0.3f};
 		float pan{0.0f};
 	};
 
@@ -51,5 +51,3 @@ private:
 	std::atomic<float> m_speed{1.0f};
 	std::vector<float> m_buf{};
 };
-
-

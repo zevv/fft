@@ -14,13 +14,15 @@ Widgets::Widgets(WidgetInfo reg)
 
 Widget* Widgets::draw(const char *cur_name)
 {
+	Widget *rv = nullptr;
+
 	ImGui::SetNextItemWidth(100);
 	if(ImGui::BeginCombo("##widget_type", cur_name)) {
 		for(auto &wi : widget_reg_list) {
 			bool is_selected = strcmp(wi.name, cur_name) == 0;
 			if(ImGui::Selectable(wi.name, is_selected)) {
 				if(strcmp(wi.name, cur_name) != 0) {
-					return wi.fn_create();
+					rv = wi.fn_create();
 				}
 			}
 		}
@@ -37,7 +39,7 @@ Widget* Widgets::draw(const char *cur_name)
 		}
 	}
 
-	return nullptr;
+	return rv;
 }
 
 

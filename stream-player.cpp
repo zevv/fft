@@ -58,7 +58,7 @@ void StreamPlayer::load(ConfigReader::Node *n)
 		if(isdigit(k.first[0])) {
 			size_t ch = atoi(k.first);
 			m_channels.resize(ch+1);
-			k.second->read("volume", m_channels[ch].volume);
+			k.second->read("volume", m_channels[ch].gain);
 			k.second->read("pan", m_channels[ch].pan);
 		}
 	}
@@ -72,7 +72,7 @@ void StreamPlayer::save(ConfigWriter &cw)
 	cw.push("channel");
 	for(size_t ch=0; ch<m_channels.size(); ch++) {
 		cw.push(ch);
-		cw.write("volume", m_channels[ch].volume);
+		cw.write("volume", m_channels[ch].gain);
 		cw.write("pan", m_channels[ch].pan);
 		cw.pop();
 	}
@@ -84,6 +84,12 @@ void StreamPlayer::save(ConfigWriter &cw)
 void StreamPlayer::seek(Time t)
 {
 	m_play_pos = t;
+	SDL_Event event{};
+	event.type = SDL_EVENT_USER;
+	event.user.code = k_user_event_audio_playback;
+	event.user.data1 = (void *)(size_t)(t * m_srate);
+	event.user.data2 = (void *)0;
+	SDL_PushEvent(&event);
 }
 
 
@@ -111,8 +117,8 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 	std::vector<float> gain_r(m_streams.channel_count());
 
 	for(size_t ch=0; ch<m_streams.channel_count(); ch++) {
-		gain_l[ch] = m_channels[ch].volume * (m_channels[ch].pan <= 0.0f ? 1.0f : (1.0f - m_channels[ch].pan));
-		gain_r[ch] = m_channels[ch].volume * (m_channels[ch].pan >= 0.0f ? 1.0f : (1.0f + m_channels[ch].pan));
+		gain_l[ch] = m_channels[ch].gain * (m_channels[ch].pan <= 0.0f ? 1.0f : (1.0f - m_channels[ch].pan));
+		gain_r[ch] = m_channels[ch].gain * (m_channels[ch].pan >= 0.0f ? 1.0f : (1.0f + m_channels[ch].pan));
 	}
 
 	SDL_SetAudioStreamFrequencyRatio(m_sdl_audio_stream, m_speed);
@@ -135,7 +141,7 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 					float v_prev = data[m_idx_prev * stride + ch] / (float)k_sample_max;
 					v = v_prev * m_xfade + v * (1.0 - m_xfade);
 				}
-				m_xfade -= 1.0 / (m_srate * 0.050);
+				m_xfade -= 1.0 / (m_srate * 0.100);
 			}
 
 			vl += v * gain_l[ch];
@@ -155,8 +161,7 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 	uint64_t t_now = SDL_GetTicks();
 	if(t_now > m_t_event) {
 		m_t_event = t_now + 10;
-		SDL_Event event;
-		SDL_zero(event);
+		SDL_Event event{};
 		event.type = SDL_EVENT_USER;
 		event.user.code = k_user_event_audio_playback;
 		event.user.data1 = (void *)m_idx;
@@ -173,5 +178,3 @@ void StreamPlayer::enable(bool enable)
 	(enable ? SDL_ResumeAudioDevice : SDL_PauseAudioDevice)(dev);
 	SDL_ClearAudioStream(m_sdl_audio_stream);
 }
-
-

@@ -81,8 +81,7 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 			m_view.time.cursor = m_view.x_to_t(pos.x, r);
 		}
 
-		if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) ||
-		   (ImGui::GetIO().MouseDelta.x != 0 && ImGui::IsMouseDown(ImGuiMouseButton_Left))) {
+	   if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
 			auto pos = ImGui::GetIO().MousePos;
 			streams.player.seek(m_view.x_to_t(pos.x, r));
 		}
@@ -138,11 +137,12 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	SDL_SetRenderDrawColor(rend, 0, 128, 128, 255);
 	int px = m_view.t_to_x(m_view.time.playpos, r);
 	SDL_RenderLine(rend, px, r.y, px, r.y + r.h);
-	
+
+	// window
 	Window w = Window(m_view.window.window_type, m_view.window.size, m_view.window.window_beta);
 	SDL_SetRenderDrawColor(rend, 128, 128, 128, 255);
-	double w_idx_from = (m_view.time.from - m_view.time.cursor) * m_view.srate + m_view.window.size * 0.5;
-	double w_idx_to   = (m_view.time.to   - m_view.time.cursor) * m_view.srate + m_view.window.size * 0.5;
+	double w_idx_from = (m_view.time.from - m_view.time.playpos) * m_view.srate + m_view.window.size * 0.5;
+	double w_idx_to   = (m_view.time.to   - m_view.time.playpos) * m_view.srate + m_view.window.size * 0.5;
 	graph(rend, r, w.data().data(), w.size(), 1, w_idx_from, w_idx_to, 0.0f, +1.0f);
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
