@@ -69,7 +69,7 @@ void WidgetXY::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	Sample *frames_data = streams.peek(&frames_stride, &frames_avail);
 
 	int idx_from = m_view.time.playpos * m_view.srate;
-	int idx_to   = idx_from + m_view.fft.size;
+	int idx_to   = idx_from + m_view.window.size;
 
 	if(idx_to < 0) return;
 	if(idx_from > frames_avail) return;
@@ -123,6 +123,6 @@ REGISTER_WIDGET(WidgetXY,
 	.name = "xy",
 	.description = "X/Y constallation display",
 	.hotkey = ImGuiKey_F6,
-	.flags = WidgetInfo::Flags::ChannelMap | WidgetInfo::Flags::Lockable,
+	.flags = WidgetInfo::Flags::ShowChannelMap | WidgetInfo::Flags::ShowLock,
 );
 

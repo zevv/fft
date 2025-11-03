@@ -25,11 +25,11 @@ public:
 		n->read("freq_from", freq.from);
 		n->read("freq_to", freq.to);
 		n->read("freq_cursor", freq.cursor);
-		n->read("fft_size", fft.size);
+		n->read("fft_size", window.size);
 		if(const char *tmp = n->read_str("fft_window_type")) {
-			fft.window_type = Window::str_to_type(tmp);
+			window.window_type = Window::str_to_type(tmp);
 		}
-		n->read("fft_window_beta", fft.window_beta);
+		n->read("fft_window_beta", window.window_beta);
 		n->read("lock", lock);
 	}
 
@@ -42,9 +42,9 @@ public:
 		cfg.write("freq_from", freq.from);
 		cfg.write("freq_to", freq.to);
 		cfg.write("freq_cursor", freq.cursor);
-		cfg.write("fft_size", fft.size);
-		cfg.write("fft_window_type", Window::type_to_str(fft.window_type));
-		cfg.write("fft_window_beta", fft.window_beta);
+		cfg.write("fft_size", window.size);
+		cfg.write("fft_window_type", Window::type_to_str(window.window_type));
+		cfg.write("fft_window_beta", window.window_beta);
 		cfg.write("lock", lock);
 	}
 
@@ -91,10 +91,16 @@ public:
 		clamp();
 	};
 
-	void zoom_t(float f) {
+	enum ZoomAnchor {
+		Cursor,
+		Middle,
+	};
+
+	void zoom_t(float f, ZoomAnchor za=Cursor) {
 		f /= 50.0;
-		time.from += (time.cursor - time.from) * f;
-		time.to   -= (time.to - time.cursor) * f;
+		Time t_mid = (za == Cursor) ? time.cursor : 0.5 * (time.from + time.to);
+		time.from += (t_mid - time.from) * f;
+		time.to   -= (time.to - t_mid) * f;
 		clamp();
 	};
 
@@ -125,7 +131,7 @@ public:
 			freq.from = mid - 0.001;
 			freq.to   = mid + 0.001;
 		}
-		fft.size = std::clamp(fft.size, 16, 16384);
+		window.size = std::clamp(window.size, 16, 16384);
 	}
 
 
@@ -142,7 +148,7 @@ public:
 		Frequency cursor{11000.0};
 	};
 
-	struct VFft {
+	struct VWindow {
 		int size{256};
 		Window::Type window_type{Window::Type::Hanning};
 		double window_beta{0.5};
@@ -157,7 +163,6 @@ public:
 	bool lock{true};
 	VTime time{};
 	VFreq freq{};
-	VFft fft{};
+	VWindow window{};
 	VAperture aperture{};
 };
-

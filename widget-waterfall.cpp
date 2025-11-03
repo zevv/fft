@@ -37,26 +37,6 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	size_t frames_avail = 0;
 	Sample *data = streams.peek(&stride, &frames_avail);
 	
-	ImGui::SetNextItemWidth(100);
-	ImGui::SameLine();
-	ImGui::SliderInt("##fft size", (int *)&m_view.fft.size, 
-				16, 32768, "%d", ImGuiSliderFlags_Logarithmic);
-
-	ImGui::SameLine();
-	ImGui::SetNextItemWidth(100);
-	ImGui::Combo("##window", (int *)&m_view.fft.window_type, 
-			Window::type_names(), Window::type_count());
-	
-	if(m_view.fft.window_type == Window::Type::Gauss || 
-	   m_view.fft.window_type == Window::Type::Kaiser) {
-		ImGui::SameLine();
-		ImGui::SetNextItemWidth(100);
-		float beta = m_view.fft.window_beta;
-		ImGui::SliderFloat("beta", &beta,
-				0.0f, 5.0f, "%.2f", ImGuiSliderFlags_Logarithmic);
-		m_view.fft.window_beta = beta;
-	}
-	
 	ImGui::SameLine();
 	ImGui::ToggleButton("A##pproximate FFT", &m_fft_approximate);
 	m_fft.set_approximate(m_fft_approximate);
@@ -113,7 +93,7 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		}
 	}
 
-	m_fft.configure(m_view.fft.size, m_view.fft.window_type, m_view.fft.window_beta);
+	m_fft.configure(m_view.window.size, m_view.window.window_type, m_view.window.window_beta);
 
 	int fft_w = m_fft.out_size();
 
@@ -144,7 +124,7 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 		for(int ch : m_channel_map.enabled_channels()) {
 
-			int idx = (int)(m_view.srate * t - m_view.fft.size / 2) * stride + ch;
+			int idx = (int)(m_view.srate * t - m_view.window.size / 2) * stride + ch;
 			if(idx < 0) continue;
 			if(idx >= (int)(frames_avail * stride)) break;
 
@@ -212,6 +192,9 @@ REGISTER_WIDGET(WidgetWaterfall,
 	.name = "waterfall",
 	.description = "FFT spectrum waterfall",
 	.hotkey = ImGuiKey_F3,
-	.flags = WidgetInfo::Flags::ChannelMap | WidgetInfo::Flags::Lockable,
+	.flags = WidgetInfo::Flags::ShowChannelMap | 
+	         WidgetInfo::Flags::ShowLock |
+			 WidgetInfo::Flags::ShowWindowSize |
+			 WidgetInfo::Flags::ShowWindowType,
 );
 

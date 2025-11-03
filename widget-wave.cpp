@@ -139,11 +139,10 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	int px = m_view.t_to_x(m_view.time.playpos, r);
 	SDL_RenderLine(rend, px, r.y, px, r.y + r.h);
 	
-	// window
-	Window w = Window(m_view.fft.window_type, m_view.fft.size, m_view.fft.window_beta);
+	Window w = Window(m_view.window.window_type, m_view.window.size, m_view.window.window_beta);
 	SDL_SetRenderDrawColor(rend, 128, 128, 128, 255);
-	double w_idx_from = (m_view.time.from - m_view.time.cursor) * m_view.srate;
-	double w_idx_to   = (m_view.time.to   - m_view.time.cursor) * m_view.srate;
+	double w_idx_from = (m_view.time.from - m_view.time.cursor) * m_view.srate + m_view.window.size * 0.5;
+	double w_idx_to   = (m_view.time.to   - m_view.time.cursor) * m_view.srate + m_view.window.size * 0.5;
 	graph(rend, r, w.data().data(), w.size(), 1, w_idx_from, w_idx_to, 0.0, +1.0);
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
@@ -156,6 +155,6 @@ REGISTER_WIDGET(WidgetWaveform,
 	.name = "waveform",
 	.description = "Waveform display",
 	.hotkey = ImGuiKey_F1,
-	.flags = WidgetInfo::Flags::ChannelMap | WidgetInfo::Flags::Lockable,
+	.flags = WidgetInfo::Flags::ShowChannelMap | WidgetInfo::Flags::ShowLock,
 );
 

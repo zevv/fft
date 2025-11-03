@@ -150,6 +150,7 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 
 	SDL_PutAudioStreamData(m_sdl_audio_stream, m_buf.data(), frame_count * m_frame_size);
 	m_play_pos += (Time)frame_count / m_srate;
+	m_frames_event += frame_count;
 	
 	uint64_t t_now = SDL_GetTicks();
 	if(t_now > m_t_event) {
@@ -159,8 +160,9 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 		event.type = SDL_EVENT_USER;
 		event.user.code = k_user_event_audio_playback;
 		event.user.data1 = (void *)m_idx;
-		event.user.data2 = (void *)frame_count;
+		event.user.data2 = (void *)m_frames_event;
 		SDL_PushEvent(&event);
+		m_frames_event = 0;
 	}
 }
 

@@ -70,9 +70,9 @@ void WidgetHistogram::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	Sample vmin = frames_data[0];
 	Sample vmax = frames_data[0];
 
-	// TODO use processing size instead of view
-	int idx_from = std::max(m_view.x_to_t(r.x,       r) * m_view.srate, 0.0);
-	int idx_to   = std::min(m_view.x_to_t(r.x + r.w, r) * m_view.srate, (double)frames_avail);
+	int idx_cursor = m_view.time.cursor * m_view.srate;
+	int idx_from = std::max(idx_cursor - m_view.window.size * 0.5, 0.0);
+	int idx_to   = std::min(idx_cursor + m_view.window.size * 0.5, (double)frames_avail);
 
 	for(int idx=idx_from; idx<idx_to; idx++) {
 		for(int ch : m_channel_map.enabled_channels()) {
@@ -106,6 +106,8 @@ REGISTER_WIDGET(WidgetHistogram,
 	.name = "histogram",
 	.description = "Value histogram",
 	.hotkey = ImGuiKey_F4,
-	.flags = WidgetInfo::Flags::ChannelMap | WidgetInfo::Flags::Lockable,
+	.flags = WidgetInfo::Flags::ShowChannelMap | 
+	         WidgetInfo::Flags::ShowLock |
+	         WidgetInfo::Flags::ShowWindowSize,
 );
 

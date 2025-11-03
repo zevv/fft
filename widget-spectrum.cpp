@@ -24,26 +24,6 @@ WidgetSpectrum::~WidgetSpectrum()
 
 void WidgetSpectrum::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
-	ImGui::SetNextItemWidth(100);
-	ImGui::SameLine();
-	ImGui::SliderInt("##fft size", (int *)&m_view.fft.size, 
-				16, 32768, "%d", ImGuiSliderFlags_Logarithmic);
-
-	ImGui::SameLine();
-	ImGui::SetNextItemWidth(100);
-	ImGui::Combo("##window", (int *)&m_view.fft.window_type, 
-			Window::type_names(), Window::type_count());
-
-	if(m_view.fft.window_type == Window::Type::Gauss || 
-	   m_view.fft.window_type == Window::Type::Kaiser) {
-		ImGui::SameLine();
-		ImGui::SetNextItemWidth(100);
-		float beta = m_view.fft.window_beta;
-		ImGui::SliderFloat("beta", &beta,
-				0.0f, 5.0f, "%.2f", ImGuiSliderFlags_Logarithmic);
-		m_view.fft.window_beta = beta;
-	}
-	
 	if(has_focus()) {
 	
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
@@ -68,7 +48,7 @@ void WidgetSpectrum::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		}
 	}
 
-	m_fft.configure(m_view.fft.size, m_view.fft.window_type, m_view.fft.window_beta);
+	m_fft.configure(m_view.window.size, m_view.window.window_type, m_view.window.window_beta);
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
@@ -79,7 +59,7 @@ void WidgetSpectrum::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		size_t stride = 0;
 		size_t avail = 0;
 		Sample *data = streams.peek(&stride, &avail);
-		int idx = ((int)(m_view.srate * m_view.time.cursor)) * stride + ch;
+		int idx = ((int)(m_view.srate * m_view.time.cursor - m_view.window.size * 0.5)) * stride + ch;
 
 		if(idx < 0) continue;
 		if(idx >= (int)(avail * stride)) continue;
@@ -87,7 +67,7 @@ void WidgetSpectrum::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 		auto out_graph = m_fft.run(&data[idx], stride);
 
-		size_t npoints = m_view.fft.size / 2 + 1;
+		size_t npoints = m_view.window.size / 2 + 1;
 		SDL_Color col = m_channel_map.ch_color(ch);
 		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
 		graph(rend, r,
@@ -111,6 +91,9 @@ REGISTER_WIDGET(WidgetSpectrum,
 	.name = "spectrum",
 	.description = "FFT spectrum graph",
 	.hotkey = ImGuiKey_F2,
-	.flags = WidgetInfo::Flags::ChannelMap | WidgetInfo::Flags::Lockable,
+	.flags = WidgetInfo::Flags::ShowChannelMap | 
+	         WidgetInfo::Flags::ShowLock |
+			 WidgetInfo::Flags::ShowWindowSize |
+			 WidgetInfo::Flags::ShowWindowType,
 );
 

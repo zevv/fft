@@ -54,7 +54,7 @@ protected:
 	WidgetInfo &m_info;
 	bool m_has_focus{false};
 	View m_view{};
-	ChannelMap m_channel_map{};
+	ShowChannelMap m_channel_map{};
 	double m_pan_speed{};
 };
 

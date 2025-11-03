@@ -6,7 +6,7 @@
 
 #include "config.hpp"
 
-class ChannelMap {
+class ShowChannelMap {
 
 public:
 	

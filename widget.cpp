@@ -61,12 +61,12 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	m_view.time.cursor = view.time.cursor;
 	m_view.time.playpos = view.time.playpos;
 
-	if(m_info.flags & WidgetInfo::Flags::ChannelMap) {
+	if(m_info.flags & WidgetInfo::Flags::ShowChannelMap) {
 		m_channel_map.set_channel_count(streams.channel_count());
 		m_channel_map.draw();
 	}
 
-	if(m_info.flags & WidgetInfo::Flags::Lockable) {
+	if(m_info.flags & WidgetInfo::Flags::ShowLock) {
 		ImGui::SameLine();
 		ImGui::ToggleButton("L##ock", &m_view.lock);
 		// key 'L': toggle lock
@@ -75,26 +75,50 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		}
 	}
 
+	if(m_info.flags & WidgetInfo::Flags::ShowWindowSize) {
+		ImGui::SameLine();
+		ImGui::SetNextItemWidth(100);
+		ImGui::SliderInt("##fft size", (int *)&m_view.window.size, 
+					16, 32768, "%d", ImGuiSliderFlags_Logarithmic);
+	}
+
+	if(m_info.flags & WidgetInfo::Flags::ShowWindowType) {
+		ImGui::SameLine();
+		ImGui::SetNextItemWidth(100);
+		ImGui::Combo("##window", (int *)&m_view.window.window_type, 
+				Window::type_names(), Window::type_count());
+		if(m_view.window.window_type == Window::Type::Gauss || 
+		   m_view.window.window_type == Window::Type::Kaiser) {
+			ImGui::SameLine();
+			ImGui::SetNextItemWidth(100);
+			float beta = m_view.window.window_beta;
+			ImGui::SliderFloat("beta", &beta,
+					0.0f, 5.0f, "%.2f", ImGuiSliderFlags_Logarithmic);
+			m_view.window.window_beta = beta;
+		}
+	}
+	
+
 	ImGui::SameLine();
 	
 	if(m_has_focus) {
 
-		// key '[': decrease FFT size
+		// key '[': decrease window size
 		if(ImGui::IsKeyPressed(ImGuiKey_LeftBracket)) {
 			for(size_t i=30; i>1; i--) {
 				int s = 1<<i;
-				if(s < m_view.fft.size) {
-					m_view.fft.size = s;
+				if(s < m_view.window.size) {
+					m_view.window.size = s;
 					break;
 				}
 			}
 		}
-		// key ']': increase FFT size
+		// key ']': increase window size
 		if(ImGui::IsKeyPressed(ImGuiKey_RightBracket)) {
 			for(size_t i=1; i<30; i++) {
 				int s = 1<<i;
-				if(s > m_view.fft.size) {
-					m_view.fft.size = s;
+				if(s > m_view.window.size) {
+					m_view.window.size = s;
 					break;
 				}
 			}
@@ -114,12 +138,12 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 		// key 'up': zoom in time
 		if(ImGui::IsKeyDown(ImGuiKey_UpArrow)) {
-			m_view.zoom_t(-m_pan_speed * 100);
+			m_view.zoom_t(-m_pan_speed * 100, View::ZoomAnchor::Middle);
 			panning = true;
 		}
 		// key 'down': zoom out time
 		if(ImGui::IsKeyDown(ImGuiKey_DownArrow)) {
-			m_view.zoom_t(+m_pan_speed * 100);
+			m_view.zoom_t(+m_pan_speed * 100, View::ZoomAnchor::Middle);
 			panning = true;
 		}
 		m_pan_speed = panning ? m_pan_speed + 0.002 : 0.0;
@@ -129,6 +153,7 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		m_view.pan_t(io.MouseWheel * 0.1f);
 	}
 
+	// draw widget
 	float t1 = hirestime();
 	do_draw(streams, rend, r);
 	float t2 = hirestime();

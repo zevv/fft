@@ -12,8 +12,10 @@ class Widget;
 struct WidgetInfo {
 
 	enum Flags {
-		ChannelMap	   = 1 << 0,
-		Lockable	   = 1 << 1,
+		ShowChannelMap	   = 1 << 0,
+		ShowLock	       = 1 << 1,
+		ShowWindowSize     = 1 << 2,
+		ShowWindowType     = 1 << 3,
 	};
 
 	const char *name;

@@ -45,6 +45,7 @@ private:
 	size_t m_idx_prev{};
 	double m_xfade{};
 	uint32_t m_t_event{};
+	size_t m_frames_event{};
 	size_t m_frame_size;
 	size_t m_buf_frames;
 	std::atomic<float> m_speed{1.0f};

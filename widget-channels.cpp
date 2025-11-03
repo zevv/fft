@@ -76,6 +76,6 @@ REGISTER_WIDGET(WidgetChannels,
 	.name = "channels",
 	.description = "Channel settings",
 	.hotkey = ImGuiKey_F5,
-	.flags = WidgetInfo::Flags::ChannelMap,
+	.flags = WidgetInfo::Flags::ShowChannelMap,
 );
 
