@@ -44,8 +44,8 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	ImGui::SameLine();
 	ImGui::ToggleButton("AGC", &m_agc);
 
-	float db_min = -100.0;
-	float db_max = 0.0;
+	int8_t db_min = -100.0;
+	int8_t db_max = 0.0;
 
 	if(!m_agc) {
 		ImGui::SameLine();
@@ -99,61 +99,60 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 	Histogram hist(64, -120.0, 0.0);
 
-	m_db_min = 0.0;
-	m_db_max = -200.0;
+	m_db_min =   -0;
+	m_db_max = -120;
 
 	SDL_FRect src;
 	src.x = m_view.freq.from * fft_w;
 	src.y = 0;
 	src.w = (m_view.freq.to - m_view.freq.from) * fft_w;
-	src.h = 1;
+	src.h = r.h;
 
 	SDL_FRect dst;
 	dst.x = r.x;
-	dst.y = 0;
+	dst.y = r.y;
 	dst.w = r.w;
-	dst.h = 1.0f;
+	dst.h = r.h;
 
 	SDL_Texture *tex = SDL_CreateTexture(
-			rend, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, fft_w, 1);
+			rend, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, fft_w, r.h);
 	SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_ADD);
 	SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_LINEAR);
+		
+	for(int ch : m_channel_map.enabled_channels()) {
+			
+		SDL_Color col = m_channel_map.ch_color(ch);
 
-	for(int y=0; y<r.h; y++) {
-		Time t = m_view.y_to_t(r.y + y, r);
+		uint32_t *pixels;
+		int pitch;
+		SDL_LockTexture(tex, nullptr, (void **)&pixels, &pitch);
+		memset(pixels, 0, pitch * r.h);
 
-		for(int ch : m_channel_map.enabled_channels()) {
-
+		for(int y=0; y<r.h; y++) {
+			Time t = m_view.y_to_t(r.y + y, r);
 			int idx = (int)(m_view.srate * t - m_view.window.size / 2) * stride + ch;
 			if(idx < 0) continue;
 			if(idx >= (int)(frames_avail * stride)) break;
 
 			auto fft_out = m_fft.run(&data[idx], stride);
-			SDL_Color col = m_channel_map.ch_color(ch);
 			uint32_t v = *(uint32_t *)&col & 0x00FFFFFF;
-
-			uint32_t *pixels;
-			int pitch;
-			SDL_LockTexture(tex, nullptr, (void **)&pixels, &pitch);
-			memset(pixels, 0, pitch);
+			uint32_t *p = pixels + y * (pitch / 4);
 
 			for(int x=0; x<fft_w; x++) {
-				float db = fft_out[x];
+				int8_t db = fft_out[x];
 				hist.add(db);
 				m_db_min = std::min(m_db_min, db);
 				m_db_max = std::max(m_db_max, db);
-				float intensity = 0.0;
+				int8_t intensity = 0.0;
 				if(db > db_min && db_max > db_min) {
-					intensity = std::clamp((db - db_min) / (db_max - db_min), 0.0f, 1.0f);
+					intensity = std::clamp(255 * (db - db_min) / (db_max - db_min), 0, 255);
 				}
-				pixels[x] = v | (uint32_t)(intensity * 255) << 24;
+				*p++ = v | (uint32_t)(intensity << 24);
 			}
 
-			SDL_UnlockTexture(tex);
-			dst.y = r.y + y;
-			SDL_RenderTexture(rend, tex, &src, &dst);
 		}
-
+		SDL_UnlockTexture(tex);
+		SDL_RenderTexture(rend, tex, &src, &dst);
 	}
 
 	SDL_DestroyTexture(tex);

@@ -20,8 +20,8 @@ private:
 	void do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r) override;
 
 	Fft m_fft{};
-	float m_db_min{};
-	float m_db_max{};
+	int8_t m_db_min{};
+	int8_t m_db_max{};
 	bool m_agc{true};
 	bool m_fft_approximate{true};
 };

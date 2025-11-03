@@ -32,19 +32,24 @@ void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	if(channels.size() != streams.channel_count()) {
 		return;
 	}
-		
+
 	ImGui::NewLine();
 	ImGui::NewLine();
 
 	for(size_t ch=0; ch<streams.channel_count(); ch++) {
 		channels[ch].enabled = false;
 	}
-		
+
+	ImGui::Text("speed:");
+	ImGui::SameLine();
 	ImGui::SetNextItemWidth(150);
-	if(ImGui::SliderFloat("speed", &speed, 0.25, 4.0, "Speed %.2fx", ImGuiSliderFlags_Logarithmic)) {
+	if(ImGui::SliderFloat("##speed", &speed, 0.25, 4.0, "Speed %.2fx", ImGuiSliderFlags_Logarithmic)) {
 		player.set_speed(speed);
 	}
-	
+	ImGui::SameLine();
+	float semitones = 12.0f * log2f(speed);
+	ImGui::Text("%+.2f semitones", semitones);
+
 	ImGui::NewLine();
 
 	for(size_t ch=0; ch<streams.channel_count(); ch++) {
