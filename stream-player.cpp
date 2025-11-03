@@ -17,7 +17,6 @@ StreamPlayer::StreamPlayer(Streams &streams)
 	, m_srate(48000)
 	, m_frame_size(2 * sizeof(float))
 	, m_buf_frames(4096)
-	, m_speed(1.0)
 {
 	SDL_AudioSpec fmt{};
 	fmt.freq = m_srate;
@@ -50,14 +49,19 @@ void StreamPlayer::set_channel_count(size_t count)
 void StreamPlayer::load(ConfigReader::Node *n)
 {
 	auto nc = n->find("player");
-	float speed = 1.0f;
-	nc->read("speed", speed);
-	m_speed = speed;
+	float stretch = 1.0f;
+	nc->read("stretch", stretch);
+	m_stretch = stretch;
+
+	float pitch = 1.0f;
+	nc->read("pitch", pitch);
+	m_pitch = pitch;
 
 	for(auto &k : nc->find("channel")->kids) {
 		if(isdigit(k.first[0])) {
 			size_t ch = atoi(k.first);
 			m_channels.resize(ch+1);
+			k.second->read("enabled", m_channels[ch].enabled);
 			k.second->read("volume", m_channels[ch].gain);
 			k.second->read("pan", m_channels[ch].pan);
 		}
@@ -68,10 +72,12 @@ void StreamPlayer::load(ConfigReader::Node *n)
 void StreamPlayer::save(ConfigWriter &cw)
 {
 	cw.push("player");
-	cw.write("speed", m_speed);
+	cw.write("stretch", m_stretch);
+	cw.write("pitch", m_pitch);
 	cw.push("channel");
 	for(size_t ch=0; ch<m_channels.size(); ch++) {
 		cw.push(ch);
+		cw.write("enabled", m_channels[ch].enabled);
 		cw.write("volume", m_channels[ch].gain);
 		cw.write("pan", m_channels[ch].pan);
 		cw.pop();
@@ -121,7 +127,7 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 		gain_r[ch] = m_channels[ch].gain * (m_channels[ch].pan >= 0.0f ? 1.0f : (1.0f + m_channels[ch].pan));
 	}
 
-	SDL_SetAudioStreamFrequencyRatio(m_sdl_audio_stream, m_speed);
+	SDL_SetAudioStreamFrequencyRatio(m_sdl_audio_stream, m_pitch);
 
 	for(size_t i=0; i<frame_count; i++) {
 
@@ -141,7 +147,7 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 					float v_prev = data[m_idx_prev * stride + ch] / (float)k_sample_max;
 					v = v_prev * m_xfade + v * (1.0 - m_xfade);
 				}
-				m_xfade -= 1.0 / (m_srate * 0.100);
+				m_xfade -= 1.0 / (m_srate * 0.040);
 			}
 
 			vl += v * gain_l[ch];
@@ -155,8 +161,9 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 	}
 
 	SDL_PutAudioStreamData(m_sdl_audio_stream, m_buf.data(), frame_count * m_frame_size);
-	m_play_pos += (Time)frame_count / m_srate;
-	m_frames_event += frame_count;
+	float factor = m_stretch / m_pitch;
+	m_play_pos += (Time)frame_count / m_srate * factor;
+	m_frames_event += frame_count * factor;
 	
 	uint64_t t_now = SDL_GetTicks();
 	if(t_now > m_t_event) {

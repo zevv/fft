@@ -29,9 +29,13 @@ public:
 	void enable(bool onoff);
 	void seek(Time tpos);
 	void audio_callback(SDL_AudioStream *stream, int additional_amount, int total_amount);
+	
+	float get_pitch() const { return m_pitch; }
+	void set_pitch(float pitch) { m_pitch = std::clamp(pitch, 0.05f, 20.0f); }
 
-	float get_speed() const { return m_speed; }
-	void set_speed(float speed) { m_speed = std::clamp(speed, 0.05f, 20.0f); }
+	float get_stretch() const { return m_stretch; }
+	void set_stretch(float stretch) { m_stretch = std::clamp(stretch, 0.05f, 20.0f); }
+
 
 	std::vector<Channel>& get_channels() { return m_channels; }
 
@@ -48,6 +52,7 @@ private:
 	size_t m_frames_event{};
 	size_t m_frame_size;
 	size_t m_buf_frames;
-	std::atomic<float> m_speed{1.0f};
+	std::atomic<float> m_pitch{1.0f};
+	std::atomic<float> m_stretch{1.0f};
 	std::vector<float> m_buf{};
 };

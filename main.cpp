@@ -241,11 +241,22 @@ void Corrie::run()
 		}
 
 		auto &player = m_streams.player;
-		float speed = player.get_speed();
 		float factor = ImGui::IsKeyDown(ImGuiKey_LeftShift) ? 2.0 : 1.059463;
-		if(ImGui::IsKeyPressed(ImGuiKey_Comma)) player.set_speed(speed / factor);
-		if(ImGui::IsKeyPressed(ImGuiKey_Period)) player.set_speed(1.0);
-		if(ImGui::IsKeyPressed(ImGuiKey_Slash)) player.set_speed(speed * factor);
+		float stretch = player.get_stretch();
+		float pitch = player.get_pitch();
+		if(ImGui::IsKeyPressed(ImGuiKey_Comma)) {
+			player.set_stretch(stretch / factor);
+			player.set_pitch(pitch / factor);
+		}
+		if(ImGui::IsKeyPressed(ImGuiKey_Slash)) {
+			player.set_stretch(stretch * factor);
+			player.set_pitch(pitch * factor);
+		}
+		if(ImGui::IsKeyPressed(ImGuiKey_Period)) {
+			player.set_pitch(1.0);
+			player.set_stretch(1.0);
+		}
+
 
 		SDL_Event event;
 		while (SDL_PollEvent(&event))

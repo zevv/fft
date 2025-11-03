@@ -27,7 +27,8 @@ void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
 	auto &channels = streams.player.get_channels();
 	auto &player = streams.player;
-	float speed = player.get_speed();
+	float stretch = player.get_stretch();
+	float pitch = player.get_pitch();
 
 	if(channels.size() != streams.channel_count()) {
 		return;
@@ -39,14 +40,33 @@ void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 			ImGui::NewLine();
 
-			ImGui::Text("speed:");
-			ImGui::SameLine();
 			ImGui::SetNextItemWidth(150);
-			if(ImGui::SliderFloat("##speed", &speed, 0.25, 4.0, "Speed %.2fx", ImGuiSliderFlags_Logarithmic)) {
-				player.set_speed(speed);
+			if(ImGui::SliderFloat("##stretch", &stretch, 0.25, 4.0, "Stretch %.2fx", ImGuiSliderFlags_Logarithmic)) {
+				player.set_stretch(stretch);
 			}
 			ImGui::SameLine();
-			float semitones = 12.0f * log2f(speed);
+			if(ImGui::Button("0##stretch")) {
+				player.set_stretch(1.0f);
+			}
+
+			ImGui::SetNextItemWidth(150);
+			if(ImGui::SliderFloat("##pitch", &pitch, 0.25, 4.0, "Pitch %.2fx", ImGuiSliderFlags_Logarithmic)) {
+				player.set_pitch(pitch);
+			}
+			ImGui::SameLine();
+			if(ImGui::Button("-##pitch")) {
+				player.set_pitch(pitch / powf(2.0f, 1.0f / 12.0f));
+			}
+			ImGui::SameLine();
+			if(ImGui::Button("0##pitch")) {
+				player.set_pitch(1.0f);
+			}
+			ImGui::SameLine();
+			if(ImGui::Button("+##pitch")) {
+				player.set_pitch(pitch * powf(2.0f, 1.0f / 12.0f));
+			}
+			ImGui::SameLine();
+			float semitones = 12.0f * log2f(pitch);
 			ImGui::Text("%+.2f semitones", semitones);
 
 			ImGui::NewLine();
