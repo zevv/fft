@@ -147,13 +147,16 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 					float v_prev = data[m_idx_prev * stride + ch] / (float)k_sample_max;
 					v = v_prev * m_xfade + v * (1.0 - m_xfade);
 				}
-				m_xfade -= 1.0 / (m_srate * 0.040);
 			}
 
 			vl += v * gain_l[ch];
 			vr += v * gain_r[ch];
 		}
-		
+
+		if(m_xfade > 0.0) {
+			m_xfade -= 1.0 / (m_srate * 0.020);
+		}
+
 		m_buf[i*2 + 0] = vl;
 		m_buf[i*2 + 1] = vr;
 		m_idx ++;
