@@ -20,6 +20,7 @@ public:
 	bool is_channel_enabled(int channel);
 	
 	static SDL_Color ch_color(int channel);
+	static void ch_set_color(int channel, SDL_Color color);
 
 
 private:

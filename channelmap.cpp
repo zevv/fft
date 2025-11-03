@@ -8,7 +8,7 @@
 
 
 // https://medialab.github.io/iwanthue/
-static const SDL_Color color[] = {
+static SDL_Color color[] = {
 	{  58, 186,  42, 255 },
 	{ 198,  69, 214, 255 },
 	{  68, 124, 254, 255 },
@@ -29,6 +29,13 @@ SDL_Color ShowChannelMap::ch_color(int channel)
 	}
 }
 
+
+void ShowChannelMap::ch_set_color(int channel, SDL_Color c)
+{
+	if(channel >= 0 && channel < 8) {
+		color[channel] = c;
+	}
+}
 
 void ShowChannelMap::load(ConfigReader::Node *node)
 {
