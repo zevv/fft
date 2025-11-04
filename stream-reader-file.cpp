@@ -7,10 +7,12 @@
 #include "stream-reader-file.hpp"
 
 StreamReaderFile::StreamReaderFile(size_t ch_count, int fd)
-	: StreamReader("fd", ch_count)
+	: StreamReader("file", ch_count)
 	, m_fd(fd)
 {
-	fcntl(m_fd, F_SETFL, O_NONBLOCK);
+	m_spec_src.freq = 41000;
+	m_spec_src.format = SDL_AUDIO_S16LE;
+	m_spec_src.channels = m_ch_count;
 }
 
 
@@ -23,17 +25,32 @@ StreamReaderFile::~StreamReaderFile()
 }
 
 
-void StreamReaderFile::poll()
+SDL_AudioStream *StreamReaderFile::do_open(SDL_AudioSpec *spec_dst)
+{
+	fcntl(m_fd, F_SETFL, O_NONBLOCK);
+
+	SDL_AudioStream *sas = SDL_CreateAudioStream(&m_spec_src, spec_dst);
+	if(sas == nullptr) {
+		fprintf(stderr, "StreamReaderFile SDL_CreateAudioStream failed: %s\n", SDL_GetError());
+	}
+	return sas;
+}
+
+
+void StreamReaderFile::do_poll(SDL_AudioStream *sas)
 {
 	if(m_fd == -1) return;
 
-	size_t bytes_max;
-	void *buf = m_rb.get_write_ptr(&bytes_max);
-	if(bytes_max == 0) return;
-
-	ssize_t r = read(m_fd, buf, bytes_max);
+	ssize_t r = read(m_fd, m_buf + m_buf_bytes, sizeof(m_buf) - m_buf_bytes);
 	if(r > 0) {
-		m_rb.write_done(r);
+		m_buf_bytes += r;
+		size_t frame_count = m_buf_bytes / m_frame_size;
+		SDL_PutAudioStreamData(sas, m_buf, frame_count * m_frame_size);
+		
+		m_buf_bytes = m_buf_bytes - frame_count * m_frame_size;
+		if(m_buf_bytes > 0) {
+			memmove(m_buf, m_buf + frame_count * m_frame_size, m_buf_bytes);
+		}
 	} else {
 		if(r < 0) {
 			fprintf(stderr, "StreamReaderFile read error: %s\n", strerror(errno));

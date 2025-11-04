@@ -1,5 +1,6 @@
 
 #include <string.h>
+#include <assert.h>
 
 #include "stream-reader.hpp"
 
@@ -9,7 +10,6 @@ StreamReader::StreamReader(const char *name, size_t ch_count)
 	, m_ch_count(ch_count)
 	, m_frame_size(ch_count * sizeof(Sample))
 {
-	m_rb.set_size(4096);
 }
 
 
@@ -18,27 +18,24 @@ StreamReader::~StreamReader()
 }
 
 
-size_t StreamReader::frames_avail()
+void StreamReader::open(void)
 {
-	return m_rb.bytes_used() / m_frame_size;
+	SDL_AudioSpec spec;
+	spec.freq = 48000;
+	spec.format = SDL_AUDIO_S16LE;
+	spec.channels = m_ch_count;
+	spec.freq = 48000;
+	m_sdl_stream = do_open(&spec);
 }
 
 
-
-size_t StreamReader::drain_into(Sample *p_dst, size_t ch_start, size_t frame_count, size_t dst_stride)
+void StreamReader::poll(void)
 {
-	Sample *p_src = (Sample *)m_rb.read(frame_count * m_frame_size);
-	size_t src_stride = m_ch_count;
-
-	for(size_t i=0; i<frame_count; i++) {
-		memcpy(p_dst + ch_start, p_src, m_frame_size);
-		p_src += src_stride;
-		p_dst += dst_stride;
+	assert(m_sdl_stream != nullptr);
+	int bytes_queued = SDL_GetAudioStreamQueued(m_sdl_stream);
+	if(bytes_queued < 64000) {
+		do_poll(m_sdl_stream);
 	}
-
-	return m_ch_count;
 }
-
-
 
 

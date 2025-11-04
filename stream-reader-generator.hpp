@@ -6,7 +6,8 @@ public:
 
 	StreamReaderGenerator(size_t ch_count, float srate, int type);
 	~StreamReaderGenerator();
-	void poll() override;
+
+	void do_poll(SDL_AudioStream *sas) override;
 private:
 
 	Sample run();

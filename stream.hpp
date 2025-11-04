@@ -44,6 +44,7 @@ private:
 	Rb m_rb;
 	Wavecache m_wavecache;
 	std::vector<StreamReader *> m_readers{};
+	std::vector<Sample> m_capture_buf{};
 
 	struct {
 		std::thread thread;
