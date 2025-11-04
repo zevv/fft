@@ -6,11 +6,11 @@
 
 #include "stream-reader-file.hpp"
 
-StreamReaderFile::StreamReaderFile(size_t ch_count, int fd)
+StreamReaderFile::StreamReaderFile(size_t ch_count, Samplerate srate, int fd)
 	: StreamReader("file", ch_count)
 	, m_fd(fd)
 {
-	m_spec_src.freq = 41000;
+	m_spec_src.freq = srate;
 	m_spec_src.format = SDL_AUDIO_S16LE;
 	m_spec_src.channels = ch_count;
 }

@@ -172,9 +172,9 @@ void Corrie::init()
 	}
 
 	int fd1 = open("/home/ico/tmp/1.s16", O_RDONLY);
-	m_streams.capture.add_reader(new StreamReaderFile(2, fd1));
-	int fd2 = open("/home/ico/tmp/3.s16", O_RDONLY);
-	m_streams.capture.add_reader(new StreamReaderFile(2, fd2));
+	m_streams.capture.add_reader(new StreamReaderFile(2, 44100.0, fd1));
+	int fd2 = open("/home/ico/tmp/2.s16", O_RDONLY);
+	m_streams.capture.add_reader(new StreamReaderFile(2, 44100.0, fd2));
 	//m_streams.capture.add_reader(new StreamReaderAudio(3, m_srate));
 	m_streams.capture.add_reader(new StreamReaderGenerator(1, m_srate, 0));
 	//m_streams.capture.add_reader(new StreamReaderGenerator(1, m_srate, 1));
