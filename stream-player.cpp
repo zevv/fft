@@ -154,7 +154,7 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 		}
 
 		if(m_xfade > 0.0) {
-			m_xfade -= 1.0 / (m_srate * 0.020);
+			m_xfade -= 1.0 / (0.020 * m_srate * m_pitch); // 20ms crossfade
 		}
 
 		m_buf[i*2 + 0] = vl;
