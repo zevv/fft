@@ -110,15 +110,6 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 	size_t avail = 0;
 	Sample *data = m_streams.peek(&stride, &avail);
 
-	if(m_xfade <= 0.0) {
-		Time delta = fabs(m_play_pos - m_idx / m_srate);
-		if(delta > 0.01) {
-			m_idx_prev = m_idx;
-			m_idx = m_play_pos * m_srate;
-			m_xfade = 1.0;
-		}
-	}
-
 	std::vector<float> gain_l(m_streams.channel_count());
 	std::vector<float> gain_r(m_streams.channel_count());
 
@@ -146,6 +137,13 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 				if(m_idx_prev >= 0 && m_idx_prev < avail) {
 					float v_prev = data[m_idx_prev * stride + ch] / (float)k_sample_max;
 					v = v_prev * m_xfade + v * (1.0 - m_xfade);
+				}
+			} else {
+				Time delta = fabs(m_play_pos - m_idx / m_srate);
+				if(delta > 0.01) {
+					m_idx_prev = m_idx;
+					m_idx = m_play_pos * m_srate;
+					m_xfade = 1.0;
 				}
 			}
 
