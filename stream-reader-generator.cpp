@@ -9,6 +9,7 @@ StreamReaderGenerator::StreamReaderGenerator(size_t ch_count, float srate, int t
 	, m_srate(srate)
 	, m_type(type)
 {
+	m_buf.resize(ch_count * 1024);
 }
 
 
@@ -18,17 +19,18 @@ StreamReaderGenerator::~StreamReaderGenerator()
 }
 
 
+void StreamReaderGenerator::open()
+{
+	m_sdl_stream = SDL_CreateAudioStream(&m_sdl_audio_spec, &m_sdl_audio_spec);
+}
+
+
 void StreamReaderGenerator::poll()
 {
-	size_t bytes_gen;
-	Sample *buf = (Sample *)m_rb.get_write_ptr(&bytes_gen);
-	size_t frames_gen = bytes_gen / m_frame_size;
-	if(frames_gen == 0) return;
-
-	for(size_t i=0; i<frames_gen; i++) {
-		buf[i] = run();
+	for(size_t i=0; i<1024; i++) {
+		m_buf[i] = run();
 	}
-	m_rb.write_done(frames_gen * m_frame_size);
+	SDL_PutAudioStreamData(m_sdl_stream, m_buf.data(), 1024 * sizeof(Sample));
 }
 
 

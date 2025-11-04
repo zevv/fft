@@ -36,7 +36,6 @@ public:
 	float get_stretch() const { return m_stretch; }
 	void set_stretch(float stretch) { m_stretch = std::clamp(stretch, 0.05f, 20.0f); }
 
-	size_t find_best_match(Sample *data, size_t target_frame, size_t start_frame);
 
 	std::vector<Channel>& get_channels() { return m_channels; }
 

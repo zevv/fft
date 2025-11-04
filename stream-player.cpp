@@ -99,34 +99,6 @@ void StreamPlayer::seek(Time t)
 }
 
 
-size_t find_best_match(Sample *data, size_t target_idx, size_t ref_idx)
-{
-
-	// search a window of 32 frames around target idx that has
-	// best correlation with ref idx
-
-	if(target_idx < 16 || ref_idx < 16) {
-		return target_idx;
-	}
-
-	int best_corr = -1;
-	size_t best_idx = target_idx;
-
-	for(size_t idx1=target_idx-16; idx1<=target_idx+16; idx1++) {
-		int corr = 0;
-		for(size_t idx2=ref_idx-16; idx2<=ref_idx+16; idx2++) {
-			corr += data[idx1] * data[idx2];
-		}
-		if(corr > best_corr) {
-			best_corr = corr;
-			best_idx = idx1;
-		}
-	}
-
-	return best_idx;
-}
-
-
 void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount, int total_amount)
 {
 	m_channels.resize(m_streams.channel_count());
@@ -170,8 +142,7 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 				Time delta = fabs(m_play_pos - m_idx / m_srate);
 				if(delta > 0.01) {
 					m_idx_prev = m_idx;
-					//m_idx = m_play_pos * m_srate;
-					m_idx = find_best_match(data, m_play_pos * m_srate, m_idx);
+					m_idx = m_play_pos * m_srate;
 					m_xfade = 1.0;
 				}
 			}

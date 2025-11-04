@@ -175,8 +175,8 @@ void Corrie::init()
 	m_streams.capture.add_reader(new StreamReaderFile(2, fd1));
 	int fd2 = open("/home/ico/tmp/2.s16", O_RDONLY);
 	m_streams.capture.add_reader(new StreamReaderFile(2, fd2));
-	m_streams.capture.add_reader(new StreamReaderAudio(3, m_srate));
-	//m_streams.capture.add_reader(new StreamReaderGenerator(1, m_srate, 1));
+	//m_streams.capture.add_reader(new StreamReaderAudio(3, m_srate));
+	m_streams.capture.add_reader(new StreamReaderGenerator(1, m_srate, 0));
 	//m_streams.capture.add_reader(new StreamReaderGenerator(1, m_srate, 1));
 	m_streams.allocate(512 * 1024 * 1024);
 	m_streams.capture.enable(true);
