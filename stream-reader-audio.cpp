@@ -8,28 +8,27 @@ StreamReaderAudio::StreamReaderAudio(size_t ch_count, float srate)
 }
 
 
-SDL_AudioStream *StreamReaderAudio::do_open(SDL_AudioSpec *spec_dst)
-{
-	SDL_AudioStream *sas = SDL_OpenAudioDeviceStream(
-            SDL_AUDIO_DEVICE_DEFAULT_RECORDING,
-            spec_dst, nullptr, (void *)this);
-
-	if(sas) {
-		SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(sas));
-	} else {
-		fprintf(stderr, "StreamReaderAudio: SDL_OpenAudioDeviceStream failed: %s\n", SDL_GetError());
-	}
-
-	return sas;
-}
-
-
 StreamReaderAudio::~StreamReaderAudio()
 {
 }
 
 
-void StreamReaderAudio::do_poll(SDL_AudioStream *sas)
+void StreamReaderAudio::open()
+{
+	m_sdl_stream = SDL_OpenAudioDeviceStream(
+            SDL_AUDIO_DEVICE_DEFAULT_RECORDING,
+            &m_sdl_audio_spec, nullptr, (void *)this);
+
+	if(m_sdl_stream) {
+		SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(m_sdl_stream));
+	} else {
+		fprintf(stderr, "StreamReaderAudio: SDL_OpenAudioDeviceStream failed: %s\n", SDL_GetError());
+	}
+}
+
+
+
+void StreamReaderAudio::poll()
 {
 }
 

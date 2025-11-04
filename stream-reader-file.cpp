@@ -25,19 +25,18 @@ StreamReaderFile::~StreamReaderFile()
 }
 
 
-SDL_AudioStream *StreamReaderFile::do_open(SDL_AudioSpec *spec_dst)
+void StreamReaderFile::open()
 {
 	fcntl(m_fd, F_SETFL, O_NONBLOCK);
 
-	SDL_AudioStream *sas = SDL_CreateAudioStream(&m_spec_src, spec_dst);
-	if(sas == nullptr) {
+	m_sdl_stream = SDL_CreateAudioStream(&m_spec_src, &m_sdl_audio_spec);
+	if(m_sdl_stream == nullptr) {
 		fprintf(stderr, "StreamReaderFile SDL_CreateAudioStream failed: %s\n", SDL_GetError());
 	}
-	return sas;
 }
 
 
-void StreamReaderFile::do_poll(SDL_AudioStream *sas)
+void StreamReaderFile::poll()
 {
 	if(m_fd == -1) return;
 
@@ -45,7 +44,7 @@ void StreamReaderFile::do_poll(SDL_AudioStream *sas)
 	if(r > 0) {
 		m_buf_bytes += r;
 		size_t frame_count = m_buf_bytes / m_frame_size;
-		SDL_PutAudioStreamData(sas, m_buf, frame_count * m_frame_size);
+		SDL_PutAudioStreamData(m_sdl_stream, m_buf, frame_count * m_frame_size);
 		
 		m_buf_bytes = m_buf_bytes - frame_count * m_frame_size;
 		if(m_buf_bytes > 0) {

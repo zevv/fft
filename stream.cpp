@@ -110,7 +110,11 @@ void Streams::capture_thread()
 	
 		// poll all readers
 		for(auto reader : m_readers) {
-			reader->poll();
+			SDL_AudioStream *sas = reader->get_sdl_audio_stream();
+			int bytes_queued = SDL_GetAudioStreamQueued(sas);
+			if(bytes_queued < 64000) {
+				reader->poll();
+			}
 		}
 
 		// calculate common lowest number of available frames
@@ -134,7 +138,7 @@ void Streams::capture_thread()
 				SDL_AudioStream *sas = reader->get_sdl_audio_stream();
 				int bytes_want = frame_count * reader_channel_count * sizeof(Sample);
 				int bytes_read = SDL_GetAudioStreamData(sas, m_capture_buf.data(), bytes_want);
-				assert(bytes_read >= 0);
+				//assert(bytes_read >= 0);
 
 				// deinterleave into ring buffer
 				Sample *p_src = m_capture_buf.data();

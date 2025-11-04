@@ -6,8 +6,8 @@ public:
 	StreamReaderFile(size_t ch_count, int fd);
 	~StreamReaderFile();
 
-	void do_poll(SDL_AudioStream *sas) override;
-	SDL_AudioStream *do_open(SDL_AudioSpec *spec) override;
+	void poll() override;
+	void open() override;
 
 private:
 	SDL_AudioSpec m_spec_src{};
