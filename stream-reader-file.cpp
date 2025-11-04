@@ -12,7 +12,7 @@ StreamReaderFile::StreamReaderFile(size_t ch_count, int fd)
 {
 	m_spec_src.freq = 41000;
 	m_spec_src.format = SDL_AUDIO_S16LE;
-	m_spec_src.channels = m_ch_count;
+	m_spec_src.channels = ch_count;
 }
 
 

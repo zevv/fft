@@ -10,7 +10,6 @@ class StreamReader {
 public:
 	StreamReader(const char *name, size_t ch_count)
 		: m_name(name)
-		, m_ch_count(ch_count)
 		, m_frame_size(ch_count * sizeof(Sample))
 		, m_sdl_audio_spec{ SDL_AUDIO_S16LE, (uint8_t)ch_count, 48000 }
 	{}
@@ -26,7 +25,6 @@ public:
 
 protected:
 	const char *m_name;
-	size_t m_ch_count;
 	size_t m_frame_size{};
 	SDL_AudioSpec m_sdl_audio_spec{};
 	SDL_AudioStream *m_sdl_stream{};
