@@ -120,7 +120,7 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 
 	SDL_SetAudioStreamFrequencyRatio(m_sdl_audio_stream, m_pitch);
 
-	size_t xfade_samples = m_srate * 0.020 * m_pitch; // 20ms crossfade
+	size_t xfade_samples = m_srate * 0.030 * m_pitch;
 	float factor = m_stretch / m_pitch;
 
 	for(size_t i=0; i<frame_count; i++) {
