@@ -172,14 +172,14 @@ void Corrie::init()
 	}
 
 	int fd1 = open("/home/ico/tmp/1.s16", O_RDONLY);
-	m_streams.add_reader(new StreamReaderFile(2, fd1));
+	m_streams.capture.add_reader(new StreamReaderFile(2, fd1));
 	int fd2 = open("/home/ico/tmp/2.s16", O_RDONLY);
-	//m_streams.add_reader(new StreamReaderFile(2, fd2));
-	//m_streams.add_reader(new StreamReaderAudio(3, m_srate));
-	//m_streams.add_reader(new StreamReaderGenerator(1, m_srate, 1));
-	//m_streams.add_reader(new StreamReaderGenerator(1, m_srate, 1));
+	m_streams.capture.add_reader(new StreamReaderFile(2, fd2));
+	m_streams.capture.add_reader(new StreamReaderAudio(3, m_srate));
+	//m_streams.capture.add_reader(new StreamReaderGenerator(1, m_srate, 1));
+	//m_streams.capture.add_reader(new StreamReaderGenerator(1, m_srate, 1));
 	m_streams.allocate(512 * 1024 * 1024);
-	m_streams.capture_enable(true);
+	m_streams.capture.enable(true);
 	m_streams.player.seek(m_view.time.playpos);
 }
 
@@ -232,7 +232,7 @@ void Corrie::run()
 
 		if(ImGui::IsKeyPressed(ImGuiKey_C)) {
 			m_capturing ^= 1;
-			m_streams.capture_enable(m_capturing);
+			m_streams.capture.enable(m_capturing);
 		}
 
 		if(ImGui::IsKeyPressed(ImGuiKey_Space)) {

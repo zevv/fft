@@ -12,14 +12,15 @@
 #include "config.hpp"
 #include "types.hpp"
 #include "wavecache.hpp"
-#include "stream-reader.hpp"
 #include "stream-player.hpp"
+#include "stream-capture.hpp"
 
 
 class StreamReader;
 
 class Streams {
 public:
+
 
 	Streams();
 	~Streams();
@@ -32,9 +33,9 @@ public:
 	Sample *peek(size_t *stride, size_t *used = nullptr);
 	Wavecache::Range *peek_wavecache(size_t *stride, size_t *used = nullptr);
 	void add_reader(StreamReader *reader);
-	void capture_enable(bool onoff);
 	
 	StreamPlayer player;
+	StreamCapture capture;
 
 private:
 
@@ -43,20 +44,7 @@ private:
 	size_t m_frame_size{};
 	Rb m_rb;
 	Wavecache m_wavecache;
-	std::vector<StreamReader *> m_readers{};
-	std::vector<Sample> m_capture_buf{};
 
-	struct {
-		std::thread thread;
-		std::atomic<bool> enabled{false};
-		std::atomic<bool> running{false};
-	} m_capture{};
-
-	void capture_thread();
 
 public:
 };
-
-
-
-

@@ -19,6 +19,7 @@ SRC += stream.cpp
 SRC += wavecache.cpp
 SRC += misc.cpp
 SRC += stream-player.cpp
+SRC += stream-capture.cpp
 SRC += stream-reader-audio.cpp
 SRC += stream-reader-file.cpp
 #SRC += stream-reader-generator.cpp
