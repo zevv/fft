@@ -47,7 +47,7 @@ private:
 	SDL_AudioStream *m_sdl_audio_stream{nullptr};
 	size_t m_idx{};
 	size_t m_idx_prev{};
-	double m_xfade{};
+	size_t m_xfade{};
 	uint32_t m_t_event{};
 	size_t m_frames_event{};
 	size_t m_frame_size;

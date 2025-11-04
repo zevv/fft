@@ -120,10 +120,22 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 
 	SDL_SetAudioStreamFrequencyRatio(m_sdl_audio_stream, m_pitch);
 
+	size_t xfade_samples = m_srate * 0.020 * m_pitch; // 20ms crossfade
+	float factor = m_stretch / m_pitch;
+
 	for(size_t i=0; i<frame_count; i++) {
 
 		float vl = 0.0;
 		float vr = 0.0;
+
+		Time delta = fabs(m_play_pos - (Time(m_idx) / m_srate));
+		if(delta > 0.020 || m_stretch != 1.0f) {
+			if(m_xfade == 0) {
+				m_idx_prev = m_idx;
+				m_idx = m_play_pos * m_srate;
+				m_xfade = xfade_samples;
+			}
+		}
 
 		for(size_t ch=0; ch<m_streams.channel_count(); ch++) {
 
@@ -133,17 +145,12 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 			if(m_idx >= 0 && m_idx < avail) {
 				v = data[m_idx * stride + ch] / (float)k_sample_max;
 			}
-			if(m_xfade > 0.0) {
+			if(m_xfade > 0) {
 				if(m_idx_prev >= 0 && m_idx_prev < avail) {
+					float g0 = (float)m_xfade / (float)xfade_samples;
+					float g1 = 1.0f - g0;
 					float v_prev = data[m_idx_prev * stride + ch] / (float)k_sample_max;
-					v = v_prev * m_xfade + v * (1.0 - m_xfade);
-				}
-			} else {
-				Time delta = fabs(m_play_pos - m_idx / m_srate);
-				if(delta > 0.01) {
-					m_idx_prev = m_idx;
-					m_idx = m_play_pos * m_srate;
-					m_xfade = 1.0;
+					v = v_prev * g0 + v * g1;
 				}
 			}
 
@@ -151,19 +158,18 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 			vr += v * gain_r[ch];
 		}
 
-		if(m_xfade > 0.0) {
-			m_xfade -= 1.0 / (0.020 * m_srate * m_pitch); // 20ms crossfade
+		if(m_xfade > 0) {
+			m_xfade --;
 		}
 
 		m_buf[i*2 + 0] = vl;
 		m_buf[i*2 + 1] = vr;
 		m_idx ++;
 		m_idx_prev ++;
+		m_play_pos += 1.0 / m_srate * factor; 
 	}
 
 	SDL_PutAudioStreamData(m_sdl_audio_stream, m_buf.data(), frame_count * m_frame_size);
-	float factor = m_stretch / m_pitch;
-	m_play_pos += (Time)frame_count / m_srate * factor;
 	m_frames_event += frame_count * factor;
 	
 	uint64_t t_now = SDL_GetTicks();
