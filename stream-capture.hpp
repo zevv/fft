@@ -21,8 +21,8 @@ public:
 	StreamCapture(Streams &streams, Rb &rb, Wavecache &wavecache);
 	~StreamCapture();
 
+	void set_sample_rate(Samplerate srate);
 	void enable(bool onoff);
-	void add_reader(StreamReader *reader);
 	void add_reader(const char *desc);
 	size_t channel_count();
 
@@ -36,6 +36,7 @@ private:
 	Streams &m_streams;
 	Rb &m_rb;
 	Wavecache &m_wavecache;
+	SDL_AudioSpec m_spec{};
 };
 
 

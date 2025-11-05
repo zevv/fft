@@ -40,6 +40,19 @@ StreamPlayer::~StreamPlayer()
 }
 
 
+void StreamPlayer::set_sample_rate(Samplerate srate)
+{
+	m_srate = srate;
+	SDL_AudioSpec src_spec, dst_spec;
+	SDL_GetAudioStreamFormat(m_sdl_audio_stream, &src_spec, &dst_spec);
+	src_spec.freq = m_srate;
+	SDL_SetAudioStreamFormat(m_sdl_audio_stream, &src_spec, &dst_spec);
+
+	SDL_GetAudioStreamFormat(m_sdl_audio_stream, &src_spec, &dst_spec);
+	printf("audio rate %d -> %d\n", src_spec.freq, dst_spec.freq);
+}
+
+
 void StreamPlayer::set_channel_count(size_t count)
 {
 	m_channels.resize(std::max(count, m_channels.size()));

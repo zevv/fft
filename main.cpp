@@ -214,11 +214,13 @@ void Corrie::init(int argc, char **argv)
 		}
 	}
 	
+	m_view.srate = m_srate;
+	m_streams.capture.set_sample_rate(m_srate);
+	
 	for(int i=optind; i<argc; i++) {
 		m_streams.capture.add_reader(argv[i]);
 	}
 	
-	m_view.srate = m_srate;
 
 	//int fd1 = open("/tmp/data", O_RDONLY);
 	//m_streams.capture.add_reader(new StreamReaderFile(6, SDL_AUDIO_F32, 96000.0, fd1));
@@ -232,6 +234,7 @@ void Corrie::init(int argc, char **argv)
 	//m_streams.capture.add_reader(new StreamReaderGenerator(1, m_srate, 1));
 	m_streams.allocate(512 * 1024 * 1024);
 	m_streams.capture.enable(true);
+	m_streams.player.set_sample_rate(m_srate);
 	m_streams.player.seek(m_view.time.playpos);
 }
 

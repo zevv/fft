@@ -18,6 +18,7 @@ StreamCapture::StreamCapture(Streams &streams, Rb &rb, Wavecache &wavecache)
 	: m_streams(streams)
 	, m_rb(rb)
 	, m_wavecache(wavecache)
+	, m_spec{SDL_AUDIO_S16, 1, 8000}
 {
 }
 
@@ -34,6 +35,11 @@ StreamCapture::~StreamCapture()
 }
 
 
+void StreamCapture::set_sample_rate(Samplerate srate)
+{
+	m_spec.freq = srate;
+}
+
 void StreamCapture::enable(bool enable)
 {
 	size_t channel_count = 0;
@@ -42,6 +48,7 @@ void StreamCapture::enable(bool enable)
 		channel_count += reader->channel_count();
 	}
 
+	m_spec.channels = channel_count;
 	m_buf.resize(channel_count * 4096);
 
 	if(enable && !m_running) {
@@ -52,11 +59,6 @@ void StreamCapture::enable(bool enable)
 	m_enabled = enable;
 }
 
-
-void StreamCapture::add_reader(StreamReader *reader)
-{
-	m_readers.push_back(reader);
-}
 
 static struct {
 	const char *name;
@@ -114,11 +116,13 @@ void StreamCapture::add_reader(const char *desc)
 		wordexp_t p;
 		if(wordexp(fname, &p, 0) == 0) {
 			fname = p.we_wordv[0];
-			SDL_AudioSpec spec = parse_audio_spec(strtok(nullptr, ":"));
+			SDL_AudioSpec src_spec = parse_audio_spec(strtok(nullptr, ":"));
 			int fd = open(fname, O_RDONLY);
 			if(fd > 0) {
-				StreamReader *reader = new StreamReaderFile(spec, fd);
-				add_reader(reader);
+				SDL_AudioSpec dst_spec = m_spec;
+				dst_spec.channels = src_spec.channels;
+				StreamReader *reader = new StreamReaderFile(dst_spec, src_spec, fd);
+				m_readers.push_back(reader);
 			} else {
 				fprintf(stderr, "open('%s'): %s\n", fname, strerror(errno));
 			}

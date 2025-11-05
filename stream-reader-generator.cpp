@@ -4,12 +4,12 @@
 #include "stream-reader-generator.hpp"
 
 
-StreamReaderGenerator::StreamReaderGenerator(size_t ch_count, float srate, int type)
-	: StreamReader("gen", ch_count)
-	, m_srate(srate)
+StreamReaderGenerator::StreamReaderGenerator(SDL_AudioSpec &dst_spec, int type)
+	: StreamReader("gen", dst_spec)
+	, m_srate(dst_spec.freq)
 	, m_type(type)
 {
-	m_buf.resize(ch_count * 1024);
+	m_buf.resize(dst_spec.channels * 1024);
 }
 
 
@@ -21,7 +21,7 @@ StreamReaderGenerator::~StreamReaderGenerator()
 
 void StreamReaderGenerator::open()
 {
-	m_sdl_stream = SDL_CreateAudioStream(&m_sdl_audio_spec, &m_sdl_audio_spec);
+	m_sdl_stream = SDL_CreateAudioStream(&m_dst_spec, &m_dst_spec);
 }
 
 

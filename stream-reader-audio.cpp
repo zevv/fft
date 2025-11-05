@@ -2,8 +2,8 @@
 #include "stream-reader-audio.hpp"
 
 
-StreamReaderAudio::StreamReaderAudio(size_t ch_count, float srate)
-	: StreamReader("audio", ch_count)
+StreamReaderAudio::StreamReaderAudio(SDL_AudioSpec &dst_spec)
+	: StreamReader("audio", dst_spec)
 {
 }
 
@@ -17,7 +17,7 @@ void StreamReaderAudio::open()
 {
 	m_sdl_stream = SDL_OpenAudioDeviceStream(
             SDL_AUDIO_DEVICE_DEFAULT_RECORDING,
-            &m_sdl_audio_spec, nullptr, (void *)this);
+            &m_dst_spec, nullptr, (void *)this);
 
 	if(m_sdl_stream) {
 		SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(m_sdl_stream));

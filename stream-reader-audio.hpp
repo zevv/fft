@@ -6,7 +6,7 @@
 
 class StreamReaderAudio : public StreamReader {
 public:
-	StreamReaderAudio(size_t ch_count, float srate);
+	StreamReaderAudio(SDL_AudioSpec &dst_spec);
 	~StreamReaderAudio();
 
 	void open() override;

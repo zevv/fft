@@ -4,7 +4,7 @@
 class StreamReaderGenerator : public StreamReader {
 public:
 
-	StreamReaderGenerator(size_t ch_count, float srate, int type);
+	StreamReaderGenerator(SDL_AudioSpec &dst_spec, int type);
 	~StreamReaderGenerator();
 
 	void open() override;

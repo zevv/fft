@@ -8,15 +8,15 @@
 
 class StreamReader {
 public:
-	StreamReader(const char *name, size_t ch_count)
+	StreamReader(const char *name, SDL_AudioSpec &dst_spec)
 		: m_name(name)
-		, m_frame_size(ch_count * sizeof(Sample))
-		, m_sdl_audio_spec{ SDL_AUDIO_S16LE, (uint8_t)ch_count, 48000 }
+		, m_frame_size(dst_spec.channels * sizeof(Sample))
+		, m_dst_spec(dst_spec)
 	{}
 
 	virtual ~StreamReader() {};
-	size_t channel_count() { return m_sdl_audio_spec.channels; }
-	size_t frame_size() { return m_sdl_audio_spec.channels * sizeof(Sample); }
+	size_t channel_count() { return m_dst_spec.channels; }
+	size_t frame_size() { return m_dst_spec.channels * sizeof(Sample); }
 	const char *name() { return m_name; }
 	SDL_AudioStream *get_sdl_audio_stream() { return m_sdl_stream; }
 
@@ -26,7 +26,7 @@ public:
 protected:
 	const char *m_name;
 	size_t m_frame_size{};
-	SDL_AudioSpec m_sdl_audio_spec{};
+	SDL_AudioSpec m_dst_spec{};
 	SDL_AudioStream *m_sdl_stream{};
 };
 

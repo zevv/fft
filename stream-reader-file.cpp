@@ -6,18 +6,9 @@
 
 #include "stream-reader-file.hpp"
 
-StreamReaderFile::StreamReaderFile(size_t ch_count, SDL_AudioFormat fmt, Samplerate srate, int fd)
-	: StreamReader("file", ch_count)
-	, m_fd(fd)
-{
-	m_spec_src.freq = srate;
-	m_spec_src.format = fmt;
-	m_spec_src.channels = ch_count;
-}
-
-StreamReaderFile::StreamReaderFile(SDL_AudioSpec &spec, int fd)
-	: StreamReader("file", spec.channels)
-	, m_spec_src(spec)
+StreamReaderFile::StreamReaderFile(SDL_AudioSpec &dst_spec, SDL_AudioSpec &src_spec, int fd)
+	: StreamReader("file", dst_spec)
+	, m_src_spec(src_spec)
 	, m_fd(fd)
 {
 }
@@ -36,7 +27,7 @@ void StreamReaderFile::open()
 {
 	fcntl(m_fd, F_SETFL, O_NONBLOCK);
 
-	m_sdl_stream = SDL_CreateAudioStream(&m_spec_src, &m_sdl_audio_spec);
+	m_sdl_stream = SDL_CreateAudioStream(&m_src_spec, &m_dst_spec);
 	if(m_sdl_stream == nullptr) {
 		fprintf(stderr, "StreamReaderFile SDL_CreateAudioStream failed: %s\n", SDL_GetError());
 	}
@@ -47,7 +38,7 @@ void StreamReaderFile::poll()
 {
 	if(m_fd == -1) return;
 
-	size_t frame_size = m_spec_src.channels * SDL_AUDIO_BYTESIZE(m_spec_src.format);
+	size_t frame_size = m_src_spec.channels * SDL_AUDIO_BYTESIZE(m_src_spec.format);
 
 	ssize_t r = read(m_fd, m_buf + m_buf_bytes, sizeof(m_buf) - m_buf_bytes);
 	if(r > 0) {
