@@ -129,14 +129,19 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	grid_vertical(rend, r, -scale / k_sample_max, +scale / k_sample_max);
 
 	// cursor
-	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
+	SDL_SetRenderDrawColor(rend, 248, 248, 0, 255);
 	int cx = m_view.t_to_x(m_view.time.cursor, r);
 	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
 	
 	// play position
 	SDL_SetRenderDrawColor(rend, 0, 128, 128, 255);
 	int px = m_view.t_to_x(m_view.time.playpos, r);
-	SDL_RenderLine(rend, px, r.y, px, r.y + r.h);
+	SDL_Vertex vert[3];
+	vert[0].position = { (float)(px - 5), (float)(r.y + r.h) };
+	vert[1].position = { (float)(px + 5), (float)(r.y + r.h) };
+	vert[2].position = { (float)(px	), (float)(r.y + r.h - 10) };
+	vert[0].color = vert[1].color = vert[2].color = { 0, 64, 128, 255 };
+	SDL_RenderGeometry(rend, nullptr, vert, 3, nullptr, 0);
 
 	// window
 	Window w = Window(m_view.window.window_type, m_view.window.size, m_view.window.window_beta);
