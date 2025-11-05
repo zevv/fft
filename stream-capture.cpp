@@ -4,13 +4,14 @@
 #include <algorithm>
 #include <unistd.h>
 #include <assert.h>
-#include <experimental/simd>
+#include <wordexp.h>
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_audio.h>
 
 #include "stream.hpp"
 #include "stream-capture.hpp"
+#include "stream-reader-file.hpp"
 
 
 StreamCapture::StreamCapture(Streams &streams, Rb &rb, Wavecache &wavecache) 
@@ -55,6 +56,77 @@ void StreamCapture::enable(bool enable)
 void StreamCapture::add_reader(StreamReader *reader)
 {
 	m_readers.push_back(reader);
+}
+
+static struct {
+	const char *name;
+	SDL_AudioFormat format;
+} audio_format_map[] = {
+	{ "u8",     SDL_AUDIO_U8 },
+	{ "s8",     SDL_AUDIO_S8 },
+	{ "s16",    SDL_AUDIO_S16 },
+	{ "s16le",  SDL_AUDIO_S16LE },
+	{ "s16be",  SDL_AUDIO_S16BE },
+	{ "s32",    SDL_AUDIO_S32 },
+	{ "s32le",  SDL_AUDIO_S32LE },
+	{ "s32be",  SDL_AUDIO_S32BE },
+	{ "f32",    SDL_AUDIO_F32 },
+	{ "f32le",  SDL_AUDIO_F32LE },
+	{ "f32be",  SDL_AUDIO_F32BE },
+	{ nullptr },
+};
+
+SDL_AudioSpec parse_audio_spec(char *s)
+{
+	SDL_AudioSpec fmt;
+	fmt.format = SDL_AUDIO_S16LE;
+	fmt.channels = 1;
+	fmt.freq = 48000;
+
+	while(s) {
+		char *endptr;
+		double val = strtod(s, &endptr);
+		if(endptr != s) {
+			if(val <= 32) fmt.channels = val;
+			if(val >  32) fmt.freq = val;
+		} else {
+			for(int i=0; audio_format_map[i].name != nullptr; i++) {
+				if(strcmp(s, audio_format_map[i].name) == 0) {
+					fmt.format = audio_format_map[i].format;
+				}
+			}
+		}
+		s = strtok(nullptr, ":");
+	}
+
+	return fmt;
+}
+
+
+void StreamCapture::add_reader(const char *desc)
+{
+	char *desc_copy = strdup(desc);
+	
+	const char *type = strtok(desc_copy, ":");
+	
+	if(strcmp(type, "file") == 0) {
+		const char *fname = strtok(nullptr, ":");
+		wordexp_t p;
+		if(wordexp(fname, &p, 0) == 0) {
+			fname = p.we_wordv[0];
+			SDL_AudioSpec spec = parse_audio_spec(strtok(nullptr, ":"));
+			int fd = open(fname, O_RDONLY);
+			if(fd > 0) {
+				StreamReader *reader = new StreamReaderFile(spec, fd);
+				add_reader(reader);
+			} else {
+				fprintf(stderr, "open('%s'): %s\n", fname, strerror(errno));
+			}
+			wordfree(&p);
+		}
+	}
+
+	free(desc_copy);
 }
 
 

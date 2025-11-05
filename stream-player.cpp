@@ -14,7 +14,7 @@ static void audio_callback_(void *userdata, SDL_AudioStream *stream, int additio
 
 StreamPlayer::StreamPlayer(Streams &streams)
 	: m_streams(streams)
-	, m_srate(48000)
+	, m_srate(8000)
 	, m_frame_size(2 * sizeof(float))
 	, m_buf_frames(4096)
 {

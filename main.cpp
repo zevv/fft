@@ -4,6 +4,7 @@
 #include <sys/ioctl.h>
 #include <stdlib.h>
 #include <math.h>
+#include <getopt.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -31,7 +32,8 @@ public:
 	void load(const char *fname);
 	void save(const char *fname);
 
-	void init();
+	void init(int argc, char **argv);
+	void usage();
 	void run();
 	void exit();
 
@@ -142,14 +144,36 @@ void Corrie::draw()
 }
 
 
-void Corrie::init()
+void Corrie::usage(void)
+{
+	fprintf(stderr, 
+		"usage: corrie [options] <src> ...\n"
+		"\n"
+		"options:\n"
+		"  -h                   show help\n"
+		"  -r --sample-rate N   set sample rate to N (default: 48000)\n"
+		"\n"
+		"sources:\n"
+		"  file:FILENAME[:CHANNELS][:FORMAT][:SRATE]\n"
+		"  audio[:CHANNELS]\n"
+		"\n"
+		"formats\n:"
+		"  u8 s8 s16[le|be] s32[le|be] f32[le|be]\n"
+
+	);
+}
+
+static struct option long_options[] = {
+	{"help",          no_argument,       0, 'h'},
+	{"sample-rate",   required_argument, 0, 'r'},
+	{0, 0, 0, 0}
+};
+
+void Corrie::init(int argc, char **argv)
 {
 	fcntl(0, F_SETFL, O_NONBLOCK);
 
 	init_video();
-
-	m_view.srate = m_srate;
-
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
@@ -171,8 +195,33 @@ void Corrie::init()
 		m_root_panel->add(p1);
 	}
 
-	int fd1 = open("/tmp/data", O_RDONLY);
-	m_streams.capture.add_reader(new StreamReaderFile(6, SDL_AUDIO_F32, 96000.0, fd1));
+	int opt;
+	while ((opt = getopt_long(argc, argv, "hr:", long_options, NULL)) != -1) {
+		switch (opt) {
+			case 'h':
+				usage();
+				::exit(0);
+				break;
+			case 'r':
+				m_srate = atof(optarg);
+				break;
+			case 0:
+				printf("option %s", long_options[optind].name);
+				break;
+			default:
+				usage();
+				::exit(1);
+		}
+	}
+	
+	for(int i=optind; i<argc; i++) {
+		m_streams.capture.add_reader(argv[i]);
+	}
+	
+	m_view.srate = m_srate;
+
+	//int fd1 = open("/tmp/data", O_RDONLY);
+	//m_streams.capture.add_reader(new StreamReaderFile(6, SDL_AUDIO_F32, 96000.0, fd1));
 
 	//int fd1 = open("/home/ico/tmp/1.s16", O_RDONLY);
 	//m_streams.capture.add_reader(new StreamReaderFile(2, SDL_AUDIO_S16LE, 44100.0, fd1));
@@ -323,14 +372,14 @@ void Corrie::exit()
 }
 
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 
 	// scope to ensure Corrie destructor called before SDL_Quit
 	{
 	Corrie cor = Corrie(nullptr, nullptr);
-	cor.init();
+	cor.init(argc, argv);
 	cor.run();
 	cor.exit();
 	}

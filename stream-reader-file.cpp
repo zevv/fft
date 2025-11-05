@@ -15,6 +15,13 @@ StreamReaderFile::StreamReaderFile(size_t ch_count, SDL_AudioFormat fmt, Sampler
 	m_spec_src.channels = ch_count;
 }
 
+StreamReaderFile::StreamReaderFile(SDL_AudioSpec &spec, int fd)
+	: StreamReader("file", spec.channels)
+	, m_spec_src(spec)
+	, m_fd(fd)
+{
+}
+
 
 StreamReaderFile::~StreamReaderFile()
 {

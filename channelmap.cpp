@@ -88,7 +88,8 @@ void ShowChannelMap::draw()
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, col);
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, col);
 
-		char label[2] = { (char)('1' + i), 0 };
+		char label[32];
+		snprintf(label, sizeof(label), "%zu", i+1);
 		ImGuiKey key = (ImGuiKey)(ImGuiKey_1 + i);
 		if(ImGui::Button(label) || (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(key))) {
 			if(ImGui::GetIO().KeyShift) m_map = 0;

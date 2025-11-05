@@ -23,6 +23,7 @@ public:
 
 	void enable(bool onoff);
 	void add_reader(StreamReader *reader);
+	void add_reader(const char *desc);
 	size_t channel_count();
 
 private:
