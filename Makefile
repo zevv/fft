@@ -36,19 +36,26 @@ SRC += $(IMGUI_DIR)/imgui_widgets.cpp
 SRC += $(IMGUI_DIR)/backends/imgui_impl_sdl3.cpp
 SRC += $(IMGUI_DIR)/backends/imgui_impl_sdlrenderer3.cpp
 
+PKG += fftw3 fftw3f sdl3
+
+
+PKG_CFLAGS := $(shell pkg-config $(PKG) --cflags)
+PKG_LIBS := $(shell pkg-config $(PKG) --libs)
+
 OBJS = $(SRC:.cpp=.o)
 DEPS = $(OBJS:.o=.d)
 
-CXXFLAGS += -std=c++23 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
+CXXFLAGS += -std=c++23
 CXXFLAGS += -g 
 CXXFLAGS += -Wall -Wformat -Werror
 CXXFLAGS += -Wno-unused-but-set-variable -Wno-unused-variable
 CXXFLAGS += -O3 -ffast-math
 CXXFLAGS += -march=native
 CXXFLAGS += -MMD
+CXXFLAGS += -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
+CXXFLAGS += $(PKG_CFLAGS)
 
-CXXFLAGS += `pkg-config sdl3 fftw3 fftw3f --cflags`
-LIBS += -ldl `pkg-config sdl3 fftw3 fftw3f --libs`
+LIBS += -ldl $(PKG_LIBS)
 
 ifdef clang
 CXX=clang++
@@ -65,6 +72,11 @@ CXX=clang++-19
 LD=clang++-19
 CXXFLAGS += -fsanitize=memory -fsanitize-memory-track-origins=2
 LDFLAGS += -fsanitize=memory -fsanitize-memory-track-origins=2
+endif
+
+CCACHE := $(shell which ccache)
+ifneq ($(CCACHE),)
+CXX := $(CCACHE) $(CXX)
 endif
 
 CFLAGS = $(CXXFLAGS)
