@@ -52,7 +52,7 @@ protected:
 
 	WidgetInfo &m_info;
 	View m_view{};
-	ShowChannelMap m_channel_map{};
+	ChannelMap m_channel_map{};
 	double m_pan_speed{};
 };
 

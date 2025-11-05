@@ -20,7 +20,7 @@ static SDL_Color color[] = {
 };
 
 
-SDL_Color ShowChannelMap::ch_color(int channel)
+SDL_Color ChannelMap::ch_color(int channel)
 {
 	if(channel >= 0 && channel < 8) {
 		return color[channel];
@@ -30,32 +30,32 @@ SDL_Color ShowChannelMap::ch_color(int channel)
 }
 
 
-void ShowChannelMap::ch_set_color(int channel, SDL_Color c)
+void ChannelMap::ch_set_color(int channel, SDL_Color c)
 {
 	if(channel >= 0 && channel < 8) {
 		color[channel] = c;
 	}
 }
 
-void ShowChannelMap::load(ConfigReader::Node *node)
+void ChannelMap::load(ConfigReader::Node *node)
 {
 	node->read("channel_map", m_map);
 }
 
 
-void ShowChannelMap::save(ConfigWriter &cw)
+void ChannelMap::save(ConfigWriter &cw)
 {
 	cw.write("channel_map", m_map);
 }
 
 
-void ShowChannelMap::set_channel_count(int count)
+void ChannelMap::set_channel_count(int count)
 {
 	m_channel_count = count;
 }
 
 
-std::generator<int> ShowChannelMap::enabled_channels()
+std::generator<int> ChannelMap::enabled_channels()
 {
 	for (size_t i=0; i<m_channel_count; ++i) {
 		if (m_map & (1<<i)) {
@@ -65,13 +65,13 @@ std::generator<int> ShowChannelMap::enabled_channels()
 }
 
 
-bool ShowChannelMap::is_channel_enabled(int channel)
+bool ChannelMap::is_channel_enabled(int channel)
 {
 	return (m_map & (1 << channel)) != 0;
 }
 
 
-void ShowChannelMap::draw()
+void ChannelMap::draw()
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3, 3));
 

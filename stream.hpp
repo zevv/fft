@@ -32,7 +32,6 @@ public:
 	Samplerate sample_rate() { return m_srate; }
 	Sample *peek(size_t *stride, size_t *used = nullptr);
 	Wavecache::Range *peek_wavecache(size_t *stride, size_t *used = nullptr);
-	void add_reader(StreamReader *reader);
 	
 	StreamPlayer player;
 	StreamCapture capture;
