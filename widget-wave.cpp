@@ -137,9 +137,9 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	SDL_SetRenderDrawColor(rend, 0, 128, 128, 255);
 	int px = m_view.t_to_x(m_view.time.playpos, r);
 	SDL_Vertex vert[3];
-	vert[0].position = { (float)(px - 5), (float)(r.y + r.h) };
-	vert[1].position = { (float)(px + 5), (float)(r.y + r.h) };
-	vert[2].position = { (float)(px	), (float)(r.y + r.h - 10) };
+	vert[0].position = { (float)(px - 5), (float)(r.y) };
+	vert[1].position = { (float)(px + 5), (float)(r.y) };
+	vert[2].position = { (float)(px	), (float)(r.y + 8) };
 	vert[0].color = vert[1].color = vert[2].color = { 0, 64, 128, 255 };
 	SDL_RenderGeometry(rend, nullptr, vert, 3, nullptr, 0);
 
