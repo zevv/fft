@@ -7,6 +7,7 @@
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
+#include "misc.hpp"
 #include "widgetinfo.hpp"
 #include "widget-channels.hpp"
 
@@ -66,6 +67,9 @@ void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 			ImGui::SameLine();
 			float semitones = 12.0f * log2f(pitch);
 			ImGui::Text("%+.2f semitones", semitones);
+
+			ImGui::SetNextItemWidth(150);
+			ImGui::SliderFloat("##Find window", &player.m_find_window, 0.0, 10.0, "scan %.1fms");
 
 			ImGui::NewLine();
 

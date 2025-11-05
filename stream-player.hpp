@@ -29,7 +29,6 @@ public:
 	void set_sample_rate(Samplerate srate);
 	void enable(bool onoff);
 	void seek(Time tpos);
-	void audio_callback(SDL_AudioStream *stream, int additional_amount, int total_amount);
 	
 	float get_pitch() const { return m_pitch; }
 	void set_pitch(float pitch) { m_pitch = std::clamp(pitch, 0.01f, 100.0f); }
@@ -37,10 +36,17 @@ public:
 	float get_stretch() const { return m_stretch; }
 	void set_stretch(float stretch) { m_stretch = std::clamp(stretch, 0.01f, 100.0f); }
 
-
 	std::vector<Channel>& get_channels() { return m_channels; }
+	
+	void audio_callback(SDL_AudioStream *stream, int additional_amount, int total_amount);
+
+	float m_find_window{0.0};
 
 private:
+
+	size_t find_jump(Sample *data, size_t stride, size_t idx_from, size_t idx_to);
+
+
 	Streams &m_streams;	
 	Samplerate m_srate;
 	std::vector<Channel> m_channels;

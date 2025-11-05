@@ -111,6 +111,35 @@ void StreamPlayer::seek(Time t)
 	SDL_PushEvent(&event);
 }
 
+	
+size_t StreamPlayer::find_jump(Sample *data, size_t stride, size_t idx_from, size_t idx_to)
+{
+	size_t wsize = m_find_window * m_srate / 1000;
+	if(idx_from <= wsize) return idx_to;
+	if(idx_to <= wsize) return idx_to;
+
+	size_t best_idx = idx_to;
+	float best_corr = 0.0f;
+
+	for(size_t i=idx_to - wsize; i<= idx_to + wsize; i++) {
+		float corr = 0.0f;
+		for(size_t j=0; j<wsize; j++) {
+			float v1 = data[(idx_from - wsize + j) * stride] / (float)k_sample_max;
+			float v2 = data[(i - wsize + j) * stride] / (float)k_sample_max;
+			corr += v1 * v2;
+		}
+		if(fabs(corr) > fabs(best_corr)) {
+			best_corr = corr;
+			best_idx = i;
+		}
+	}
+
+	printf("find %zu %zu\n", idx_to, best_idx);
+
+	return best_idx;
+}
+
+
 
 void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount, int total_amount)
 {
@@ -142,10 +171,14 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 		float vr = 0.0;
 
 		Time delta = fabs(m_play_pos - (Time(m_idx) / m_srate));
-		if(delta > 0.020 || m_stretch != 1.0f) {
+		if(delta > 0.001 || m_stretch != 1.0f) {
 			if(m_xfade == 0) {
 				m_idx_prev = m_idx;
-				m_idx = m_play_pos * m_srate;
+				if(m_find_window > 0.0) {
+					m_idx = find_jump(data, stride, m_idx_prev, m_play_pos * m_srate);
+				} else {
+					m_idx = m_play_pos * m_srate;
+				}
 				m_xfade = xfade_samples;
 			}
 		}
