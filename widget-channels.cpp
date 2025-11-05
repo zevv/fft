@@ -45,22 +45,20 @@ void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 				player.set_stretch(stretch);
 			}
 			ImGui::SameLine();
-			if(ImGui::Button("0##stretch")) {
-				player.set_stretch(1.0f);
-			}
+			if(ImGui::Button("-##stretch")) player.set_stretch(stretch / powf(2.0f, 1.0f / 12.0f));
+			ImGui::SameLine();
+			if(ImGui::Button("0##stretch")) player.set_stretch(1.0f);
+			ImGui::SameLine();
+			if(ImGui::Button("+##stretch")) player.set_stretch(stretch * powf(2.0f, 1.0f / 12.0f));
 
 			ImGui::SetNextItemWidth(150);
 			if(ImGui::SliderFloat("##pitch", &pitch, 0.25, 4.0, "Pitch %.2fx", ImGuiSliderFlags_Logarithmic)) {
 				player.set_pitch(pitch);
 			}
 			ImGui::SameLine();
-			if(ImGui::Button("-##pitch")) {
-				player.set_pitch(pitch / powf(2.0f, 1.0f / 12.0f));
-			}
+			if(ImGui::Button("-##pitch")) player.set_pitch(pitch / powf(2.0f, 1.0f / 12.0f));
 			ImGui::SameLine();
-			if(ImGui::Button("0##pitch")) {
-				player.set_pitch(1.0f);
-			}
+			if(ImGui::Button("0##pitch")) player.set_pitch(1.0f);
 			ImGui::SameLine();
 			if(ImGui::Button("+##pitch")) {
 				player.set_pitch(pitch * powf(2.0f, 1.0f / 12.0f));
