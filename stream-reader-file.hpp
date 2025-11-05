@@ -3,7 +3,7 @@
 
 class StreamReaderFile : public StreamReader {
 public:
-	StreamReaderFile(size_t ch_count, Samplerate srate, int fd);
+	StreamReaderFile(size_t ch_count, SDL_AudioFormat fmt, Samplerate srate, int fd);
 	~StreamReaderFile();
 
 	void poll() override;

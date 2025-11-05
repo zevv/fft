@@ -137,6 +137,9 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 			}
 		}
 
+		float g0 = (float)m_xfade / (float)xfade_samples;
+		float g1 = 1.0f - g0;
+
 		for(size_t ch=0; ch<m_streams.channel_count(); ch++) {
 
 			if(m_channels[ch].enabled == false) continue;
@@ -147,8 +150,6 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 			}
 			if(m_xfade > 0) {
 				if(m_idx_prev >= 0 && m_idx_prev < avail) {
-					float g0 = (float)m_xfade / (float)xfade_samples;
-					float g1 = 1.0f - g0;
 					float v_prev = data[m_idx_prev * stride + ch] / (float)k_sample_max;
 					v = v_prev * g0 + v * g1;
 				}

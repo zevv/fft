@@ -31,10 +31,10 @@ public:
 	void audio_callback(SDL_AudioStream *stream, int additional_amount, int total_amount);
 	
 	float get_pitch() const { return m_pitch; }
-	void set_pitch(float pitch) { m_pitch = std::clamp(pitch, 0.05f, 20.0f); }
+	void set_pitch(float pitch) { m_pitch = std::clamp(pitch, 0.01f, 100.0f); }
 
 	float get_stretch() const { return m_stretch; }
-	void set_stretch(float stretch) { m_stretch = std::clamp(stretch, 0.05f, 20.0f); }
+	void set_stretch(float stretch) { m_stretch = std::clamp(stretch, 0.01f, 100.0f); }
 
 
 	std::vector<Channel>& get_channels() { return m_channels; }

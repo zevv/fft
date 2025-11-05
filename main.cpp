@@ -171,12 +171,15 @@ void Corrie::init()
 		m_root_panel->add(p1);
 	}
 
-	int fd1 = open("/home/ico/tmp/1.s16", O_RDONLY);
-	m_streams.capture.add_reader(new StreamReaderFile(2, 44100.0, fd1));
-	int fd2 = open("/home/ico/tmp/2.s16", O_RDONLY);
-	m_streams.capture.add_reader(new StreamReaderFile(2, 44100.0, fd2));
+	int fd1 = open("/tmp/data", O_RDONLY);
+	m_streams.capture.add_reader(new StreamReaderFile(6, SDL_AUDIO_F32, 96000.0, fd1));
+
+	//int fd1 = open("/home/ico/tmp/1.s16", O_RDONLY);
+	//m_streams.capture.add_reader(new StreamReaderFile(2, SDL_AUDIO_S16LE, 44100.0, fd1));
+	//int fd2 = open("/home/ico/tmp/3.s16", O_RDONLY);
+	//m_streams.capture.add_reader(new StreamReaderFile(2, SDL_AUDIO_S16LE, 44100.0, fd2));
 	//m_streams.capture.add_reader(new StreamReaderAudio(3, m_srate));
-	m_streams.capture.add_reader(new StreamReaderGenerator(1, m_srate, 0));
+	//m_streams.capture.add_reader(new StreamReaderGenerator(1, m_srate, 0));
 	//m_streams.capture.add_reader(new StreamReaderGenerator(1, m_srate, 1));
 	m_streams.allocate(512 * 1024 * 1024);
 	m_streams.capture.enable(true);
