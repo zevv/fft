@@ -150,6 +150,7 @@ void Corrie::usage(void)
 		"usage: corrie [options] <src> ...\n"
 		"\n"
 		"options:\n"
+		"  -d --buffer-depth N  set buffer depth to N bytes (default: 512MB)\n"
 		"  -h                   show help\n"
 		"  -r --sample-rate N   set sample rate to N (default: 48000)\n"
 		"\n"
@@ -163,12 +164,6 @@ void Corrie::usage(void)
 
 	);
 }
-
-static struct option long_options[] = {
-	{"help",          no_argument,       0, 'h'},
-	{"sample-rate",   required_argument, 0, 'r'},
-	{0, 0, 0, 0}
-};
 
 void Corrie::init(int argc, char **argv)
 {
@@ -196,9 +191,21 @@ void Corrie::init(int argc, char **argv)
 		m_root_panel->add(p1);
 	}
 
+	static struct option long_options[] = {
+		{"help",          no_argument,       0, 'h'},
+		{"sample-rate",   required_argument, 0, 'r'},
+		{"buffer-depth",  required_argument, 0, 'd'},
+		{0, 0, 0, 0}
+	};
+
+	int opt_buffer_depth = 512 * 1024 * 1024;
+
 	int opt;
-	while ((opt = getopt_long(argc, argv, "hr:", long_options, NULL)) != -1) {
+	while ((opt = getopt_long(argc, argv, "d:hr:", long_options, NULL)) != -1) {
 		switch (opt) {
+			case 'd':
+				opt_buffer_depth = atof(optarg);
+				break;
 			case 'h':
 				usage();
 				::exit(0);
@@ -222,18 +229,7 @@ void Corrie::init(int argc, char **argv)
 		m_streams.capture.add_reader(argv[i]);
 	}
 	
-
-	//int fd1 = open("/tmp/data", O_RDONLY);
-	//m_streams.capture.add_reader(new StreamReaderFile(6, SDL_AUDIO_F32, 96000.0, fd1));
-
-	//int fd1 = open("/home/ico/tmp/1.s16", O_RDONLY);
-	//m_streams.capture.add_reader(new StreamReaderFile(2, SDL_AUDIO_S16LE, 44100.0, fd1));
-	//int fd2 = open("/home/ico/tmp/3.s16", O_RDONLY);
-	//m_streams.capture.add_reader(new StreamReaderFile(2, SDL_AUDIO_S16LE, 44100.0, fd2));
-	//m_streams.capture.add_reader(new StreamReaderAudio(3, m_srate));
-	//m_streams.capture.add_reader(new StreamReaderGenerator(1, m_srate, 0));
-	//m_streams.capture.add_reader(new StreamReaderGenerator(1, m_srate, 1));
-	m_streams.allocate(512 * 1024 * 1024);
+	m_streams.allocate(opt_buffer_depth);
 	m_streams.capture.enable(true);
 	m_streams.player.set_sample_rate(m_srate);
 	m_streams.player.seek(m_view.time.playpos);

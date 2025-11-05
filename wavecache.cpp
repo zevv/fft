@@ -32,16 +32,10 @@ void Wavecache::feed_frames(Sample *buf, size_t frame_count, size_t channel_coun
 	Range *pout = (Range *)m_rb.get_write_ptr();
 	size_t frames_out = 0;
 	for(size_t i=0; i<frame_count; i++) {
-		if(m_n == 0) {
-			for(size_t ch=0; ch<channel_count; ch++) {
-				pout[ch].min = buf[ch] / 255;
-				pout[ch].max = buf[ch] / 255;
-			}
-		} else {
-			for(size_t ch=0; ch<channel_count; ch++) {
-				pout[ch].min = std::min(pout[ch].min, (int8_t)(buf[ch] / 255));
-				pout[ch].max = std::max(pout[ch].max, (int8_t)(buf[ch] / 255));
-			}
+		for(size_t ch=0; ch<channel_count; ch++) {
+			const int8_t v = buf[ch] / 255;
+			pout[ch].min = m_n == 0 ? v : std::min(pout[ch].min, v);
+			pout[ch].max = m_n == 0 ? v : std::max(pout[ch].max, v);
 		}
 		m_n ++;
 		if(m_n == m_step) {
