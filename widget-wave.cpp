@@ -78,15 +78,15 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 			auto pos = ImGui::GetIO().MousePos;
 			streams.player.seek(m_view.x_to_t(pos.x, r));
 		}
-	}
 
-	if(ImGui::IsMouseInRect(r)) {
-		auto pos = ImGui::GetIO().MousePos;
-		if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-			m_view.time.cursor += m_view.dx_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
-		} else {
-			m_view.time.cursor = m_view.x_to_t(pos.x, r);
-		}
+	   if(ImGui::IsMouseInRect(r)) {
+		   auto pos = ImGui::GetIO().MousePos;
+		   if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+			   m_view.time.cursor += m_view.dx_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
+		   } else {
+			   m_view.time.cursor = m_view.x_to_t(pos.x, r);
+		   }
+	   }
 	}
 
 	Sample scale = k_sample_max;
@@ -144,6 +144,12 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	vert[2].position = { (float)(px	), (float)(r.y + 8) };
 	vert[0].color = vert[1].color = vert[2].color = { 0, 64, 128, 255 };
 	SDL_RenderGeometry(rend, nullptr, vert, 3, nullptr, 0);
+	vert[0].position = { (float)(px - 4), (float)(r.y + r.h - 1) };
+	vert[1].position = { (float)(px + 4), (float)(r.y + r.h - 1) };
+	vert[2].position = { (float)(px	), (float)(r.y + r.h - 9) };
+	SDL_RenderGeometry(rend, nullptr, vert, 3, nullptr, 0);
+	SDL_RenderLine(rend, px, r.y, px, r.y + r.h);
+
 
 	// window
 	Window w = Window(m_view.window.window_type, m_view.window.size, m_view.window.window_beta);
