@@ -64,7 +64,7 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	if(ImGui::IsWindowFocused()) {
 
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
-		ImGui::Text("f=%.6gHz", m_view.freq.cursor * m_view.srate * 0.5);
+		ImGui::Text("f=%.6gHz", m_view.freq.cursor * streams.sample_rate() * 0.5);
 
 		auto pos = ImGui::GetIO().MousePos;
 		if(pos.x >= 0) {
@@ -130,7 +130,7 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 		for(int y=0; y<r.h; y++) {
 			Time t = m_view.y_to_t(r.y + y, r);
-			int idx = (int)(m_view.srate * t - m_view.window.size / 2) * stride + ch;
+			int idx = (int)(streams.sample_rate() * t - m_view.window.size / 2) * stride + ch;
 			if(idx < 0) continue;
 			if(idx >= (int)(frames_avail * stride)) break;
 

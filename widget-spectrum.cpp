@@ -27,7 +27,7 @@ void WidgetSpectrum::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	if(ImGui::IsWindowFocused()) {
 	
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
-		ImGui::Text("f=%.6gHz amp=%.2fdB", m_view.freq.cursor * m_view.srate * 0.5, m_amp_cursor);
+		ImGui::Text("f=%.6gHz amp=%.2fdB", m_view.freq.cursor * streams.sample_rate() * 0.5, m_amp_cursor);
 
 		auto pos = ImGui::GetIO().MousePos;
 		if(pos.x >= 0) {
@@ -59,7 +59,7 @@ void WidgetSpectrum::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		size_t stride = 0;
 		size_t avail = 0;
 		Sample *data = streams.peek(&stride, &avail);
-		int idx = ((int)(m_view.srate * m_view.time.playpos - m_view.window.size * 0.5)) * stride + ch;
+		int idx = ((int)(streams.sample_rate() * m_view.time.playpos - m_view.window.size * 0.5)) * stride + ch;
 
 		if(idx < 0) continue;
 		if(idx >= (int)(avail * stride)) continue;

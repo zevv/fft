@@ -39,6 +39,14 @@ void Streams::save(ConfigWriter &cw)
 }
 
 
+void Streams::set_sample_rate(Samplerate srate)
+{
+	m_srate = srate;
+	capture.set_sample_rate(srate);
+	player.set_sample_rate(srate);
+}
+
+
 void Streams::allocate(size_t depth)
 {
 	m_channel_count = capture.channel_count();

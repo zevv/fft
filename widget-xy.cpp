@@ -68,7 +68,7 @@ void WidgetXY::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	size_t frames_avail;
 	Sample *frames_data = streams.peek(&frames_stride, &frames_avail);
 
-	int idx_from = m_view.time.playpos * m_view.srate;
+	int idx_from = m_view.time.playpos * streams.sample_rate();
 	int idx_to   = idx_from + m_view.window.size;
 
 	if(idx_to < 0) return;

@@ -21,15 +21,16 @@ class StreamReader;
 class Streams {
 public:
 
-
 	Streams();
 	~Streams();
 	void load(ConfigReader::Node *node);
 	void save(ConfigWriter &cfg);
 
+	void set_sample_rate(Samplerate srate);
 	size_t channel_count() { return m_channel_count; }
 	void allocate(size_t depth);
 	size_t frames_avail();
+	Samplerate sample_rate() { return m_srate; }
 	Sample *peek(size_t *stride, size_t *used = nullptr);
 	Wavecache::Range *peek_wavecache(size_t *stride, size_t *used = nullptr);
 	void add_reader(StreamReader *reader);
@@ -44,6 +45,7 @@ private:
 	size_t m_frame_size{};
 	Rb m_rb;
 	Wavecache m_wavecache;
+	Samplerate m_srate{};
 
 
 public:

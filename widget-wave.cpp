@@ -71,7 +71,7 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
 			m_view.time.from = 0;
-			m_view.time.to   = frames_avail / m_view.srate;
+			m_view.time.to   = frames_avail / streams.sample_rate();
 		}
 
 		auto pos = ImGui::GetIO().MousePos;
@@ -92,8 +92,8 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		scale = m_peak / 0.9;
 	}
 
-	float idx_from = m_view.x_to_t(r.x,       r) * m_view.srate;
-	float idx_to   = m_view.x_to_t(r.x + r.w, r) * m_view.srate;
+	float idx_from = m_view.x_to_t(r.x,       r) * streams.sample_rate();
+	float idx_to   = m_view.x_to_t(r.x + r.w, r) * streams.sample_rate();
 	float step = (idx_to - idx_from) / r.w;
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
@@ -146,8 +146,8 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	// window
 	Window w = Window(m_view.window.window_type, m_view.window.size, m_view.window.window_beta);
 	SDL_SetRenderDrawColor(rend, 128, 128, 128, 255);
-	double w_idx_from = (m_view.time.from - m_view.time.playpos) * m_view.srate + m_view.window.size * 0.5;
-	double w_idx_to   = (m_view.time.to   - m_view.time.playpos) * m_view.srate + m_view.window.size * 0.5;
+	double w_idx_from = (m_view.time.from - m_view.time.playpos) * streams.sample_rate() + m_view.window.size * 0.5;
+	double w_idx_to   = (m_view.time.to   - m_view.time.playpos) * streams.sample_rate() + m_view.window.size * 0.5;
 	graph(rend, r, w.data().data(), w.size(), 1, w_idx_from, w_idx_to, 0.0f, +1.0f);
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);

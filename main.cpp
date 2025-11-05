@@ -68,7 +68,6 @@ Corrie::Corrie(SDL_Window *window, SDL_Renderer *renderer)
 	, m_streams()
 {
     resize_window(800, 600);
-	m_view.srate = m_srate;
 }
 
 
@@ -222,8 +221,7 @@ void Corrie::init(int argc, char **argv)
 		}
 	}
 	
-	m_view.srate = m_srate;
-	m_streams.capture.set_sample_rate(m_srate);
+	m_streams.set_sample_rate(m_srate);
 	
 	for(int i=optind; i<argc; i++) {
 		m_streams.capture.add_reader(argv[i]);
@@ -231,7 +229,6 @@ void Corrie::init(int argc, char **argv)
 	
 	m_streams.allocate(opt_buffer_depth);
 	m_streams.capture.enable(true);
-	m_streams.player.set_sample_rate(m_srate);
 	m_streams.player.seek(m_view.time.playpos);
 }
 
@@ -327,7 +324,7 @@ void Corrie::run()
 			if(event.type == SDL_EVENT_USER) {
 				if(event.user.code == k_user_event_audio_capture) {
 					size_t frame_idx = (size_t)(uintptr_t)event.user.data1;
-					Time t_to = frame_idx / m_view.srate;
+					Time t_to = frame_idx / m_srate;
 					Time dt = t_to - m_view.time.to;
 					if(0) {
 						m_view.time.from += dt;

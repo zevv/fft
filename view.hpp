@@ -159,7 +159,6 @@ public:
 		float range{80.0f};
 	};
 	
-	Samplerate srate{48000};
 	bool lock{true};
 	VTime time{};
 	VFreq freq{};
