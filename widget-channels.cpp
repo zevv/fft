@@ -145,6 +145,11 @@ void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 			ImGui::EndTabItem();
 		}
+		
+		if(ImGui::BeginTabItem("style")) {
+			ImGui::ShowStyleEditor();
+			ImGui::EndTabItem();
+		}
 
 
 		ImGui::EndTabBar();

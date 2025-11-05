@@ -47,7 +47,6 @@ private:
 	Panel *m_root_panel;
 
 	SDL_Window *m_win{};
-	SDL_Texture *m_tex{};
 	SDL_Renderer *m_rend{};
 	bool m_resize{true};
 	int m_w = 800;
@@ -109,35 +108,26 @@ void Corrie::save(const char *fname)
 
 void Corrie::resize_window(int w, int h)
 {
-    if(m_tex) SDL_DestroyTexture(m_tex);
 	m_w = w;
 	m_h = h;
 	m_resize = true;
-    m_tex = SDL_CreateTexture(SDL_GetRenderer(m_win), SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h);
-    SDL_SetTextureBlendMode(m_tex, SDL_BLENDMODE_BLEND);
 }
 
 
 void Corrie::draw()
 {
+	SDL_SetRenderDrawColor(m_rend, 0, 0, 0, 255);
+	SDL_RenderClear(m_rend);
+	
 	ImGui_ImplSDLRenderer3_NewFrame();
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
-	SDL_SetRenderTarget(m_rend, m_tex);
-	SDL_SetRenderDrawColor(m_rend, 10, 10, 10, 255);
-	SDL_RenderClear(m_rend);
-
 	m_root_panel->draw(m_view, m_streams, m_rend, 0, 0, m_w, m_h);
-
-	SDL_SetRenderTarget(m_rend, nullptr);
 
 	ImGui::Render();
 	ImGuiIO& io = ImGui::GetIO();
 	SDL_SetRenderScale(m_rend, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
-	SDL_SetRenderDrawColor(m_rend, 0, 0, 0, 255);
-	SDL_RenderClear(m_rend);
-	SDL_RenderTexture(m_rend, m_tex, nullptr, nullptr);
 	ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_rend);
 	SDL_RenderPresent(m_rend);
 }
