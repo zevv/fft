@@ -36,7 +36,7 @@ SRC += $(IMGUI_DIR)/imgui_widgets.cpp
 SRC += $(IMGUI_DIR)/backends/imgui_impl_sdl3.cpp
 SRC += $(IMGUI_DIR)/backends/imgui_impl_sdlrenderer3.cpp
 
-PKG += fftw3 fftw3f sdl3
+PKG += fftw3f sdl3
 
 
 PKG_CFLAGS := $(shell pkg-config $(PKG) --cflags)
