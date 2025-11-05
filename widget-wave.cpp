@@ -74,16 +74,18 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 			m_view.time.to   = frames_avail / streams.sample_rate();
 		}
 
+	   if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+			auto pos = ImGui::GetIO().MousePos;
+			streams.player.seek(m_view.x_to_t(pos.x, r));
+		}
+	}
+
+	if(ImGui::IsMouseInRect(r)) {
 		auto pos = ImGui::GetIO().MousePos;
 		if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
 			m_view.time.cursor += m_view.dx_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
 		} else {
 			m_view.time.cursor = m_view.x_to_t(pos.x, r);
-		}
-
-	   if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-			auto pos = ImGui::GetIO().MousePos;
-			streams.player.seek(m_view.x_to_t(pos.x, r));
 		}
 	}
 

@@ -1,6 +1,7 @@
 
 #include <time.h>
 
+#include <SDL3/SDL.h>
 #include <imgui.h>
 
 #include "misc.hpp"
@@ -24,5 +25,13 @@ bool ToggleButton(const char* str_id, bool* v)
 	ImGui::PopStyleColor(3);
 	return pressed;
 }
+
+
+bool IsMouseInRect(SDL_Rect const &rect)
+{
+	ImVec2 mp = ImGui::GetIO().MousePos;
+	return (mp.x >= rect.x) && (mp.x < rect.x + rect.w) &&
+	       (mp.y >= rect.y) && (mp.y < rect.y + rect.h);
 }
 
+}
