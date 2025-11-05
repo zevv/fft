@@ -61,6 +61,8 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 	if(ImGui::IsWindowFocused()) {
 	
+		auto pos = ImGui::GetIO().MousePos;
+
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
 		ImGui::Text("t=%.4gs", m_view.time.cursor);
 
@@ -74,13 +76,12 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 			m_view.time.to   = frames_avail / streams.sample_rate();
 		}
 
-	   if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-			auto pos = ImGui::GetIO().MousePos;
-			streams.player.seek(m_view.x_to_t(pos.x, r));
-		}
-
 	   if(ImGui::IsMouseInRect(r)) {
-		   auto pos = ImGui::GetIO().MousePos;
+
+		   if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+			   streams.player.seek(m_view.x_to_t(pos.x, r));
+		   }
+
 		   if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
 			   m_view.time.cursor += m_view.dx_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
 		   } else {
@@ -136,7 +137,7 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
 	
 	// play position
-	SDL_SetRenderDrawColor(rend, 0, 128, 128, 255);
+	SDL_SetRenderDrawColor(rend, 0, 96, 96, 255);
 	int px = m_view.t_to_x(m_view.time.playpos, r);
 	SDL_Vertex vert[3];
 	vert[0].position = { (float)(px - 5), (float)(r.y) };

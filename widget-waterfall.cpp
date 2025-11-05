@@ -85,14 +85,18 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		}
 
 		if(ImGui::IsMouseInRect(r)) {
-			if(ImGui::GetIO().MouseDelta.y != 0) {
-				auto pos = ImGui::GetIO().MousePos;
-				if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-					m_view.time.cursor += m_view.dy_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
-				} else {
-					m_view.time.cursor = m_view.y_to_t(pos.y, r);
-				}
-			}
+		   if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+			   streams.player.seek(m_view.y_to_t(pos.y, r));
+		   }
+
+		   if(ImGui::GetIO().MouseDelta.y != 0) {
+			   auto pos = ImGui::GetIO().MousePos;
+			   if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+				   m_view.time.cursor += m_view.dy_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
+			   } else {
+				   m_view.time.cursor = m_view.y_to_t(pos.y, r);
+			   }
+		   }
 		}
 	}
 
@@ -176,7 +180,7 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	SDL_RenderLine(rend, r.x, cy, r.x + r.w, cy);
 	
 	// play position
-	SDL_SetRenderDrawColor(rend, 0, 128, 128, 255);
+	SDL_SetRenderDrawColor(rend, 0, 96, 96, 255);
 	int py = m_view.t_to_y(m_view.time.playpos, r);
 	SDL_Vertex vert[3];
 	vert[0].position = { (float)(r.x), (float)(py - 5) };
