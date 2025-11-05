@@ -25,10 +25,7 @@ StreamCapture::StreamCapture(Streams &streams, Rb &rb, Wavecache &wavecache)
 
 StreamCapture::~StreamCapture()
 {
-	m_running = false;
-	if(m_thread.joinable()) {
-		m_thread.join();
-	}
+	enable(false);
 	for(auto reader : m_readers) {
 		delete reader;
 	}
@@ -48,6 +45,7 @@ void StreamCapture::enable(bool enable)
 		channel_count += reader->channel_count();
 	}
 
+	m_enabled = enable;
 	m_spec.channels = channel_count;
 	m_buf.resize(channel_count * 4096);
 
@@ -55,8 +53,13 @@ void StreamCapture::enable(bool enable)
 		m_running = true;
 		m_thread = std::thread(&StreamCapture::capture_thread, this);
 	}
-	
-	m_enabled = enable;
+
+	if(!enable && m_running) {
+		m_running = false;
+		if(m_thread.joinable()) {
+			m_thread.join();
+		}
+	}
 }
 
 
@@ -111,7 +114,7 @@ void StreamCapture::add_reader(const char *desc)
 	
 	const char *type = strtok(desc_copy, ":");
 	
-	if(strcmp(type, "file") == 0) {
+	if(strcmp(type, "raw") == 0) {
 		const char *fname = strtok(nullptr, ":");
 		wordexp_t p;
 		if(wordexp(fname, &p, 0) == 0) {

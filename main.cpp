@@ -154,11 +154,12 @@ void Corrie::usage(void)
 		"  -r --sample-rate N   set sample rate to N (default: 48000)\n"
 		"\n"
 		"sources:\n"
-		"  file:FILENAME[:CHANNELS][:FORMAT][:SRATE]\n"
+		"  raw:FILENAME[:AUDIOSPEC]\n"
+		"  stdin[:AUDIOSPEC]\n"
 		"  audio[:CHANNELS]\n"
 		"\n"
-		"formats\n:"
-		"  u8 s8 s16[le|be] s32[le|be] f32[le|be]\n"
+		"audio spec:\n"
+		"  u8|s16|s32|f32|f64[:CHANNELS][:SRATE]\n"
 
 	);
 }
