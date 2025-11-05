@@ -130,6 +130,14 @@ void StreamCapture::add_reader(const char *desc)
 		}
 	}
 
+	if(strcmp(type, "stdin") == 0) {
+		SDL_AudioSpec src_spec = parse_audio_spec(strtok(nullptr, ":"));
+		SDL_AudioSpec dst_spec = m_spec;
+		dst_spec.channels = src_spec.channels;
+		StreamReader *reader = new StreamReaderFile(dst_spec, src_spec, 0);
+		m_readers.push_back(reader);
+	}
+
 	free(desc_copy);
 }
 
