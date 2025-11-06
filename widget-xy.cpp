@@ -9,6 +9,7 @@
 
 #include "widgetinfo.hpp"
 #include "widget-xy.hpp"
+#include "misc.hpp"
 
 
 WidgetXY::WidgetXY(WidgetInfo &info)
@@ -27,6 +28,7 @@ void WidgetXY::do_load(ConfigReader::Node *node)
 {
 	auto *wnode = node->find("xy");
 	wnode->read("decay", m_decay);
+	wnode->read("agc", m_agc);
 }
 
 
@@ -34,12 +36,15 @@ void WidgetXY::do_save(ConfigWriter &cw)
 {
 	cw.push("xy");
 	cw.write("decay", m_decay);
+	cw.write("agc", m_agc);
 	cw.pop();
 }
 
 
 void WidgetXY::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 {
+	ImGui::SameLine();
+	ImGui::ToggleButton("AGC", &m_agc);
 
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(100);
@@ -77,12 +82,13 @@ void WidgetXY::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	std::vector<SDL_FPoint> point(idx_to - idx_from);
 	size_t npoints = 0;
 
+	if(!m_agc) m_peak = k_sample_max;
+
 	int cx = r.w / 2;
 	int cy = r.h / 2;
 	double sx = (double)(r.w / 2) / m_peak;
 	double sy = (double)(r.h / 2) / m_peak;
-	m_peak *= 0.99;
-	//m_peak = k_sample_max;
+	m_peak *= 0.95;
 		
 	for(int idx=idx_from; idx<idx_to; idx++) {
 		Sample vx = frames_data[idx * frames_stride + ch_x];
