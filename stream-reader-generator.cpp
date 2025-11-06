@@ -39,16 +39,20 @@ Sample StreamReaderGenerator::run()
 	Sample v = 0;
 
 	if(m_type == 0) {
-		v = sin(2.0 * M_PI * 440.0 * m_phase) * k_sample_max;
-		m_phase += 1.0 / m_srate;
-		if(m_phase >= 1.0) m_phase -= 1.0;
+		v = sin(m_phase) * k_sample_max;
+		m_phase += 440.0 * 2.0 * M_PI / m_srate;
 	}
 
 	if(m_type == 1) {
 		v = (m_phase - 0.5) * k_sample_max;
 		m_phase += 440.0 / m_srate;
-		if(m_phase > 1.0) m_phase -= 1.0;
 	}
-
+	
+	if(m_type == 2) {
+		v = sin(m_phase) * k_sample_max;
+		m_phase += m_aux1 * 2.0 * M_PI / m_srate;
+		m_aux1 += 0.1;
+	}
+		
 	return v;
 }

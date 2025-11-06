@@ -12,6 +12,8 @@
 #include "stream.hpp"
 #include "stream-capture.hpp"
 #include "stream-reader-file.hpp"
+#include "stream-reader-generator.hpp"
+#include "stream-reader-audio.hpp"
 
 
 StreamCapture::StreamCapture(Streams &streams, Rb &rb, Wavecache &wavecache) 
@@ -138,6 +140,20 @@ void StreamCapture::add_reader(const char *desc)
 		SDL_AudioSpec dst_spec = m_spec;
 		dst_spec.channels = src_spec.channels;
 		StreamReader *reader = new StreamReaderFile(dst_spec, src_spec, 0);
+		m_readers.push_back(reader);
+	}
+	
+	if(strcmp(type, "gen") == 0) {
+		int type = atoi(strtok(nullptr, ":"));
+		StreamReader *reader = new StreamReaderGenerator(m_spec, type);
+		m_readers.push_back(reader);
+	}
+
+	if(strcmp(type, "audio") == 0) {
+		SDL_AudioSpec src_spec = parse_audio_spec(strtok(nullptr, ":"));
+		SDL_AudioSpec dst_spec = m_spec;
+		dst_spec.channels = src_spec.channels;
+		StreamReader *reader = new StreamReaderAudio(dst_spec);
 		m_readers.push_back(reader);
 	}
 

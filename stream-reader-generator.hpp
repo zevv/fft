@@ -14,6 +14,7 @@ private:
 	Sample run();
 	Samplerate m_srate{};
 	Time m_phase{};
+	double m_aux1{};
 	int m_type{};
 	std::vector<Sample> m_buf{};
 };
