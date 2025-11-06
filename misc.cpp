@@ -1,5 +1,8 @@
 
 #include <time.h>
+#include <math.h>
+#include <stdio.h>
+
 
 #include <SDL3/SDL.h>
 #include <imgui.h>
@@ -11,6 +14,22 @@ double hirestime()
 	struct timespec ts;
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts);
 	return ts.tv_sec + ts.tv_nsec * 1e-9;
+}
+
+
+void freq_to_note(double freq, char *note, size_t note_len)
+{
+	static const char *name[] = {
+		"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"
+	};
+	if(freq <= 0.0) {
+		snprintf(note, note_len, "---");
+		return;
+	}
+	int midi_number = static_cast<int>(round(12.0 * log2(freq / 440.0) + 69.0));
+	int nr = midi_number % 12;
+	int oct = (midi_number / 12) - 1;
+	snprintf(note, note_len, "%s%d", name[nr], oct);
 }
 
 namespace ImGui {

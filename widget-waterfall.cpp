@@ -64,7 +64,10 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	if(ImGui::IsWindowFocused()) {
 
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
-		ImGui::Text("f=%.6gHz", m_view.freq.cursor * streams.sample_rate() * 0.5);
+		float f = m_view.freq.cursor * streams.sample_rate() * 0.5f;
+		char note[32];
+		freq_to_note(f, note, sizeof(note));
+		ImGui::Text("f=%.6gHz %s", f, note);
 
 		auto pos = ImGui::GetIO().MousePos;
 		if(pos.x >= 0) {
