@@ -134,8 +134,13 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	grid_vertical(rend, r, -scale / k_sample_max, +scale / k_sample_max);
 
 	// cursor
-	SDL_SetRenderDrawColor(rend, 248, 248, 0, 255);
 	int cx = m_view.t_to_x(m_view.time.cursor, r);
+	SDL_SetRenderDrawColor(rend, 0, 0, 0, 255);
+	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
+	SDL_RenderLine(rend, cx - 1, r.y, cx - 1, r.y + r.h);
+	SDL_RenderLine(rend, cx + 1, r.y, cx + 1, r.y + r.h);
+	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
+	SDL_SetRenderDrawColor(rend, 192, 192, 192, 255);
 	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
 	
 	// play position

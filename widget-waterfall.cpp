@@ -177,10 +177,19 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	// grid
 	//grid_time_v(rend, r, m_view.time.from, m_view.time.to);
 
-	// time cursor
-	SDL_SetRenderDrawColor(rend, 248, 248, 0, 255);
+	// cursors
+	int cx = m_view.freq_to_x(m_view.freq.cursor, r);
 	int cy = m_view.t_to_y(m_view.time.cursor, r);
+	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
+	SDL_SetRenderDrawColor(rend, 0, 0, 0, 255);
+	SDL_RenderLine(rend, r.x, cy - 1, r.x + r.w, cy - 1);
+	SDL_RenderLine(rend, r.x, cy + 1, r.x + r.w, cy + 1);
+	SDL_RenderLine(rend, cx - 1, r.y, cx - 1, r.y + r.h);
+	SDL_RenderLine(rend, cx + 1, r.y, cx + 1, r.y + r.h);
+	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
+	SDL_SetRenderDrawColor(rend, 192, 192, 192, 255);
 	SDL_RenderLine(rend, r.x, cy, r.x + r.w, cy);
+	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
 	
 	// play position
 	SDL_SetRenderDrawColor(rend, 0, 96, 96, 255);
@@ -196,11 +205,6 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	vert[2].position = { (float)(r.x + r.w - 9), (float)(py	) };
 	SDL_RenderGeometry(rend, nullptr, vert, 3, nullptr, 0);
 	SDL_RenderLine(rend, r.x, py, r.x + r.w, py);
-
-	// freq cursor
-	SDL_SetRenderDrawColor(rend, 248, 248, 0, 255);
-	int cx = m_view.freq_to_x(m_view.freq.cursor, r);
-	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
