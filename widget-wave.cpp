@@ -92,8 +92,9 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 	Sample scale = k_sample_max;
 	if(m_agc && m_peak > 0.0f) {
-		scale = m_peak / 0.9;
+		scale = m_peak / 1.0;
 	}
+	m_peak *= 0.9f;
 
 	float idx_from = m_view.x_to_t(r.x,       r) * streams.sample_rate();
 	float idx_to   = m_view.x_to_t(r.x + r.w, r) * streams.sample_rate();
@@ -124,6 +125,7 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 		m_peak = std::max(m_peak, peak);
 	}
+
 
 	// time grid
 	grid_time(rend, r, m_view.x_to_t(r.x, r), m_view.x_to_t(r.x + r.w, r));
@@ -161,7 +163,6 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
-	m_peak *= 0.9f;
 }
 
 

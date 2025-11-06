@@ -33,7 +33,7 @@ void Wavecache::feed_frames(Sample *buf, size_t frame_count, size_t channel_coun
 	size_t frames_out = 0;
 	for(size_t i=0; i<frame_count; i++) {
 		for(size_t ch=0; ch<channel_count; ch++) {
-			const int8_t v = buf[ch] / 255;
+			const int8_t v = std::clamp(buf[ch] / 255, -127, +127);
 			pout[ch].min = m_n == 0 ? v : std::min(pout[ch].min, v);
 			pout[ch].max = m_n == 0 ? v : std::max(pout[ch].max, v);
 		}
