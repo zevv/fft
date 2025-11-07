@@ -77,10 +77,8 @@ void WidgetSpectrum::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	}
 	
 	// cursor
-	SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
 	int cx = m_view.freq_to_x(m_view.freq.cursor, r);
-	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
-
+	hcursor(rend, r, cx, false);
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 

@@ -401,3 +401,48 @@ void Widget::grid_horizontal(SDL_Renderer *rend, SDL_Rect &r, float v_min, float
 	grid_aux(rend, r, v_min, v_max, true);
 }
 
+static void cursor(SDL_Renderer *rend, float x0, float y0, float x1, float y1, float aw, SDL_FColor col, bool flip)
+{
+	float ah = 6;
+	SDL_Vertex v[8];
+	v[0].position.x = x0 - aw;        v[0].position.y = y0;
+	v[1].position.x = x1 + aw;        v[1].position.y = y0;
+	v[2].position.x = x0;             v[2].position.y = y0 + ah;
+	v[3].position.x = x1;             v[3].position.y = y0 + ah;
+	v[4].position.x = x0;             v[4].position.y = y1 - ah;
+	v[5].position.x = x1;             v[5].position.y = y1 - ah;
+	v[6].position.x = x0 - aw;        v[6].position.y = y1;
+	v[7].position.x = x1 + aw;        v[7].position.y = y1;
+	if(flip) {
+		for(int i=0; i<8; i++) {
+			float tmp = v[i].position.y;
+			v[i].position.y = v[i].position.x;
+			v[i].position.x = tmp;
+		}
+	}
+	for(int i=0; i<8; i++) v[i].color = col;
+	int indices[] = { 0, 1, 2, 1, 2, 3, 2, 3, 4, 3, 4, 5, 4, 5, 6, 5, 6, 7 };
+	SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, col.a);
+	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
+	SDL_RenderGeometry(rend, nullptr, v, 8, indices, 18);
+}
+
+
+void Widget::vcursor(SDL_Renderer *rend, SDL_Rect &r, int y, bool playpos)
+{
+	float aw = playpos ? 4.0f : 0.0f;
+	SDL_FColor col = {192, 192, 192, 255};
+	if(playpos) col = {0, 96, 128, 255};
+	cursor(rend, y-1, r.x, y+3, r.x + r.w, aw, {0, 0, 0, 255}, true);
+	cursor(rend, y, r.x, y+1, r.x + r.w, aw, col, true);
+}
+
+void Widget::hcursor(SDL_Renderer *rend, SDL_Rect &r, int x, bool playpos)
+{
+	float aw = playpos ? 4.0f : 0.0f;
+	SDL_FColor col = {192, 192, 192, 255};
+	if(playpos) col = {0, 96, 128, 255};
+	cursor(rend, x-1, r.y, x+3, r.y + r.h, aw, {0, 0, 0, 255}, false);
+	cursor(rend, x, r.y, x+1, r.y + r.h, aw, col, false);
+}
+

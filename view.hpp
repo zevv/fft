@@ -25,11 +25,11 @@ public:
 		n->read("freq_from", freq.from);
 		n->read("freq_to", freq.to);
 		n->read("freq_cursor", freq.cursor);
-		n->read("fft_size", window.size);
-		if(const char *tmp = n->read_str("fft_window_type")) {
+		n->read("window_size", window.size);
+		if(const char *tmp = n->read_str("window_type")) {
 			window.window_type = Window::str_to_type(tmp);
 		}
-		n->read("fft_window_beta", window.window_beta);
+		n->read("window_beta", window.window_beta);
 		n->read("lock", lock);
 	}
 
@@ -42,9 +42,9 @@ public:
 		cfg.write("freq_from", freq.from);
 		cfg.write("freq_to", freq.to);
 		cfg.write("freq_cursor", freq.cursor);
-		cfg.write("fft_size", window.size);
-		cfg.write("fft_window_type", Window::type_to_str(window.window_type));
-		cfg.write("fft_window_beta", window.window_beta);
+		cfg.write("window_size", window.size);
+		cfg.write("window_type", Window::type_to_str(window.window_type));
+		cfg.write("window_beta", window.window_beta);
 		cfg.write("lock", lock);
 	}
 

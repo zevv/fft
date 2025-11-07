@@ -79,9 +79,16 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		
 		}
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			m_view.pan_freq(-ImGui::GetIO().MouseDelta.x / r.w);
-			m_view.zoom_freq(ImGui::GetIO().MouseDelta.y);
+			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+				m_view.pan_freq(-ImGui::GetIO().MouseDelta.x / r.w);
+				m_view.zoom_freq(ImGui::GetIO().MouseDelta.y);
+			} else {
+				m_view.pan_t(ImGui::GetIO().MouseDelta.y / r.w);
+				m_view.zoom_t(ImGui::GetIO().MouseDelta.x);
+			}
 		}
+
+
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
 			m_view.freq.from = 0.0f;
 			m_view.freq.to = 1.0;
@@ -180,31 +187,9 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	// cursors
 	int cx = m_view.freq_to_x(m_view.freq.cursor, r);
 	int cy = m_view.t_to_y(m_view.time.cursor, r);
-	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
-	SDL_SetRenderDrawColor(rend, 0, 0, 0, 255);
-	SDL_RenderLine(rend, r.x, cy - 1, r.x + r.w, cy - 1);
-	SDL_RenderLine(rend, r.x, cy + 1, r.x + r.w, cy + 1);
-	SDL_RenderLine(rend, cx - 1, r.y, cx - 1, r.y + r.h);
-	SDL_RenderLine(rend, cx + 1, r.y, cx + 1, r.y + r.h);
-	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
-	SDL_SetRenderDrawColor(rend, 192, 192, 192, 255);
-	SDL_RenderLine(rend, r.x, cy, r.x + r.w, cy);
-	SDL_RenderLine(rend, cx, r.y, cx, r.y + r.h);
-	
-	// play position
-	SDL_SetRenderDrawColor(rend, 0, 96, 96, 255);
-	int py = m_view.t_to_y(m_view.time.playpos, r);
-	SDL_Vertex vert[3];
-	vert[0].position = { (float)(r.x), (float)(py - 5) };
-	vert[1].position = { (float)(r.x), (float)(py + 5) };
-	vert[2].position = { (float)(r.x + 8), (float)(py	) };
-	vert[0].color = vert[1].color = vert[2].color = { 0, 64, 128, 255 };
-	SDL_RenderGeometry(rend, nullptr, vert, 3, nullptr, 0);
-	vert[0].position = { (float)(r.x + r.w - 1), (float)(py - 4) };
-	vert[1].position = { (float)(r.x + r.w - 1), (float)(py + 4) };
-	vert[2].position = { (float)(r.x + r.w - 9), (float)(py	) };
-	SDL_RenderGeometry(rend, nullptr, vert, 3, nullptr, 0);
-	SDL_RenderLine(rend, r.x, py, r.x + r.w, py);
+	vcursor(rend, r, cy, false);
+	hcursor(rend, r, cx, false);
+	vcursor(rend, r, m_view.t_to_y(m_view.time.playpos, r), true);
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
