@@ -7,8 +7,8 @@
 class Wavecache {
 public:
 	struct Range {
-		int8_t min;
-		int8_t max;
+		Sample min;
+		Sample max;
 	};
 
 	Wavecache(size_t step);

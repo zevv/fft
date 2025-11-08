@@ -139,8 +139,7 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 					&wdata[ch].min, &wdata[ch].max, 
 					frames_avail / 256, wdata_stride * 2,
 					idx_from / 256, idx_to / 256,
-					(int8_t)(-scale / 256), (int8_t)(+scale / 256));
-			peak *= 256;
+					(Sample)-scale, (Sample)+scale);
 		}
 
 		m_peak = std::max(m_peak, peak);
