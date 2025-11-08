@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <math.h>
 #include <getopt.h>
@@ -30,8 +31,9 @@ class Corrie {
 public:
 	Corrie(SDL_Window *window, SDL_Renderer *renderer);
 
-	void load(const char *fname);
-	void save(const char *fname);
+	void config_fname(char *buf, size_t buflen);
+	void load();
+	void save();
 
 	void init(int argc, char **argv);
 	void usage();
@@ -56,6 +58,7 @@ private:
 	Streams m_streams;
 	View m_view{};
 	int m_redraw{1};
+	char m_session_name[64]{"default"};
 
 	bool m_capturing{true};
 	bool m_playback{false};
@@ -71,24 +74,52 @@ Corrie::Corrie(SDL_Window *window, SDL_Renderer *renderer)
 }
 
 
-void Corrie::load(const char *fname)
+
+void Corrie::config_fname(char *buf, size_t buflen)
 {
+	char dir[PATH_MAX];
+	const char *path = getenv("XDG_CONFIG_HOME");
+	const char *home = getenv("HOME");
+	if(path) {
+		snprintf(dir, sizeof(dir), "%s/corrie", path);
+	} else if(home) {
+		snprintf(dir, sizeof(dir), "%s/.config/corrie", home);
+	} else {
+		snprintf(dir, sizeof(dir), "./.corrie");
+	}
+	mkdir(dir, 0755);
+	snprintf(buf, buflen, "%s/%s", dir, m_session_name);
+}
+
+
+void Corrie::load()
+{
+	char fname[PATH_MAX];
+	config_fname(fname, sizeof(fname));
+
 	ConfigReader cr;
 	cr.open(fname);
-	if(auto n = cr.find("config")) n->read("samplerate", m_srate);
+	if(auto n = cr.find("config")) {
+		n->read("samplerate", m_srate);
+		n->read("session", m_session_name, sizeof(m_session_name));
+	}
 	if(auto n = cr.find("view")) m_view.load(n);
 	if(auto n = cr.find("panel")) m_root_panel->load(n);
 	if(auto n = cr.find("stream")) m_streams.load(n);
 }
 
 
-void Corrie::save(const char *fname)
+void Corrie::save()
 {
+	char fname[PATH_MAX];
+	config_fname(fname, sizeof(fname));
+
 	ConfigWriter cw;
 	cw.open(fname);
 
 	cw.push("config");
 	cw.write("samplerate", m_srate);
+	cw.write("session", m_session_name);
 	cw.pop();
 	
 	cw.push("stream");
@@ -187,7 +218,7 @@ void Corrie::init(int argc, char **argv)
 	Panel *tmp_root_panel = new Panel(Panel::Type::Root);
 	m_root_panel = tmp_root_panel;
 
-	load("config.txt");
+	load();
 
 	if(m_root_panel->nkids() == 0) {
 		Panel *p2 = new Panel(Panel::Type::SplitH);
@@ -204,6 +235,7 @@ void Corrie::init(int argc, char **argv)
 		{"help",          no_argument,       0, 'h'},
 		{"sample-rate",   required_argument, 0, 'r'},
 		{"buffer-depth",  required_argument, 0, 'd'},
+		{"session",       required_argument, 0, 's'},
 		{0, 0, 0, 0}
 	};
 
@@ -221,6 +253,9 @@ void Corrie::init(int argc, char **argv)
 				break;
 			case 'r':
 				m_srate = atof(optarg);
+				break;
+			case 's':
+				snprintf(m_session_name, sizeof(m_session_name), "%s", optarg);
 				break;
 			case 0:
 				printf("option %s", long_options[optind].name);
@@ -290,6 +325,7 @@ void Corrie::run()
 	while (!done)
 	{
 
+		// Capture control
 		if(ImGui::IsKeyPressed(ImGuiKey_C)) {
 			m_capturing ^= 1;
 			if(m_capturing) {
@@ -299,16 +335,18 @@ void Corrie::run()
 			}
 		}
 
+		// Player control
+		auto &player = m_streams.player;
+
 		if(ImGui::IsKeyPressed(ImGuiKey_Space)) {
 			m_playback ^= 1;
 			if(m_playback) {
-				m_streams.player.resume();
+				player.resume();
 			} else {
-				m_streams.player.pause();
+				player.pause();
 			}
 		}
 
-		auto &player = m_streams.player;
 		float factor = ImGui::IsKeyDown(ImGuiKey_LeftShift) ? 2.0 : 1.059463;
 		float stretch = player.get_stretch();
 		float pitch = player.get_pitch();
@@ -375,7 +413,7 @@ void Corrie::run()
 
 void Corrie::exit()
 {
-	save("config.txt");
+	save();
 
 	delete m_root_panel;
 
@@ -405,3 +443,4 @@ int main(int argc, char** argv)
 
 	return 0;
 }
+
