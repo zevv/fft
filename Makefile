@@ -21,6 +21,7 @@ SRC += misc.cpp
 SRC += stream-player.cpp
 SRC += stream-capture.cpp
 SRC += stream-reader-audio.cpp
+SRC += stream-reader-jack.cpp
 SRC += stream-reader-file.cpp
 SRC += stream-reader-generator.cpp
 SRC += config.cpp
@@ -36,7 +37,7 @@ SRC += $(IMGUI_DIR)/imgui_widgets.cpp
 SRC += $(IMGUI_DIR)/backends/imgui_impl_sdl3.cpp
 SRC += $(IMGUI_DIR)/backends/imgui_impl_sdlrenderer3.cpp
 
-PKG += fftw3f sdl3
+PKG += fftw3f sdl3 jack
 
 
 PKG_CFLAGS := $(shell pkg-config $(PKG) --cflags)
@@ -49,7 +50,7 @@ CXXFLAGS += -std=c++23
 CXXFLAGS += -g 
 CXXFLAGS += -Wall -Wformat -Werror
 CXXFLAGS += -Wno-unused-but-set-variable -Wno-unused-variable
-CXXFLAGS += -O3 -ffast-math
+CXXFLAGS += -O0 -ffast-math
 CXXFLAGS += -march=native
 CXXFLAGS += -MMD
 CXXFLAGS += -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends

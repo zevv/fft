@@ -14,6 +14,7 @@
 #include "stream-reader-file.hpp"
 #include "stream-reader-generator.hpp"
 #include "stream-reader-audio.hpp"
+#include "stream-reader-jack.hpp"
 
 
 StreamCapture::StreamCapture(Streams &streams, Rb &rb, Wavecache &wavecache) 
@@ -156,6 +157,14 @@ void StreamCapture::add_reader(const char *desc)
 		StreamReader *reader = new StreamReaderAudio(dst_spec);
 		m_readers.push_back(reader);
 	}
+	
+	if(strcmp(type, "jack") == 0) {
+		SDL_AudioSpec src_spec = parse_audio_spec(strtok(nullptr, ":"));
+		SDL_AudioSpec dst_spec = m_spec;
+		dst_spec.channels = src_spec.channels;
+		StreamReader *reader = new StreamReaderJack(dst_spec);
+		m_readers.push_back(reader);
+	}
 
 	free(desc_copy);
 }
@@ -195,6 +204,10 @@ void StreamCapture::capture_thread()
 		for(auto reader : m_readers) {
 			SDL_AudioStream *sas = reader->get_sdl_audio_stream();
 			int bytes_avail = SDL_GetAudioStreamAvailable(sas);
+			if(bytes_avail < 0) {
+				printf("SDL_GetAudioStreamAvailable(): %s\n", SDL_GetError());
+				exit(1);
+			}
 			frame_count = std::min(frame_count, (size_t)bytes_avail / reader->frame_size());
 		}
 
