@@ -10,6 +10,7 @@ public:
 	~StreamReaderAudio();
 
 	void open() override;
-	void poll() override;
+	void resume() override;
+	void pause() override;
 };
 

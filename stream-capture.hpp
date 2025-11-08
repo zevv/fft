@@ -23,7 +23,8 @@ public:
 
 	void set_sample_rate(Samplerate srate);
 	void start();
-	void enable(bool onoff);
+	void resume();
+	void pause();
 	void add_reader(const char *desc);
 	size_t channel_count();
 

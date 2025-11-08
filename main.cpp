@@ -239,7 +239,7 @@ void Corrie::init(int argc, char **argv)
 	
 	m_streams.allocate(opt_buffer_depth);
 	m_streams.capture.start();
-	m_streams.capture.enable(true);
+	m_streams.capture.resume();
 	m_streams.player.seek(m_view.time.playpos);
 }
 
@@ -292,7 +292,11 @@ void Corrie::run()
 
 		if(ImGui::IsKeyPressed(ImGuiKey_C)) {
 			m_capturing ^= 1;
-			m_streams.capture.enable(m_capturing);
+			if(m_capturing) {
+				m_streams.capture.resume();
+			} else {
+				m_streams.capture.pause();
+			}
 		}
 
 		if(ImGui::IsKeyPressed(ImGuiKey_Space)) {

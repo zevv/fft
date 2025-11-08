@@ -28,8 +28,19 @@ void StreamReaderAudio::open()
 
 
 
-void StreamReaderAudio::poll()
+void StreamReaderAudio::pause()
 {
+	if(m_sdl_stream) {
+		SDL_PauseAudioDevice(SDL_GetAudioStreamDevice(m_sdl_stream));
+	}
+}
+
+
+void StreamReaderAudio::resume()
+{
+	if(m_sdl_stream) {
+		SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(m_sdl_stream));
+	}
 }
 
 

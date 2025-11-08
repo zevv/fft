@@ -81,8 +81,15 @@ void StreamReaderJack::open()
 }
 
 
-void StreamReaderJack::poll()
+void StreamReaderJack::pause()
 {
+	jack_deactivate(m_jack_client);
+}
+
+
+void StreamReaderJack::resume()
+{
+	jack_activate(m_jack_client);
 }
 
 

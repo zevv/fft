@@ -11,7 +11,8 @@ public:
 	~StreamReaderJack();
 
 	void open() override;
-	void poll() override;
+	void pause() override;
+	void resume() override;
 
 	int process_callback(jack_nframes_t nframes);
 

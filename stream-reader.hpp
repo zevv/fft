@@ -21,7 +21,9 @@ public:
 	SDL_AudioStream *get_sdl_audio_stream() { return m_sdl_stream; }
 
 	virtual void open(void) = 0;
-	virtual void poll(void) = 0;
+	virtual void poll(void) {};
+	virtual void pause(void) {};
+	virtual void resume(void) {};
 
 protected:
 	const char *m_name;

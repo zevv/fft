@@ -28,7 +28,7 @@ StreamCapture::StreamCapture(Streams &streams, Rb &rb, Wavecache &wavecache)
 
 StreamCapture::~StreamCapture()
 {
-	enable(false);
+	pause();
 	for(auto reader : m_readers) {
 		delete reader;
 	}
@@ -54,16 +54,28 @@ void StreamCapture::start()
 }
 
 
-void StreamCapture::enable(bool enable)
+void StreamCapture::resume()
 {
-	m_enabled = enable;
-
-	if(enable && !m_running) {
+	if(!m_running) {
+		m_enabled = true;
 		m_running = true;
 		m_thread = std::thread(&StreamCapture::capture_thread, this);
 	}
 
-	if(!enable && m_running) {
+	for(auto reader : m_readers) {
+		reader->resume();
+	}
+}
+
+
+void StreamCapture::pause()
+{
+	if(m_running) {
+
+		for(auto reader : m_readers) {
+			reader->pause();
+		}
+
 		m_running = false;
 		if(m_thread.joinable()) {
 			m_thread.join();
