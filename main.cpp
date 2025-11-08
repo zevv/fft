@@ -18,6 +18,7 @@
 
 #include "panel.hpp"
 #include "stream.hpp"
+#include "misc.hpp"
 #include "stream-reader-audio.hpp"
 #include "stream-reader-file.hpp"
 #include "stream-reader-generator.hpp"
@@ -122,6 +123,25 @@ void Corrie::draw()
 	ImGui_ImplSDLRenderer3_NewFrame();
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
+
+	if(0) {
+		ImGuiWindowFlags flags = 0;
+		flags |= ImGuiWindowFlags_NoCollapse;
+		flags |= ImGuiWindowFlags_NoMove;
+		flags |= ImGuiWindowFlags_NoTitleBar;
+		flags |= ImGuiWindowFlags_NoSavedSettings;
+		flags |= ImGuiWindowFlags_NoNavInputs;
+
+		ImGui::SetNextWindowPos(ImVec2{0, 0});
+		ImGui::SetNextWindowSize(ImVec2(m_w, 16));
+
+		ImGui::Begin("main", nullptr, ImGuiWindowFlags_NoTitleBar);
+		ImGui::ToggleButton("C##capture", &m_capturing);
+		ImGui::SameLine();
+		ImGui::ToggleButton("P##playback", &m_playback);
+		ImGui::SameLine();
+		ImGui::End();
+	}
 
 	m_root_panel->draw(m_view, m_streams, m_rend, 0, 0, m_w, m_h);
 
@@ -317,7 +337,7 @@ void Corrie::run()
 					size_t frame_idx = (size_t)(uintptr_t)event.user.data1;
 					Time t_to = frame_idx / m_srate;
 					Time dt = t_to - m_view.time.to;
-					if(true) {
+					if(!m_playback) {
 						m_view.time.from += dt;
 						m_view.time.to += dt;
 					}
