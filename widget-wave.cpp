@@ -88,24 +88,24 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 			   m_view.time.cursor = m_view.x_to_t(pos.x, r);
 		   }
 
-		   if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-			   m_view.time.sel_from = m_view.x_to_t(pos.x, r);
-			   m_view.time.sel_to   = m_view.x_to_t(pos.x, r);
-		   }
+		   // if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+		   //     m_view.time.sel_from = m_view.x_to_t(pos.x, r);
+		   //     m_view.time.sel_to   = m_view.x_to_t(pos.x, r);
+		   // }
 
-		   if(ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-			   if(ImGui::GetIO().MouseDelta.x < 10) {
-				   m_view.time.sel_to = m_view.x_to_t(pos.x, r);
-			   }
-		   }
+		   // if(ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+		   //     if(ImGui::GetIO().MouseDelta.x < 10) {
+		   //  	   m_view.time.sel_to = m_view.x_to_t(pos.x, r);
+		   //     }
+		   // }
 
-		   if(m_view.time.sel_from != m_view.time.sel_to) {
-			   if(m_view.time.playpos < m_view.time.sel_from || m_view.time.playpos > m_view.time.sel_to) {
-				   streams.player.seek(m_view.time.sel_from);
-				   printf("Seek to sel_from %.4f\n", m_view.time.sel_from);
-				   m_view.time.playpos = m_view.time.sel_from + 0.1; // bah
-			   }
-		   }
+		   // if(m_view.time.sel_from != m_view.time.sel_to) {
+		   //     if(m_view.time.playpos < m_view.time.sel_from || m_view.time.playpos > m_view.time.sel_to) {
+		   //  	   streams.player.seek(m_view.time.sel_from);
+		   //  	   printf("Seek to sel_from %.4f\n", m_view.time.sel_from);
+		   //  	   m_view.time.playpos = m_view.time.sel_from + 0.1; // bah
+		   //     }
+		   // }
 	   }
 	}
 
