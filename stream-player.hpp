@@ -7,6 +7,7 @@
 #include <SDL3/SDL.h>
 
 #include "config.hpp"
+#include "biquad.hpp"
 
 class Streams;
 
@@ -30,6 +31,12 @@ public:
 	void enable(bool onoff);
 	void seek(Time tpos);
 	void audio_callback(SDL_AudioStream *stream, int additional_amount, int total_amount);
+
+	float master_gain_get() const { return m_master_gain; }
+	void master_gain_set(float gain) { m_master_gain = gain; }
+
+	void filter_get(float &f_lp, float &f_hp);
+	void filter_set(float f_lp, float f_hp);
 	
 	float get_pitch() const { return m_pitch; }
 	void set_pitch(float pitch) { m_pitch = std::clamp(pitch, 0.01f, 100.0f); }
@@ -53,7 +60,14 @@ private:
 	size_t m_frames_event{};
 	size_t m_frame_size;
 	size_t m_buf_frames;
+	std::atomic<float> m_master_gain{1.0f};
 	std::atomic<float> m_pitch{1.0f};
 	std::atomic<float> m_stretch{1.0f};
 	std::vector<float> m_buf{};
+	struct {
+		std::atomic<float> f_hp{0.0f};
+		std::atomic<float> f_lp{1.0f};
+		Biquad bq_hp[2];
+		Biquad bq_lp[2];
+	} m_filter;
 };

@@ -4,9 +4,10 @@
 #include "types.hpp"
 
 class Biquad {
+public:
 
 	enum class Type { LP, HP, BP, BS };
-	Biquad(Samplerate srate);
+	Biquad();
 	void configure(Type type, float freq, float Q = 0.7071);
 
 	float run(float v_in)
@@ -35,7 +36,6 @@ class Biquad {
 	}
 
 private:
-	float m_inv_srate;
 	float m_x1{}, m_x2{};
 	float m_y0{}, m_y1{}, m_y2{};
 	float m_b0_a0{}, m_b1_a0{}, m_b2_a0{};

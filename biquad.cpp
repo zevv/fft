@@ -12,8 +12,7 @@
 
 #include "biquad.hpp"
 
-Biquad::Biquad(Samplerate srate)
-	: m_inv_srate(1.0 / srate)
+Biquad::Biquad()
 {
 	m_first = true;
 	configure(Type::LP, 1000, 0.707);
@@ -22,12 +21,13 @@ Biquad::Biquad(Samplerate srate)
 
 void Biquad::configure(Type type, float freq, float Q)
 {
-	freq = std::clamp(freq * m_inv_srate, 0.0f, 0.5f);
+	freq = std::clamp(freq, 0.0f, 0.5f);
 	float a0 = 0.0, a1 = 0.0, a2 = 0.0;
 	float b0 = 0.0, b1 = 0.0, b2 = 0.0;
 
-	float alpha = sin(freq) / (2.0*Q);
-	float cos_w0 = cos(freq);
+	float w0 = 2 * M_PI * freq;
+	float alpha = sin(w0) / (2.0*Q);
+	float cos_w0 = cos(w0);
 
 	switch(type) {
 

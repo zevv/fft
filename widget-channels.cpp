@@ -40,6 +40,24 @@ void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 			ImGui::NewLine();
 
+			float gain = player.master_gain_get();
+			float db = 20.0f * log10f(std::max(gain, 0.0001f));
+			ImGui::SetNextItemWidth(150);
+			ImGui::SliderFloat("##Gain", &db, -30.0, +30.0, "master %+.0fdB");
+			player.master_gain_set(powf(10.0f, db / 20.0f));
+
+			float fs = streams.sample_rate() * 0.5;
+			float f_lp, f_hp;
+			player.filter_get(f_lp, f_hp);
+			f_lp *= fs;
+			f_hp *= fs;
+			ImGui::SetNextItemWidth(150);
+			ImGui::SliderFloat("##Highpass", &f_hp, 0.0f, fs, "Highpass %.0fHz", ImGuiSliderFlags_Logarithmic);
+			ImGui::SameLine();
+			ImGui::SetNextItemWidth(150);
+			ImGui::SliderFloat("##Lowpass", &f_lp, 0.0f, fs, "Lowpass %.0fHz", ImGuiSliderFlags_Logarithmic);
+			player.filter_set(f_lp / fs, f_hp / fs);
+
 			ImGui::SetNextItemWidth(150);
 			if(ImGui::SliderFloat("##stretch", &stretch, 0.25, 4.0, "Stretch %.2fx", ImGuiSliderFlags_Logarithmic)) {
 				player.set_stretch(stretch);

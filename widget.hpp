@@ -50,6 +50,13 @@ protected:
 	void grid_time(SDL_Renderer *rend, SDL_Rect &r, Time t_from, Time t_to);
 	void grid_time_v(SDL_Renderer *rend, SDL_Rect &r, Time t_from, Time t_to);
 
+	enum class CursorType {
+		HorWire,
+		HorPlaypos,
+		VerWire,
+		VerPlaypos
+	};
+
 	void vcursor(SDL_Renderer *rend, SDL_Rect &r, int y, bool playpos);
 	void hcursor(SDL_Renderer *rend, SDL_Rect &r, int x, bool playpos);
 

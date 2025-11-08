@@ -58,7 +58,30 @@ void StreamPlayer::set_channel_count(size_t count)
 	m_channels.resize(std::max(count, m_channels.size()));
 }
 
-	
+
+void StreamPlayer::filter_get(float &f_lp, float &f_hp)
+{
+	f_lp = m_filter.f_lp;
+	f_hp = m_filter.f_hp;
+}
+
+
+void StreamPlayer::filter_set(float f_lp, float f_hp)
+{
+	if(f_lp != m_filter.f_lp || f_hp != m_filter.f_hp) {
+
+		m_filter.f_lp = f_lp;
+		m_filter.f_hp = f_hp;
+
+		for(size_t i=0; i<2; i++) {
+			m_filter.bq_hp[i].configure(Biquad::Type::HP, f_hp);
+			m_filter.bq_lp[i].configure(Biquad::Type::LP, f_lp);
+		}
+	}
+
+}
+
+
 void StreamPlayer::load(ConfigReader::Node *n)
 {
 	auto nc = n->find("player");
@@ -69,6 +92,16 @@ void StreamPlayer::load(ConfigReader::Node *n)
 	float pitch = 1.0f;
 	nc->read("pitch", pitch);
 	m_pitch = pitch;
+
+	float master_gain = 1.0f;
+	nc->read("master_gain", master_gain);
+	m_master_gain = master_gain;
+
+	float filter_lp = 1.0f;
+	float filter_hp = 0.0f;
+	nc->read("filter_lp", filter_lp);
+	nc->read("filter_hp", filter_hp);
+	filter_set(filter_lp, filter_hp);
 
 	for(auto &k : nc->find("channel")->kids) {
 		if(isdigit(k.first[0])) {
@@ -87,6 +120,9 @@ void StreamPlayer::save(ConfigWriter &cw)
 	cw.push("player");
 	cw.write("stretch", m_stretch);
 	cw.write("pitch", m_pitch);
+	cw.write("master_gain", m_master_gain);
+	cw.write("filter_lp", m_filter.f_lp);
+	cw.write("filter_hp", m_filter.f_hp);
 	cw.push("channel");
 	for(size_t ch=0; ch<m_channels.size(); ch++) {
 		cw.push(ch);
@@ -151,7 +187,7 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 		}
 
 		float g0 = (float)m_xfade / (float)xfade_samples;
-		float g1 = 1.0f - g0;
+		float g1 = (1.0f - g0);
 
 		for(size_t ch=0; ch<m_streams.channel_count(); ch++) {
 
@@ -168,12 +204,22 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 				}
 			}
 
-			vl += v * gain_l[ch];
-			vr += v * gain_r[ch];
+			vl += v * gain_l[ch] * m_master_gain;
+			vr += v * gain_r[ch] * m_master_gain;
 		}
 
 		if(m_xfade > 0) {
 			m_xfade --;
+		}
+
+		if(m_filter.f_hp > 0.0f) {
+			vl = m_filter.bq_hp[0].run(vl);
+			vr = m_filter.bq_hp[1].run(vr);
+		}
+
+		if(m_filter.f_lp < 1.0f) {
+			vl = m_filter.bq_lp[0].run(vl);
+			vr = m_filter.bq_lp[1].run(vr);
 		}
 
 		m_buf[i*2 + 0] = vl;
