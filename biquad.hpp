@@ -37,7 +37,7 @@ public:
 
 private:
 	float m_x1{}, m_x2{};
-	float m_y0{}, m_y1{}, m_y2{};
+	float m_y1{}, m_y2{};
 	float m_b0_a0{}, m_b1_a0{}, m_b2_a0{};
 	float m_a1_a0{}, m_a2_a0{};
 	bool m_initialized{false};
