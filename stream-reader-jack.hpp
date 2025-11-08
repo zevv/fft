@@ -1,9 +1,10 @@
 
 #include <SDL3/SDL_audio.h>
-#include <jack/jack.h>
 
 #include "stream-reader.hpp"
 
+struct jack_client_t;
+struct jack_port_t;
 
 class StreamReaderJack : public StreamReader {
 public:
@@ -13,7 +14,7 @@ public:
 	void open() override;
 	void poll() override;
 
-	int process_callback(jack_nframes_t nframes);
+	int process_callback(int nframes);
 
 private:
 	SDL_AudioSpec m_src_spec{};
