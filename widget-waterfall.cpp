@@ -181,12 +181,40 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		m_db_max = hist.get_percentile(1.00);
 	}
 
-	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
+
+	// darken filtered out area
+	float f_lp, f_hp;
+	streams.player.filter_get(f_lp, f_hp);
+
+	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
+	SDL_FRect filt_rect;
+	filt_rect.y = r.y;
+	filt_rect.h = r.h;
+	int x_hp = m_view.freq_to_x(f_hp, r);
+	filt_rect.x = r.x;
+	filt_rect.w = x_hp - r.x;
+	SDL_SetRenderDrawColor(rend, 0, 0, 0, 128);
+	SDL_RenderFillRect(rend, &filt_rect);
+	int x_lp = m_view.freq_to_x(f_lp, r);
+	filt_rect.x = x_lp;
+	filt_rect.w = r.x + r.w - x_lp;
+	SDL_RenderFillRect(rend, &filt_rect);
+
+	// selection
+	if(m_view.time.sel_from != m_view.time.sel_to) {
+		float sx_from = m_view.t_to_y(m_view.time.sel_from, r);
+		float sx_to   = m_view.t_to_y(m_view.time.sel_to,   r);
+		SDL_SetRenderDrawColor(rend, 128, 128, 255, 64);
+		SDL_FRect sr = { (float)r.x, sx_from, (float)r.w, sx_to - sx_from };
+		SDL_RenderFillRect(rend, &sr);
+	}
+	
 
 	// grid
 	//grid_time_v(rend, r, m_view.time.from, m_view.time.to);
 
 	// cursors
+	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 	int cx = m_view.freq_to_x(m_view.freq.cursor, r);
 	int cy = m_view.t_to_y(m_view.time.cursor, r);
 	vcursor(rend, r, cy, false);

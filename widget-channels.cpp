@@ -52,10 +52,10 @@ void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 			f_lp *= fs;
 			f_hp *= fs;
 			ImGui::SetNextItemWidth(150);
-			ImGui::SliderFloat("##Highpass", &f_hp, 0.0f, fs, "Highpass %.0fHz", ImGuiSliderFlags_Logarithmic);
+			ImGui::SliderFloat("##Highpass", &f_hp, 0.0f, fs, "Highpass %.0fHz");
 			ImGui::SameLine();
 			ImGui::SetNextItemWidth(150);
-			ImGui::SliderFloat("##Lowpass", &f_lp, 0.0f, fs, "Lowpass %.0fHz", ImGuiSliderFlags_Logarithmic);
+			ImGui::SliderFloat("##Lowpass", &f_lp, 0.0f, fs, "Lowpass %.0fHz");
 			player.filter_set(f_lp / fs, f_hp / fs);
 
 			ImGui::SetNextItemWidth(150);

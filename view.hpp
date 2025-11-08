@@ -22,6 +22,8 @@ public:
 		n->read("t_playpos", time.playpos);
 		n->read("t_from", time.from);
 		n->read("t_to", time.to);
+		n->read("t_sel_from", time.sel_from);
+		n->read("t_sel_to", time.sel_to);
 		n->read("freq_from", freq.from);
 		n->read("freq_to", freq.to);
 		n->read("freq_cursor", freq.cursor);
@@ -39,6 +41,8 @@ public:
 		cfg.write("t_playpos", time.playpos);
 		cfg.write("t_from", time.from);
 		cfg.write("t_to", time.to);
+		cfg.write("t_sel_from", time.sel_from);
+		cfg.write("t_sel_to", time.sel_to);
 		cfg.write("freq_from", freq.from);
 		cfg.write("freq_to", freq.to);
 		cfg.write("freq_cursor", freq.cursor);
@@ -140,6 +144,8 @@ public:
 		Time to{1.0};
 		Time cursor{0.5};
 		Time playpos{0.0};
+		Time sel_from{0.0};
+		Time sel_to{0.0};
 	};
 
 	struct VFreq {
