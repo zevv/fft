@@ -83,7 +83,7 @@ void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 				ImGui::SameLine();
 				ImGui::SetNextItemWidth(150);
 				float db = 20.0f * log10f(std::max(channels[ch].gain, 0.0001f));
-				ImGui::SliderFloat("##Volume", &db, -60.0, +30.0, "%.0fdB");
+				ImGui::SliderFloat("##Volume", &db, -60.0, +0.0, "%.0fdB");
 				channels[ch].gain = db > -60 ? powf(10.0f, db / 20.0f) : 0.0f;
 
 				ImGui::SameLine();

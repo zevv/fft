@@ -25,6 +25,7 @@ SRC += stream-reader-jack.cpp
 SRC += stream-reader-file.cpp
 SRC += stream-reader-generator.cpp
 SRC += config.cpp
+SRC += biquad.cpp
 SRC += rb.cpp
 SRC += fft.cpp
 SRC += histogram.cpp
