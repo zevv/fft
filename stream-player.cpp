@@ -246,9 +246,16 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 }
 
 
-void StreamPlayer::enable(bool enable)
+void StreamPlayer::resume()
 {
-	auto dev = SDL_GetAudioStreamDevice(m_sdl_audio_stream);
-	(enable ? SDL_ResumeAudioDevice : SDL_PauseAudioDevice)(dev);
+	SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audio_stream));
 	SDL_ClearAudioStream(m_sdl_audio_stream);
 }
+
+
+void StreamPlayer::pause()
+{
+	SDL_PauseAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audio_stream));
+	SDL_ClearAudioStream(m_sdl_audio_stream);
+}
+

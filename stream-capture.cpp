@@ -57,13 +57,13 @@ void StreamCapture::start()
 void StreamCapture::resume()
 {
 	if(!m_running) {
-		m_enabled = true;
+
 		m_running = true;
 		m_thread = std::thread(&StreamCapture::capture_thread, this);
-	}
 
-	for(auto reader : m_readers) {
-		reader->resume();
+		for(auto reader : m_readers) {
+			reader->resume();
+		}
 	}
 }
 
@@ -71,7 +71,7 @@ void StreamCapture::resume()
 void StreamCapture::pause()
 {
 	if(m_running) {
-
+	
 		for(auto reader : m_readers) {
 			reader->pause();
 		}
@@ -204,10 +204,6 @@ void StreamCapture::capture_thread()
 
 	while(m_running) {
 
-		while(!m_enabled && m_running) {
-			usleep(10000);
-		}
-	
 		// poll all readers
 		for(auto reader : m_readers) {
 			SDL_AudioStream *sas = reader->get_sdl_audio_stream();

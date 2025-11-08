@@ -28,7 +28,8 @@ public:
 
 	void set_channel_count(size_t count);
 	void set_sample_rate(Samplerate srate);
-	void enable(bool onoff);
+	void pause();
+	void resume();
 	void seek(Time tpos);
 	void audio_callback(SDL_AudioStream *stream, int additional_amount, int total_amount);
 

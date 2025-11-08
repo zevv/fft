@@ -32,7 +32,6 @@ private:
 	std::vector<StreamReader *> m_readers{};
 	std::vector<Sample> m_buf{};
 	std::thread m_thread;
-	std::atomic<bool> m_enabled{false};
 	std::atomic<bool> m_running{false};
 	void capture_thread();
 	Streams &m_streams;

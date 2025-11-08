@@ -301,7 +301,11 @@ void Corrie::run()
 
 		if(ImGui::IsKeyPressed(ImGuiKey_Space)) {
 			m_playback ^= 1;
-			m_streams.player.enable(m_playback);
+			if(m_playback) {
+				m_streams.player.resume();
+			} else {
+				m_streams.player.pause();
+			}
 		}
 
 		auto &player = m_streams.player;

@@ -22,7 +22,7 @@ Streams::Streams()
 
 Streams::~Streams()
 {
-	player.enable(false);
+	player.pause();
 	capture.pause();
 }
 
