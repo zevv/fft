@@ -97,7 +97,7 @@ public:
 	};
 
 	void zoom_t(float f, ZoomAnchor za=Cursor) {
-		f /= 50.0;
+		f /= 100.0;
 		Time t_mid = (za == Cursor) ? time.cursor : 0.5 * (time.from + time.to);
 		time.from += (t_mid - time.from) * f;
 		time.to   -= (time.to - t_mid) * f;
@@ -112,7 +112,7 @@ public:
 	};
 
 	void zoom_freq(float f) {
-		f /= 50.0;
+		f /= 100.0;
 		freq.from += (freq.cursor - freq.from) * f;
 		freq.to   -= (freq.to - freq.cursor) * f;
 		clamp();

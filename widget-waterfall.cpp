@@ -92,6 +92,8 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
 			m_view.freq.from = 0.0f;
 			m_view.freq.to = 1.0;
+			m_view.time.from = 0;
+			m_view.time.to   = frames_avail / streams.sample_rate();
 		}
 
 		if(ImGui::IsMouseInRect(r)) {

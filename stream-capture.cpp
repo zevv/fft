@@ -40,17 +40,23 @@ void StreamCapture::set_sample_rate(Samplerate srate)
 	m_spec.freq = srate;
 }
 
-void StreamCapture::enable(bool enable)
+
+void StreamCapture::start()
 {
 	size_t channel_count = 0;
 	for(auto &reader : m_readers) {
 		reader->open();
 		channel_count += reader->channel_count();
 	}
-
-	m_enabled = enable;
+	
 	m_spec.channels = channel_count;
 	m_buf.resize(channel_count * 4096);
+}
+
+
+void StreamCapture::enable(bool enable)
+{
+	m_enabled = enable;
 
 	if(enable && !m_running) {
 		m_running = true;

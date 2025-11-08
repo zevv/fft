@@ -126,12 +126,16 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		m_peak = std::max(m_peak, peak);
 	}
 
-
-	// time grid
+	// grids
 	grid_time(rend, r, m_view.x_to_t(r.x, r), m_view.x_to_t(r.x + r.w, r));
-	
-	// value grid
 	grid_vertical(rend, r, -scale / k_sample_max, +scale / k_sample_max);
+
+	// window
+	Window w = Window(m_view.window.window_type, m_view.window.size, m_view.window.window_beta);
+	SDL_SetRenderDrawColor(rend, 128, 128, 128, 255);
+	double w_idx_from = (m_view.time.from - m_view.time.playpos) * streams.sample_rate() + m_view.window.size * 0.5;
+	double w_idx_to   = (m_view.time.to   - m_view.time.playpos) * streams.sample_rate() + m_view.window.size * 0.5;
+	graph(rend, r, w.data().data(), w.size(), 1, w_idx_from, w_idx_to, 0.0f, +1.0f);
 
 	// cursor
 	int cx = m_view.t_to_x(m_view.time.cursor, r);
@@ -140,14 +144,6 @@ void WidgetWaveform::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	// play position
 	int px = m_view.t_to_x(m_view.time.playpos, r);
 	hcursor(rend, r, px, true);
-
-
-	// window
-	Window w = Window(m_view.window.window_type, m_view.window.size, m_view.window.window_beta);
-	SDL_SetRenderDrawColor(rend, 128, 128, 128, 255);
-	double w_idx_from = (m_view.time.from - m_view.time.playpos) * streams.sample_rate() + m_view.window.size * 0.5;
-	double w_idx_to   = (m_view.time.to   - m_view.time.playpos) * streams.sample_rate() + m_view.window.size * 0.5;
-	graph(rend, r, w.data().data(), w.size(), 1, w_idx_from, w_idx_to, 0.0f, +1.0f);
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 

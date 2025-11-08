@@ -218,6 +218,7 @@ void Corrie::init(int argc, char **argv)
 	}
 	
 	m_streams.allocate(opt_buffer_depth);
+	m_streams.capture.start();
 	m_streams.capture.enable(true);
 	m_streams.player.seek(m_view.time.playpos);
 }
@@ -316,7 +317,7 @@ void Corrie::run()
 					size_t frame_idx = (size_t)(uintptr_t)event.user.data1;
 					Time t_to = frame_idx / m_srate;
 					Time dt = t_to - m_view.time.to;
-					if(0) {
+					if(true) {
 						m_view.time.from += dt;
 						m_view.time.to += dt;
 					}

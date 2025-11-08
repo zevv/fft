@@ -433,7 +433,7 @@ void Widget::vcursor(SDL_Renderer *rend, SDL_Rect &r, int y, bool playpos)
 	float aw = playpos ? 4.0f : 0.0f;
 	SDL_FColor col = {192, 192, 192, 255};
 	if(playpos) col = {0, 96, 128, 255};
-	cursor(rend, y-1, r.x, y+3, r.x + r.w, aw, {0, 0, 0, 255}, true);
+	cursor(rend, y-1, r.x, y+2, r.x + r.w, aw, {0, 0, 0, 255}, true);
 	cursor(rend, y, r.x, y+1, r.x + r.w, aw, col, true);
 }
 
@@ -442,7 +442,7 @@ void Widget::hcursor(SDL_Renderer *rend, SDL_Rect &r, int x, bool playpos)
 	float aw = playpos ? 4.0f : 0.0f;
 	SDL_FColor col = {192, 192, 192, 255};
 	if(playpos) col = {0, 96, 128, 255};
-	cursor(rend, x-1, r.y, x+3, r.y + r.h, aw, {0, 0, 0, 255}, false);
+	cursor(rend, x-1, r.y, x+2, r.y + r.h, aw, {0, 0, 0, 255}, false);
 	cursor(rend, x, r.y, x+1, r.y + r.h, aw, col, false);
 }
 
