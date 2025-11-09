@@ -4,7 +4,7 @@
 #include "sourceregistry.hpp"
 
 
-static std::vector<SourceInfo> &registry()
+std::vector<SourceInfo> &SourceRegistry::get_registry()
 {
 	static std::vector<SourceInfo> instance;
 	return instance;
@@ -13,13 +13,13 @@ static std::vector<SourceInfo> &registry()
 
 SourceRegistry::SourceRegistry(SourceInfo info)
 {
-	registry().push_back(info);
+	get_registry().push_back(info);
 }
 
 
 Source *SourceRegistry::create(const char *name, SDL_AudioSpec &dst_spec, char *args)
 {
-	for(auto &reg : registry()) {
+	for(auto &reg : get_registry()) {
 		if(strcmp(reg.name, name) == 0) {
 			Source *reader = reg.fn_create(dst_spec, args);
 			reader->dump(stdout);
