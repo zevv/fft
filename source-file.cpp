@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "source.hpp"
+#include "sourceregistry.hpp"
 #include "misc.hpp"
 
 class SourceFile : public Source {

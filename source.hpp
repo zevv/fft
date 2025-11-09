@@ -17,13 +17,6 @@ struct SourceInfo {
 	Source *(*fn_create)(SDL_AudioSpec &dst_spec, char *args);
 };
 
-class SourceReg {
-public:
-	SourceReg(SourceInfo info);
-	static Source *create(const char *name, SDL_AudioSpec &dst_spec, char *args);
-};
-
-
 class Source {
 public:
 	Source(SourceInfo &info, SDL_AudioSpec &dst_spec)
@@ -58,10 +51,3 @@ protected:
 	SDL_AudioStream *m_sdl_stream{};
 };
 
-
-#define REGISTER_STREAM_READER(class, ...) \
-	static SourceInfo reg = { \
-		__VA_ARGS__ \
-		.fn_create = [](SDL_AudioSpec &dst_spec, char *args) -> Source* { return new class(reg, dst_spec, args); }, \
-	}; \
-	static SourceReg info(reg);

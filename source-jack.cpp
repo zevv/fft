@@ -3,6 +3,7 @@
 #include <jack/jack.h>
 
 #include "source.hpp"
+#include "sourceregistry.hpp"
 
 class SourceJack : public Source {
 public:

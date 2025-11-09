@@ -1,5 +1,6 @@
 
 #include "source.hpp"
+#include "sourceregistry.hpp"
 
 
 class SourceAudio : public Source {

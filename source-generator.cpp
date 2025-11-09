@@ -3,6 +3,7 @@
 
 
 #include "source.hpp"
+#include "sourceregistry.hpp"
 
 class SourceGenerator : public Source {
 public:
