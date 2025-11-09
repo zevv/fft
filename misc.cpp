@@ -50,12 +50,14 @@ SDL_AudioFormat sdl_audioformat_from_str(const char *s)
 }
 
 
-SDL_AudioSpec sdl_audiospec_from_str(char *s)
+SDL_AudioSpec sdl_audiospec_from_str(char *args)
 {
 	SDL_AudioSpec fmt;
 	fmt.format = SDL_AUDIO_S16LE;
 	fmt.channels = 1;
 	fmt.freq = 48000;
+
+	char *s = strtok(args, ":");
 
 	while(s) {
 		char *endptr;

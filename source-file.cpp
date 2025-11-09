@@ -29,6 +29,7 @@ SourceFile::SourceFile(SourceInfo &info, SDL_AudioSpec &dst_spec, char *args)
 	, m_fd(0)
 {
 	m_src_spec = sdl_audiospec_from_str(args);
+	m_dst_spec.channels = m_src_spec.channels;
 }
 
 

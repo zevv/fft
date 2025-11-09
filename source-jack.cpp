@@ -34,6 +34,8 @@ private:
 SourceJack::SourceJack(SourceInfo &info, SDL_AudioSpec &dst_spec, char *args)
 	: Source(info, dst_spec)
 {
+	SDL_AudioSpec spec = sdl_audiospec_from_str(args);
+	m_dst_spec.channels = spec.channels;
 }
 
 

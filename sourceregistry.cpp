@@ -21,10 +21,10 @@ Source *SourceRegistry::create(const char *name, SDL_AudioSpec &dst_spec, char *
 {
 	for(auto &reg : get_registry()) {
 		if(strcmp(reg.name, name) == 0) {
-			Source *reader = reg.fn_create(dst_spec, args);
-			reader->dump(stdout);
-			assert(reader != nullptr);
-			return reader;
+			Source *source = reg.fn_create(dst_spec, args);
+			source->dump(stdout);
+			assert(source != nullptr);
+			return source;
 		}
 	}
 	return nullptr;
