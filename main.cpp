@@ -20,17 +20,21 @@
 #include "app.hpp"
 
 
-int main(int argc, char** argv)
+static void run(int argc, char** argv)
 {
-	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-
-	// scope to ensure App destructor called before SDL_Quit
-	{
 	App app = App(nullptr, nullptr);
 	app.init(argc, argv);
 	app.run();
 	app.exit();
-	}
+}
+
+
+
+int main(int argc, char** argv)
+{
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+
+	run(argc, argv);
 
 	fftwf_cleanup();
 	SDL_Quit();
