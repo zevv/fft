@@ -9,6 +9,47 @@
 
 #include "misc.hpp"
 
+static struct {
+	const char *name;
+	SDL_AudioFormat format;
+} audio_format_map[] = {
+	{ "u8",     SDL_AUDIO_U8 },
+	{ "s8",     SDL_AUDIO_S8 },
+	{ "s16",    SDL_AUDIO_S16 },
+	{ "s16le",  SDL_AUDIO_S16LE },
+	{ "s16be",  SDL_AUDIO_S16BE },
+	{ "s32",    SDL_AUDIO_S32 },
+	{ "s32le",  SDL_AUDIO_S32LE },
+	{ "s32be",  SDL_AUDIO_S32BE },
+	{ "f32",    SDL_AUDIO_F32 },
+	{ "f32le",  SDL_AUDIO_F32LE },
+	{ "f32be",  SDL_AUDIO_F32BE },
+	{ nullptr },
+};
+
+
+const char *sdl_audioformat_to_str(SDL_AudioFormat sdl_audioformat)
+{
+	for(int i=0; audio_format_map[i].name != nullptr; i++) {
+		if(sdl_audioformat == audio_format_map[i].format) {
+			return audio_format_map[i].name;
+		}
+	}
+	return "unknown";
+}
+
+
+SDL_AudioFormat sdl_audioformat_from_str(const char *s)
+{
+	for(int i=0; audio_format_map[i].name != nullptr; i++) {
+		if(strcmp(s, audio_format_map[i].name) == 0) {
+			return audio_format_map[i].format;
+		}
+	}
+	return SDL_AUDIO_UNKNOWN;
+}
+
+
 double hirestime()
 {
 	struct timespec ts;

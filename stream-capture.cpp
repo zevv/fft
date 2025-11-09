@@ -10,6 +10,7 @@
 #include <SDL3/SDL_audio.h>
 
 #include "stream.hpp"
+#include "misc.hpp"
 #include "stream-capture.hpp"
 #include "stream-reader-file.hpp"
 #include "stream-reader-generator.hpp"
@@ -84,24 +85,6 @@ void StreamCapture::pause()
 }
 
 
-static struct {
-	const char *name;
-	SDL_AudioFormat format;
-} audio_format_map[] = {
-	{ "u8",     SDL_AUDIO_U8 },
-	{ "s8",     SDL_AUDIO_S8 },
-	{ "s16",    SDL_AUDIO_S16 },
-	{ "s16le",  SDL_AUDIO_S16LE },
-	{ "s16be",  SDL_AUDIO_S16BE },
-	{ "s32",    SDL_AUDIO_S32 },
-	{ "s32le",  SDL_AUDIO_S32LE },
-	{ "s32be",  SDL_AUDIO_S32BE },
-	{ "f32",    SDL_AUDIO_F32 },
-	{ "f32le",  SDL_AUDIO_F32LE },
-	{ "f32be",  SDL_AUDIO_F32BE },
-	{ nullptr },
-};
-
 SDL_AudioSpec parse_audio_spec(char *s)
 {
 	SDL_AudioSpec fmt;
@@ -116,10 +99,9 @@ SDL_AudioSpec parse_audio_spec(char *s)
 			if(val <= 32) fmt.channels = val;
 			if(val >  32) fmt.freq = val;
 		} else {
-			for(int i=0; audio_format_map[i].name != nullptr; i++) {
-				if(strcmp(s, audio_format_map[i].name) == 0) {
-					fmt.format = audio_format_map[i].format;
-				}
+			SDL_AudioFormat format = sdl_audioformat_from_str(s);
+			if(format != SDL_AUDIO_UNKNOWN) {
+				fmt.format = format;
 			}
 		}
 		s = strtok(nullptr, ":");
