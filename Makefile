@@ -4,6 +4,7 @@ BIN = fft
 IMGUI_DIR = /home/ico/external/imgui
 
 SRC += main.cpp
+SRC += app.cpp
 SRC += window.cpp
 SRC += panel.cpp
 SRC += channelmap.cpp

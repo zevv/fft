@@ -1,0 +1,50 @@
+
+#pragma once 
+
+#include "panel.hpp"
+#include "stream.hpp"
+#include "misc.hpp"
+#include "view.hpp"
+#include "config.hpp"
+#include "widgetregistry.hpp"
+#include "app.hpp"
+
+
+class App {
+public:
+	App(SDL_Window *window, SDL_Renderer *renderer);
+
+	void config_fname(char *buf, size_t buflen);
+	void load();
+	void save();
+
+	void init(int argc, char **argv);
+	void usage();
+	void run();
+	void exit();
+
+	void init_video();
+	void req_redraw();
+
+	void draw();
+	void resize_window(int w, int h);
+
+private:
+	Panel *m_root_panel;
+
+	SDL_Window *m_win{};
+	SDL_Renderer *m_rend{};
+	bool m_resize{true};
+	int m_w = 800;
+	int m_h = 600;
+	Time m_srate{48000.0};
+	Streams m_streams;
+	View m_view{};
+	int m_redraw{1};
+	char m_session_name[64]{"default"};
+
+	bool m_capturing{true};
+	bool m_playback{false};
+};
+
+
