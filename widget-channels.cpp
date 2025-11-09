@@ -7,11 +7,11 @@
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
-#include "widgetinfo.hpp"
+#include "widgetregistry.hpp"
 #include "widget-channels.hpp"
 
 
-WidgetChannels::WidgetChannels(WidgetInfo &info)
+WidgetChannels::WidgetChannels(Widget::Info &info)
 	: Widget(info)
 {
 }

@@ -1,12 +1,12 @@
 
 #include <assert.h>
 
-#include "widgetinfo.hpp"
+#include "widgetregistry.hpp"
 
-static std::vector<WidgetInfo> widget_reg_list;
+static std::vector<Widget::Info> widget_reg_list;
 
 
-Widgets::Widgets(WidgetInfo reg)
+Widgets::Widgets(Widget::Info reg)
 {
 	widget_reg_list.push_back(reg);
 }

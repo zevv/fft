@@ -12,7 +12,7 @@
 
 class WidgetSpectrum : public Widget {
 public:
-	WidgetSpectrum(WidgetInfo &info);
+	WidgetSpectrum(Widget::Info &info);
 	~WidgetSpectrum() override;
 
 private:

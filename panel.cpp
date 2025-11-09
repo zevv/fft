@@ -3,7 +3,7 @@
 #include <imgui.h>
 #include <algorithm>
 
-#include "widgetinfo.hpp"
+#include "widgetregistry.hpp"
 #include "panel.hpp"
 	
 

@@ -22,6 +22,7 @@
 #include "misc.hpp"
 #include "view.hpp"
 #include "config.hpp"
+#include "widgetregistry.hpp"
 
 
 class Corrie {

@@ -14,7 +14,7 @@
 class WidgetChannels : public Widget {
 
 public:
-	WidgetChannels(WidgetInfo &info);
+	WidgetChannels(Widget::Info &info);
 	~WidgetChannels() override;
 
 private:

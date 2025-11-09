@@ -13,7 +13,7 @@ class Widgets;
 
 class WidgetWaterfall : public Widget {
 public:
-	WidgetWaterfall(WidgetInfo &info);
+	WidgetWaterfall(Widget::Info &info);
 	~WidgetWaterfall() override;
 
 private:

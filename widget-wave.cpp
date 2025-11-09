@@ -8,11 +8,11 @@
 #include <imgui.h>
 
 #include "misc.hpp"
-#include "widgetinfo.hpp"
+#include "widgetregistry.hpp"
 #include "widget-wave.hpp"
 
 
-WidgetWaveform::WidgetWaveform(WidgetInfo &info)
+WidgetWaveform::WidgetWaveform(Widget::Info &info)
 	: Widget(info)
 {
 }
@@ -182,6 +182,6 @@ REGISTER_WIDGET(WidgetWaveform,
 	.name = "waveform",
 	.description = "Waveform display",
 	.hotkey = ImGuiKey_F1,
-	.flags = WidgetInfo::Flags::ShowChannelMap | WidgetInfo::Flags::ShowLock,
+	.flags = Widget::Info::Flags::ShowChannelMap | Widget::Info::Flags::ShowLock,
 );
 

@@ -7,14 +7,14 @@
 
 class SourceRegistry {
 public:
-	SourceRegistry(SourceInfo info);
+	SourceRegistry(Source::Info info);
 	static Source *create(const char *name, SDL_AudioSpec &dst_spec, char *args);
-	static std::vector<SourceInfo> &get_registry();
+	static std::vector<Source::Info> &get_registry();
 };
 
 
 #define REGISTER_STREAM_READER(class, ...) \
-	static SourceInfo reg = { \
+	static Source::Info reg = { \
 		__VA_ARGS__ \
 		.fn_create = [](SDL_AudioSpec &dst_spec, char *args) -> Source* { return new class(reg, dst_spec, args); }, \
 	}; \

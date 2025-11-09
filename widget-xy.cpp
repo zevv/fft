@@ -7,12 +7,12 @@
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
-#include "widgetinfo.hpp"
+#include "widgetregistry.hpp"
 #include "widget-xy.hpp"
 #include "misc.hpp"
 
 
-WidgetXY::WidgetXY(WidgetInfo &info)
+WidgetXY::WidgetXY(Widget::Info &info)
 	: Widget(info)
 {
 }
@@ -129,6 +129,6 @@ REGISTER_WIDGET(WidgetXY,
 	.name = "xy",
 	.description = "X/Y constallation display",
 	.hotkey = ImGuiKey_F6,
-	.flags = WidgetInfo::Flags::ShowChannelMap | WidgetInfo::Flags::ShowLock,
+	.flags = Widget::Info::Flags::ShowChannelMap | Widget::Info::Flags::ShowLock,
 );
 

@@ -8,11 +8,11 @@
 #include <imgui.h>
 
 #include "misc.hpp"
-#include "widgetinfo.hpp"
+#include "widgetregistry.hpp"
 #include "widget-histogram.hpp"
 
 
-WidgetHistogram::WidgetHistogram(WidgetInfo &info)
+WidgetHistogram::WidgetHistogram(Widget::Info &info)
 	: Widget(info)
 {
 }
@@ -106,8 +106,8 @@ REGISTER_WIDGET(WidgetHistogram,
 	.name = "histogram",
 	.description = "Value histogram",
 	.hotkey = ImGuiKey_F4,
-	.flags = WidgetInfo::Flags::ShowChannelMap | 
-	         WidgetInfo::Flags::ShowLock |
-	         WidgetInfo::Flags::ShowWindowSize,
+	.flags = Widget::Info::Flags::ShowChannelMap | 
+	         Widget::Info::Flags::ShowLock |
+	         Widget::Info::Flags::ShowWindowSize,
 );
 

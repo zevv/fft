@@ -6,36 +6,22 @@
 
 #include <imgui.h>
 
+#include "widget.hpp"
+
 class Widgets;
 class Widget;
-
-struct WidgetInfo {
-
-	enum Flags {
-		ShowChannelMap	   = 1 << 0,
-		ShowLock	       = 1 << 1,
-		ShowWindowSize     = 1 << 2,
-		ShowWindowType     = 1 << 3,
-	};
-
-	const char *name;
-	const char *description;
-	enum ImGuiKey hotkey;
-	int flags;
-	Widget *(*fn_create)();
-};
 
 
 class Widgets {
 public:
-	Widgets(WidgetInfo reg);
+	Widgets(Widget::Info reg);
 	static Widget *draw(const char *name);
 	static Widget *create_widget(const char *name);
 };
 
 
 #define REGISTER_WIDGET(class, ...) \
-	static WidgetInfo reg = { \
+	static Widget::Info reg = { \
 		__VA_ARGS__ \
 		.fn_create = []() -> Widget* { return new class(reg); }, \
 	}; \

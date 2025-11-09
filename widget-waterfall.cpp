@@ -8,12 +8,12 @@
 #include <imgui.h>
 
 #include "misc.hpp"
-#include "widgetinfo.hpp"
+#include "widgetregistry.hpp"
 #include "widget-waterfall.hpp"
 #include "histogram.hpp"
 
 
-WidgetWaterfall::WidgetWaterfall(WidgetInfo &info)
+WidgetWaterfall::WidgetWaterfall(Widget::Info &info)
 	: Widget(info)
 	, m_fft(true)
 {
@@ -230,9 +230,9 @@ REGISTER_WIDGET(WidgetWaterfall,
 	.name = "waterfall",
 	.description = "FFT spectrum waterfall",
 	.hotkey = ImGuiKey_F3,
-	.flags = WidgetInfo::Flags::ShowChannelMap | 
-	         WidgetInfo::Flags::ShowLock |
-			 WidgetInfo::Flags::ShowWindowSize |
-			 WidgetInfo::Flags::ShowWindowType,
+	.flags = Widget::Info::Flags::ShowChannelMap | 
+	         Widget::Info::Flags::ShowLock |
+			 Widget::Info::Flags::ShowWindowSize |
+			 Widget::Info::Flags::ShowWindowType,
 );
 

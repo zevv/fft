@@ -4,14 +4,14 @@
 #include "sourceregistry.hpp"
 
 
-std::vector<SourceInfo> &SourceRegistry::get_registry()
+std::vector<Source::Info> &SourceRegistry::get_registry()
 {
-	static std::vector<SourceInfo> instance;
+	static std::vector<Source::Info> instance;
 	return instance;
 }
 
 
-SourceRegistry::SourceRegistry(SourceInfo info)
+SourceRegistry::SourceRegistry(Source::Info info)
 {
 	get_registry().push_back(info);
 }

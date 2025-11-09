@@ -7,7 +7,7 @@
 
 class SourceJack : public Source {
 public:
-	SourceJack(SourceInfo &info, SDL_AudioSpec &dst_spec, char *args);
+	SourceJack(Source::Info &info, SDL_AudioSpec &dst_spec, char *args);
 	~SourceJack();
 
 	void open() override;
@@ -31,7 +31,7 @@ private:
 };
 
 
-SourceJack::SourceJack(SourceInfo &info, SDL_AudioSpec &dst_spec, char *args)
+SourceJack::SourceJack(Source::Info &info, SDL_AudioSpec &dst_spec, char *args)
 	: Source(info, dst_spec)
 {
 	SDL_AudioSpec spec = sdl_audiospec_from_str(args);

@@ -5,7 +5,7 @@
 
 class SourceAudio : public Source {
 public:
-	SourceAudio(SourceInfo &info, SDL_AudioSpec &dst_spec, char *args);
+	SourceAudio(Source::Info &info, SDL_AudioSpec &dst_spec, char *args);
 	~SourceAudio();
 
 	void open() override;
@@ -15,7 +15,7 @@ public:
 
 
 
-SourceAudio::SourceAudio(SourceInfo &info, SDL_AudioSpec &dst_spec, char *args)
+SourceAudio::SourceAudio(Source::Info &info, SDL_AudioSpec &dst_spec, char *args)
 	: Source(info, dst_spec)
 {
 	m_dst_spec = sdl_audiospec_from_str(args);

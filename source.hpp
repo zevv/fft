@@ -9,17 +9,16 @@
 #include "misc.hpp"
 #include "stream.hpp"
 
-class Source;
-
-struct SourceInfo {
-	const char *name;
-	const char *description;
-	Source *(*fn_create)(SDL_AudioSpec &dst_spec, char *args);
-};
-
 class Source {
 public:
-	Source(SourceInfo &info, SDL_AudioSpec &dst_spec)
+
+	struct Info {
+		const char *name;
+		const char *description;
+		Source *(*fn_create)(SDL_AudioSpec &dst_spec, char *args);
+	};
+
+	Source(Source::Info &info, SDL_AudioSpec &dst_spec)
 		: m_info(info)
 		, m_frame_size(dst_spec.channels * sizeof(Sample))
 		, m_dst_spec(dst_spec)
@@ -45,7 +44,7 @@ public:
 	virtual void resume(void) {};
 
 protected:
-	SourceInfo m_info;
+	Source::Info m_info;
 	size_t m_frame_size{};
 	SDL_AudioSpec m_dst_spec{};
 	SDL_AudioStream *m_sdl_stream{};

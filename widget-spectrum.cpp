@@ -7,11 +7,11 @@
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
-#include "widgetinfo.hpp"
+#include "widgetregistry.hpp"
 #include "widget-spectrum.hpp"
 
 
-WidgetSpectrum::WidgetSpectrum(WidgetInfo &info)
+WidgetSpectrum::WidgetSpectrum(Widget::Info &info)
 	: Widget(info)
 {
 }
@@ -89,9 +89,9 @@ REGISTER_WIDGET(WidgetSpectrum,
 	.name = "spectrum",
 	.description = "FFT spectrum graph",
 	.hotkey = ImGuiKey_F2,
-	.flags = WidgetInfo::Flags::ShowChannelMap | 
-	         WidgetInfo::Flags::ShowLock |
-			 WidgetInfo::Flags::ShowWindowSize |
-			 WidgetInfo::Flags::ShowWindowType,
+	.flags = Widget::Info::Flags::ShowChannelMap | 
+	         Widget::Info::Flags::ShowLock |
+			 Widget::Info::Flags::ShowWindowSize |
+			 Widget::Info::Flags::ShowWindowType,
 );
 

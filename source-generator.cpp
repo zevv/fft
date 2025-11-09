@@ -8,7 +8,7 @@
 class SourceGenerator : public Source {
 public:
 
-	SourceGenerator(SourceInfo &info, SDL_AudioSpec &dst_spec, char *args);
+	SourceGenerator(Source::Info &info, SDL_AudioSpec &dst_spec, char *args);
 	~SourceGenerator();
 
 	void open() override;
@@ -26,7 +26,7 @@ private:
 
 
 
-SourceGenerator::SourceGenerator(SourceInfo &info, SDL_AudioSpec &dst_spec, char *args)
+SourceGenerator::SourceGenerator(Source::Info &info, SDL_AudioSpec &dst_spec, char *args)
 	: Source(info, dst_spec)
 	, m_srate(dst_spec.freq)
 	, m_type(0)

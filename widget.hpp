@@ -10,12 +10,31 @@
 #include "stream.hpp"
 #include "config.hpp"
 #include "channelmap.hpp"
-#include "widgetinfo.hpp"
+
+class Widget;
 
 class Widget {
 public:
+
+	struct Info {
+
+		enum Flags {
+			ShowChannelMap	   = 1 << 0,
+			ShowLock	       = 1 << 1,
+			ShowWindowSize     = 1 << 2,
+			ShowWindowType     = 1 << 3,
+		};
+
+		const char *name;
+		const char *description;
+		enum ImGuiKey hotkey;
+		int flags;
+		Widget *(*fn_create)();
+	};
+
+
 	
-	Widget(WidgetInfo &info);
+	Widget(Info &info);
 	virtual ~Widget();
 	
 	void load(ConfigReader::Node *node);
@@ -60,7 +79,7 @@ protected:
 	void vcursor(SDL_Renderer *rend, SDL_Rect &r, int y, bool playpos);
 	void hcursor(SDL_Renderer *rend, SDL_Rect &r, int x, bool playpos);
 
-	WidgetInfo &m_info;
+	Info &m_info;
 	View m_view{};
 	ChannelMap m_channel_map{};
 	double m_pan_speed{};

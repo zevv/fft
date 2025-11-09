@@ -8,9 +8,10 @@
 
 #include "misc.hpp"
 #include "widget.hpp"
+#include "widgetregistry.hpp"
 
 
-Widget::Widget(WidgetInfo &info)
+Widget::Widget(Widget::Info &info)
 	: m_info(info)
 {
 }
@@ -60,12 +61,12 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	m_view.time.cursor = view.time.cursor;
 	m_view.time.playpos = view.time.playpos;
 
-	if(m_info.flags & WidgetInfo::Flags::ShowChannelMap) {
+	if(m_info.flags & Widget::Info::Flags::ShowChannelMap) {
 		m_channel_map.set_channel_count(streams.channel_count());
 		m_channel_map.draw();
 	}
 
-	if(m_info.flags & WidgetInfo::Flags::ShowLock) {
+	if(m_info.flags & Widget::Info::Flags::ShowLock) {
 		ImGui::SameLine();
 		ImGui::ToggleButton("L##ock", &m_view.lock);
 		// key 'L': toggle lock
@@ -74,14 +75,14 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 		}
 	}
 
-	if(m_info.flags & WidgetInfo::Flags::ShowWindowSize) {
+	if(m_info.flags & Widget::Info::Flags::ShowWindowSize) {
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(100);
 		ImGui::SliderInt("##fft size", (int *)&m_view.window.size, 
 					16, 32768, "%d", ImGuiSliderFlags_Logarithmic);
 	}
 
-	if(m_info.flags & WidgetInfo::Flags::ShowWindowType) {
+	if(m_info.flags & Widget::Info::Flags::ShowWindowType) {
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(100);
 		ImGui::Combo("##window", (int *)&m_view.window.window_type, 

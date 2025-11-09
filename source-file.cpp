@@ -10,7 +10,7 @@
 
 class SourceFile : public Source {
 public:
-	SourceFile(SourceInfo &info, SDL_AudioSpec &dst_spec, char *args);
+	SourceFile(Source::Info &info, SDL_AudioSpec &dst_spec, char *args);
 	~SourceFile();
 
 	void poll() override;
@@ -24,7 +24,7 @@ private:
 };
 
 
-SourceFile::SourceFile(SourceInfo &info, SDL_AudioSpec &dst_spec, char *args)
+SourceFile::SourceFile(Source::Info &info, SDL_AudioSpec &dst_spec, char *args)
 	: Source(info, dst_spec)
 	, m_fd(0)
 {

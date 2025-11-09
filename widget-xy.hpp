@@ -14,7 +14,7 @@
 class WidgetXY : public Widget {
 
 public:
-	WidgetXY(WidgetInfo &info);
+	WidgetXY(Widget::Info &info);
 	~WidgetXY() override;
 
 private:
