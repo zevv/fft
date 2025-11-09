@@ -21,7 +21,7 @@ Source *SourceRegistry::create(const char *name, SDL_AudioSpec &dst_spec, char *
 {
 	for(auto &reg : get_registry()) {
 		if(strcmp(reg.name, name) == 0) {
-			Source *source = reg.fn_create(dst_spec, args);
+			Source *source = reg.fn_new(dst_spec, args);
 			source->dump(stdout);
 			assert(source != nullptr);
 			return source;

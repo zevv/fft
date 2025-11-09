@@ -29,7 +29,7 @@ public:
 		const char *description;
 		enum ImGuiKey hotkey;
 		int flags;
-		Widget *(*fn_create)();
+		Widget *(*fn_new)();
 	};
 
 

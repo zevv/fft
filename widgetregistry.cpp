@@ -22,7 +22,7 @@ Widget* Widgets::draw(const char *cur_name)
 			bool is_selected = strcmp(wi.name, cur_name) == 0;
 			if(ImGui::Selectable(wi.name, is_selected)) {
 				if(strcmp(wi.name, cur_name) != 0) {
-					rv = wi.fn_create();
+					rv = wi.fn_new();
 				}
 			}
 		}
@@ -33,7 +33,7 @@ Widget* Widgets::draw(const char *cur_name)
 		for(auto &wi : widget_reg_list) {
 			if(wi.hotkey != ImGuiKey_None && ImGui::IsKeyPressed(wi.hotkey)) {
 				if(strcmp(wi.name, cur_name) != 0) {
-					return wi.fn_create();
+					return wi.fn_new();
 				}
 			}
 		}
@@ -47,7 +47,7 @@ Widget* Widgets::create_widget(const char *name)
 {
 	for(auto &wi : widget_reg_list) {
 		if(strcmp(wi.name, name) == 0) {
-			return wi.fn_create();
+			return wi.fn_new();
 		}
 	}
 	assert(false && "unknown widget type");

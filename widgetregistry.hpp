@@ -23,7 +23,7 @@ public:
 #define REGISTER_WIDGET(class, ...) \
 	static Widget::Info reg = { \
 		__VA_ARGS__ \
-		.fn_create = []() -> Widget* { return new class(reg); }, \
+		.fn_new = []() -> Widget* { return new class(reg); }, \
 	}; \
 	static Widgets info(reg);
 

@@ -15,7 +15,7 @@ public:
 	struct Info {
 		const char *name;
 		const char *description;
-		Source *(*fn_create)(SDL_AudioSpec &dst_spec, char *args);
+		Source *(*fn_new)(SDL_AudioSpec &dst_spec, char *args);
 	};
 
 	Source(Source::Info &info, SDL_AudioSpec &dst_spec)
