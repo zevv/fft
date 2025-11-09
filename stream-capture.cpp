@@ -88,7 +88,7 @@ void StreamCapture::add_reader(const char *desc)
 	char *name = strtok(desc_copy, ":");
 	char *args = strtok(nullptr, "");
 	SDL_AudioSpec dst_spec = m_spec;
-	auto reader = StreamReaderReg::create(name, dst_spec, args);
+	auto reader = SourceReg::create(name, dst_spec, args);
 	if(reader) {
 		m_readers.push_back(reader);
 	}

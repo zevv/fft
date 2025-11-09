@@ -10,7 +10,7 @@
 #include <SDL3/SDL_audio.h>
 
 #include "stream.hpp"
-#include "stream-reader.hpp"
+#include "source.hpp"
 
 Streams::Streams()
 	: player(StreamPlayer(*this))

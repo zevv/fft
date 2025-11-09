@@ -9,30 +9,30 @@
 #include "misc.hpp"
 #include "stream.hpp"
 
-class StreamReader;
+class Source;
 
-struct StreamReaderInfo {
+struct SourceInfo {
 	const char *name;
 	const char *description;
-	StreamReader *(*fn_create)(SDL_AudioSpec &dst_spec, char *args);
+	Source *(*fn_create)(SDL_AudioSpec &dst_spec, char *args);
 };
 
-class StreamReaderReg {
+class SourceReg {
 public:
-	StreamReaderReg(StreamReaderInfo info);
-	static StreamReader *create(const char *name, SDL_AudioSpec &dst_spec, char *args);
+	SourceReg(SourceInfo info);
+	static Source *create(const char *name, SDL_AudioSpec &dst_spec, char *args);
 };
 
 
-class StreamReader {
+class Source {
 public:
-	StreamReader(StreamReaderInfo &info, SDL_AudioSpec &dst_spec)
+	Source(SourceInfo &info, SDL_AudioSpec &dst_spec)
 		: m_info(info)
 		, m_frame_size(dst_spec.channels * sizeof(Sample))
 		, m_dst_spec(dst_spec)
 	{}
 
-	virtual ~StreamReader() {};
+	virtual ~Source() {};
 	size_t channel_count() { return m_dst_spec.channels; }
 	size_t frame_size() { return m_dst_spec.channels * sizeof(Sample); }
 	const char *name() { return m_info.name; }
@@ -52,7 +52,7 @@ public:
 	virtual void resume(void) {};
 
 protected:
-	StreamReaderInfo m_info;
+	SourceInfo m_info;
 	size_t m_frame_size{};
 	SDL_AudioSpec m_dst_spec{};
 	SDL_AudioStream *m_sdl_stream{};
@@ -60,8 +60,8 @@ protected:
 
 
 #define REGISTER_STREAM_READER(class, ...) \
-	static StreamReaderInfo reg = { \
+	static SourceInfo reg = { \
 		__VA_ARGS__ \
-		.fn_create = [](SDL_AudioSpec &dst_spec, char *args) -> StreamReader* { return new class(reg, dst_spec, args); }, \
+		.fn_create = [](SDL_AudioSpec &dst_spec, char *args) -> Source* { return new class(reg, dst_spec, args); }, \
 	}; \
-	static StreamReaderReg info(reg);
+	static SourceReg info(reg);

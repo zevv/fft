@@ -2,13 +2,13 @@
 #include <math.h>
 
 
-#include "stream-reader.hpp"
+#include "source.hpp"
 
-class StreamReaderGenerator : public StreamReader {
+class SourceGenerator : public Source {
 public:
 
-	StreamReaderGenerator(StreamReaderInfo &info, SDL_AudioSpec &dst_spec, char *args);
-	~StreamReaderGenerator();
+	SourceGenerator(SourceInfo &info, SDL_AudioSpec &dst_spec, char *args);
+	~SourceGenerator();
 
 	void open() override;
 	void poll() override;
@@ -25,8 +25,8 @@ private:
 
 
 
-StreamReaderGenerator::StreamReaderGenerator(StreamReaderInfo &info, SDL_AudioSpec &dst_spec, char *args)
-	: StreamReader(info, dst_spec)
+SourceGenerator::SourceGenerator(SourceInfo &info, SDL_AudioSpec &dst_spec, char *args)
+	: Source(info, dst_spec)
 	, m_srate(dst_spec.freq)
 	, m_type(0)
 {
@@ -35,18 +35,18 @@ StreamReaderGenerator::StreamReaderGenerator(StreamReaderInfo &info, SDL_AudioSp
 
 
 
-StreamReaderGenerator::~StreamReaderGenerator()
+SourceGenerator::~SourceGenerator()
 {
 }
 
 
-void StreamReaderGenerator::open()
+void SourceGenerator::open()
 {
 	m_sdl_stream = SDL_CreateAudioStream(&m_dst_spec, &m_dst_spec);
 }
 
 
-void StreamReaderGenerator::poll()
+void SourceGenerator::poll()
 {
 	for(size_t i=0; i<1024; i++) {
 		m_buf[i] = run();
@@ -55,7 +55,7 @@ void StreamReaderGenerator::poll()
 }
 
 
-Sample StreamReaderGenerator::run()
+Sample SourceGenerator::run()
 {
 	Sample v = 0;
 

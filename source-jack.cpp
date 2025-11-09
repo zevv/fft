@@ -2,12 +2,12 @@
 #include <SDL3/SDL_audio.h>
 #include <jack/jack.h>
 
-#include "stream-reader.hpp"
+#include "source.hpp"
 
-class StreamReaderJack : public StreamReader {
+class SourceJack : public Source {
 public:
-	StreamReaderJack(StreamReaderInfo &info, SDL_AudioSpec &dst_spec, char *args);
-	~StreamReaderJack();
+	SourceJack(SourceInfo &info, SDL_AudioSpec &dst_spec, char *args);
+	~SourceJack();
 
 	void open() override;
 	void pause() override;
@@ -30,13 +30,13 @@ private:
 };
 
 
-StreamReaderJack::StreamReaderJack(StreamReaderInfo &info, SDL_AudioSpec &dst_spec, char *args)
-	: StreamReader(info, dst_spec)
+SourceJack::SourceJack(SourceInfo &info, SDL_AudioSpec &dst_spec, char *args)
+	: Source(info, dst_spec)
 {
 }
 
 
-StreamReaderJack::~StreamReaderJack()
+SourceJack::~SourceJack()
 {
 	jack_deactivate(m_jack_client);
 	for(auto &port : m_ports) {
@@ -48,12 +48,12 @@ StreamReaderJack::~StreamReaderJack()
 
 static int process_callback_(jack_nframes_t nframes, void *arg)
 {
-	StreamReaderJack *reader = static_cast<StreamReaderJack *>(arg);
+	SourceJack *reader = static_cast<SourceJack *>(arg);
 	return reader->process_callback(nframes);
 }
 
 
-int StreamReaderJack::process_callback(jack_nframes_t nframes)
+int SourceJack::process_callback(jack_nframes_t nframes)
 {
 	size_t stride = m_ports.size();
 	for(size_t i=0; i<m_ports.size(); i++) {
@@ -69,12 +69,12 @@ int StreamReaderJack::process_callback(jack_nframes_t nframes)
 }
 
 
-void StreamReaderJack::open()
+void SourceJack::open()
 {
 	jack_status_t status;
 	m_jack_client = jack_client_open("fft", JackNullOption, &status, NULL);
 	if(m_jack_client == nullptr) {
-		fprintf(stderr, "StreamReaderJack jack_client_open failed: %x\n", status);
+		fprintf(stderr, "SourceJack jack_client_open failed: %x\n", status);
 		return;
 	}
 
@@ -83,7 +83,7 @@ void StreamReaderJack::open()
 		snprintf(port.name, sizeof(port.name), "input_%d", i+1);
 		port.jack_port = jack_port_register(m_jack_client, port.name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0);
 		if(port.jack_port == nullptr) {
-			fprintf(stderr, "StreamReaderJack jack_port_register failed for port %d\n", i);
+			fprintf(stderr, "SourceJack jack_port_register failed for port %d\n", i);
 			return;
 		}
 		m_ports.push_back(port);
@@ -98,7 +98,7 @@ void StreamReaderJack::open()
 
 	m_sdl_stream = SDL_CreateAudioStream(&m_src_spec, &m_dst_spec);
 	if(m_sdl_stream == nullptr) {
-		fprintf(stderr, "StreamReaderFile SDL_CreateAudioStream failed: %s\n", SDL_GetError());
+		fprintf(stderr, "SourceFile SDL_CreateAudioStream failed: %s\n", SDL_GetError());
 		return;
 	}
 
@@ -107,19 +107,19 @@ void StreamReaderJack::open()
 }
 
 
-void StreamReaderJack::pause()
+void SourceJack::pause()
 {
 	jack_deactivate(m_jack_client);
 }
 
 
-void StreamReaderJack::resume()
+void SourceJack::resume()
 {
 	jack_activate(m_jack_client);
 }
 
 
-REGISTER_STREAM_READER(StreamReaderJack,
+REGISTER_STREAM_READER(SourceJack,
 	.name = "jack",
 	.description = "Jack audio source",
 );

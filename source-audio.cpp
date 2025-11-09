@@ -1,11 +1,11 @@
 
-#include "stream-reader.hpp"
+#include "source.hpp"
 
 
-class StreamReaderAudio : public StreamReader {
+class SourceAudio : public Source {
 public:
-	StreamReaderAudio(StreamReaderInfo &info, SDL_AudioSpec &dst_spec, char *args);
-	~StreamReaderAudio();
+	SourceAudio(SourceInfo &info, SDL_AudioSpec &dst_spec, char *args);
+	~SourceAudio();
 
 	void open() override;
 	void resume() override;
@@ -14,19 +14,19 @@ public:
 
 
 
-StreamReaderAudio::StreamReaderAudio(StreamReaderInfo &info, SDL_AudioSpec &dst_spec, char *args)
-	: StreamReader(info, dst_spec)
+SourceAudio::SourceAudio(SourceInfo &info, SDL_AudioSpec &dst_spec, char *args)
+	: Source(info, dst_spec)
 {
 	m_dst_spec = sdl_audiospec_from_str(args);
 }
 
 
-StreamReaderAudio::~StreamReaderAudio()
+SourceAudio::~SourceAudio()
 {
 }
 
 
-void StreamReaderAudio::open()
+void SourceAudio::open()
 {
 	m_sdl_stream = SDL_OpenAudioDeviceStream(
             SDL_AUDIO_DEVICE_DEFAULT_RECORDING,
@@ -35,13 +35,13 @@ void StreamReaderAudio::open()
 	if(m_sdl_stream) {
 		SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(m_sdl_stream));
 	} else {
-		fprintf(stderr, "StreamReaderAudio: SDL_OpenAudioDeviceStream failed: %s\n", SDL_GetError());
+		fprintf(stderr, "SourceAudio: SDL_OpenAudioDeviceStream failed: %s\n", SDL_GetError());
 	}
 }
 
 
 
-void StreamReaderAudio::pause()
+void SourceAudio::pause()
 {
 	if(m_sdl_stream) {
 		SDL_PauseAudioDevice(SDL_GetAudioStreamDevice(m_sdl_stream));
@@ -49,7 +49,7 @@ void StreamReaderAudio::pause()
 }
 
 
-void StreamReaderAudio::resume()
+void SourceAudio::resume()
 {
 	if(m_sdl_stream) {
 		SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(m_sdl_stream));
@@ -57,7 +57,7 @@ void StreamReaderAudio::resume()
 }
 
 
-REGISTER_STREAM_READER(StreamReaderAudio,
+REGISTER_STREAM_READER(SourceAudio,
 	.name = "audio",
 	.description = "SDL audio source",
 );

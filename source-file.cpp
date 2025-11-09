@@ -4,13 +4,13 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "stream-reader.hpp"
+#include "source.hpp"
 #include "misc.hpp"
 
-class StreamReaderFile : public StreamReader {
+class SourceFile : public Source {
 public:
-	StreamReaderFile(StreamReaderInfo &info, SDL_AudioSpec &dst_spec, char *args);
-	~StreamReaderFile();
+	SourceFile(SourceInfo &info, SDL_AudioSpec &dst_spec, char *args);
+	~SourceFile();
 
 	void poll() override;
 	void open() override;
@@ -23,15 +23,15 @@ private:
 };
 
 
-StreamReaderFile::StreamReaderFile(StreamReaderInfo &info, SDL_AudioSpec &dst_spec, char *args)
-	: StreamReader(info, dst_spec)
+SourceFile::SourceFile(SourceInfo &info, SDL_AudioSpec &dst_spec, char *args)
+	: Source(info, dst_spec)
 	, m_fd(0)
 {
 	m_src_spec = sdl_audiospec_from_str(args);
 }
 
 
-StreamReaderFile::~StreamReaderFile()
+SourceFile::~SourceFile()
 {
 	if(m_fd != -1) {
 		::close(m_fd);
@@ -40,18 +40,18 @@ StreamReaderFile::~StreamReaderFile()
 }
 
 
-void StreamReaderFile::open()
+void SourceFile::open()
 {
 	fcntl(m_fd, F_SETFL, O_NONBLOCK);
 
 	m_sdl_stream = SDL_CreateAudioStream(&m_src_spec, &m_dst_spec);
 	if(m_sdl_stream == nullptr) {
-		fprintf(stderr, "StreamReaderFile SDL_CreateAudioStream failed: %s\n", SDL_GetError());
+		fprintf(stderr, "SourceFile SDL_CreateAudioStream failed: %s\n", SDL_GetError());
 	}
 }
 
 
-void StreamReaderFile::poll()
+void SourceFile::poll()
 {
 	if(m_fd == -1) return;
 
@@ -71,14 +71,14 @@ void StreamReaderFile::poll()
 		::close(m_fd);
 		m_fd = -1;
 	} else if(errno != EAGAIN && errno != EWOULDBLOCK) {
-		fprintf(stderr, "StreamReaderFile read error: %s\n", strerror(errno));
+		fprintf(stderr, "SourceFile read error: %s\n", strerror(errno));
 		::close(m_fd);
 		m_fd = -1;
 	}
 }
 
 
-REGISTER_STREAM_READER(StreamReaderFile,
+REGISTER_STREAM_READER(SourceFile,
 	.name = "raw",
 	.description = "raw audio file reader",
 );

@@ -16,7 +16,7 @@
 #include "stream-capture.hpp"
 
 
-class StreamReader;
+class Source;
 
 class Streams {
 public:

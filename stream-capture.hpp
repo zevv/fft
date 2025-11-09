@@ -12,9 +12,9 @@
 #include "rb.hpp"
 #include "types.hpp"
 #include "wavecache.hpp"
-#include "stream-reader.hpp"
+#include "source.hpp"
 
-class StreamReader;
+class Source;
 
 class StreamCapture {
 public:
@@ -29,7 +29,7 @@ public:
 	size_t channel_count();
 
 private:
-	std::vector<StreamReader *> m_readers{};
+	std::vector<Source *> m_readers{};
 	std::vector<Sample> m_buf{};
 	std::thread m_thread;
 	std::atomic<bool> m_running{false};
