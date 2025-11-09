@@ -159,23 +159,19 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 	size_t avail = 0;
 	Sample *data = m_stream.peek(&stride, &avail);
 
-	std::vector<float> gain_l(m_stream.channel_count());
-	std::vector<float> gain_r(m_stream.channel_count());
+	std::vector<float> gain[2];
+	gain[0].resize(m_stream.channel_count());
+	gain[1].resize(m_stream.channel_count());
 
 	for(size_t ch=0; ch<m_stream.channel_count(); ch++) {
-		gain_l[ch] = m_channels[ch].gain * (m_channels[ch].pan <= 0.0f ? 1.0f : (1.0f - m_channels[ch].pan));
-		gain_r[ch] = m_channels[ch].gain * (m_channels[ch].pan >= 0.0f ? 1.0f : (1.0f + m_channels[ch].pan));
+		gain[0][ch] = m_channels[ch].gain * (m_channels[ch].pan <= 0.0f ? 1.0f : (1.0f - m_channels[ch].pan));
+		gain[1][ch] = m_channels[ch].gain * (m_channels[ch].pan >= 0.0f ? 1.0f : (1.0f + m_channels[ch].pan));
 	}
-
-	SDL_SetAudioStreamFrequencyRatio(m_sdl_audio_stream, m_pitch);
 
 	size_t xfade_samples = m_srate * 0.030 * m_pitch;
 	float factor = m_stretch / m_pitch;
 
 	for(size_t i=0; i<frame_count; i++) {
-
-		float vl = 0.0;
-		float vr = 0.0;
 
 		Time delta = fabs(m_play_pos - (Time(m_idx) / m_srate));
 		if(delta > 0.020 || m_stretch != 1.0f) {
@@ -186,49 +182,41 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 			}
 		}
 
+		float v[2]{};
 		float g0 = (float)m_xfade / (float)xfade_samples;
 		float g1 = (1.0f - g0);
 
 		for(size_t ch=0; ch<m_stream.channel_count(); ch++) {
-
-			if(m_channels[ch].enabled == false) continue;
-
-			float v = 0.0f;
-			if(m_idx >= 0 && m_idx < avail) {
-				v = data[m_idx * stride + ch] / (float)k_sample_max;
-			}
-			if(m_xfade > 0) {
-				if(m_idx_prev >= 0 && m_idx_prev < avail) {
-					float v_prev = data[m_idx_prev * stride + ch] / (float)k_sample_max;
-					v = v_prev * g0 + v * g1;
+			if(m_channels[ch].enabled && m_idx >= 0 && m_idx < avail) {
+				float v_ch = data[m_idx * stride + ch] / (float)k_sample_max;
+				if(m_xfade > 0) {
+					if(m_idx_prev >= 0 && m_idx_prev < avail) {
+						float v_prev = data[m_idx_prev * stride + ch] / (float)k_sample_max;
+						v_ch = v_prev * g0 + v_ch * g1;
+					}
+				}
+				for(size_t lr=0; lr<2; lr++) {
+					v[lr] += v_ch * gain[lr][ch] * m_master_gain;
 				}
 			}
-
-			vl += v * gain_l[ch] * m_master_gain;
-			vr += v * gain_r[ch] * m_master_gain;
 		}
 
 		if(m_xfade > 0) {
 			m_xfade --;
 		}
 
-		if(m_filter.f_hp > 0.0f) {
-			vl = m_filter.bq_hp[0].run(vl);
-			vr = m_filter.bq_hp[1].run(vr);
+		for(size_t lr=0; lr<2; lr++) {
+			if(m_filter.f_hp > 0.0f) v[lr] = m_filter.bq_hp[0].run(v[lr]);
+			if(m_filter.f_lp < 1.0f) v[lr] = m_filter.bq_lp[0].run(v[lr]);
+			m_buf[i*2 + lr] = v[lr];
 		}
 
-		if(m_filter.f_lp < 1.0f) {
-			vl = m_filter.bq_lp[0].run(vl);
-			vr = m_filter.bq_lp[1].run(vr);
-		}
-
-		m_buf[i*2 + 0] = vl;
-		m_buf[i*2 + 1] = vr;
 		m_idx ++;
 		m_idx_prev ++;
 		m_play_pos += 1.0 / m_srate * factor; 
 	}
 
+	SDL_SetAudioStreamFrequencyRatio(m_sdl_audio_stream, m_pitch);
 	SDL_PutAudioStreamData(m_sdl_audio_stream, m_buf.data(), frame_count * m_frame_size);
 	m_frames_event += frame_count * factor;
 	
