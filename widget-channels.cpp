@@ -84,31 +84,44 @@ void WidgetChannels::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 			ImGui::SameLine();
 			float semitones = 12.0f * log2f(pitch);
 			ImGui::Text("%+.2f semitones", semitones);
-
+		
 			ImGui::NewLine();
+			size_t ch = 0;
+			for(auto &source : stream.capture.sources()) {
+				auto info = source->info();
+				auto args = source->args();
+				char label[64];
+				snprintf(label, sizeof(label), "%s / %s", info.name, args);
+				if(ImGui::CollapsingHeader(label, ImGuiTreeNodeFlags_DefaultOpen)) {
+					for(size_t i=0; i<source->channel_count(); i++) {
 
-			for(size_t ch=0; ch<stream.channel_count(); ch++) {
-				SDL_Color col = m_channel_map.ch_color(ch);
-				ImVec4 imcol = {col.r / 255.0f, col.g / 255.0f, col.b / 255.0f, 1.0f};
+						SDL_Color col = m_channel_map.ch_color(ch);
+						ImVec4 imcol = {col.r / 255.0f, col.g / 255.0f, col.b / 255.0f, 1.0f};
 
-				ImGui::TextColored(imcol, "ch %zu", ch+1);
+						ImGui::TextColored(imcol, "ch %zu", ch+1);
 
-				ImGui::PushID(ch);
+						ImGui::PushID(ch);
 
-				ImGui::SameLine();
-				ImGui::Checkbox("##Enable", &channels[ch].enabled);
+						ImGui::SameLine();
+						ImGui::Checkbox("##Enable", &channels[ch].enabled);
 
-				ImGui::SameLine();
-				ImGui::SetNextItemWidth(150);
-				float db = 20.0f * log10f(std::max(channels[ch].gain, 0.0001f));
-				ImGui::SliderFloat("##Volume", &db, -60.0, +0.0, "%.0fdB");
-				channels[ch].gain = db > -60 ? powf(10.0f, db / 20.0f) : 0.0f;
+						ImGui::SameLine();
+						ImGui::SetNextItemWidth(150);
+						float db = 20.0f * log10f(std::max(channels[ch].gain, 0.0001f));
+						ImGui::SliderFloat("##Volume", &db, -60.0, +0.0, "%.0fdB");
+						channels[ch].gain = db > -60 ? powf(10.0f, db / 20.0f) : 0.0f;
 
-				ImGui::SameLine();
-				ImGui::SetNextItemWidth(150);
-				ImGui::SameLine();
-				ImGui::SliderFloat("##Pan", &channels[ch].pan, -1.0f, 1.0f, "Pan %.2f");
-				ImGui::PopID();
+						ImGui::SameLine();
+						ImGui::SetNextItemWidth(150);
+						ImGui::SameLine();
+						ImGui::SliderFloat("##Pan", &channels[ch].pan, -1.0f, 1.0f, "Pan %.2f");
+						ImGui::PopID();
+
+						ch ++;
+					}
+
+				}
+				
 			}
 			ImGui::EndTabItem();
 		}

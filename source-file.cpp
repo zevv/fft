@@ -25,7 +25,7 @@ private:
 
 
 SourceFile::SourceFile(Source::Info &info, SDL_AudioSpec &dst_spec, char *args)
-	: Source(info, dst_spec)
+	: Source(info, dst_spec, args)
 	, m_fd(0)
 {
 	m_src_spec = sdl_audiospec_from_str(args);

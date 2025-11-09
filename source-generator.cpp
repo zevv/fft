@@ -27,7 +27,7 @@ private:
 
 
 SourceGenerator::SourceGenerator(Source::Info &info, SDL_AudioSpec &dst_spec, char *args)
-	: Source(info, dst_spec)
+	: Source(info, dst_spec, args)
 	, m_srate(dst_spec.freq)
 	, m_type(0)
 {

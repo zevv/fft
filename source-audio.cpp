@@ -16,7 +16,7 @@ public:
 
 
 SourceAudio::SourceAudio(Source::Info &info, SDL_AudioSpec &dst_spec, char *args)
-	: Source(info, dst_spec)
+	: Source(info, dst_spec, args)
 {
 	SDL_AudioSpec spec = sdl_audiospec_from_str(args);
 	m_dst_spec.channels = spec.channels;

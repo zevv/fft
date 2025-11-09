@@ -27,6 +27,7 @@ public:
 	void pause();
 	void add_source(const char *desc);
 	size_t channel_count();
+	const std::vector<Source *> &sources() { return m_sources; }
 
 private:
 	std::vector<Source *> m_sources{};
