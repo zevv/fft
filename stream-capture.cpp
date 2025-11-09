@@ -27,8 +27,8 @@ StreamCapture::StreamCapture(Streams &streams, Rb &rb, Wavecache &wavecache)
 StreamCapture::~StreamCapture()
 {
 	pause();
-	for(auto reader : m_readers) {
-		delete reader;
+	for(auto source : m_sources) {
+		delete source;
 	}
 }
 
@@ -42,9 +42,9 @@ void StreamCapture::set_sample_rate(Samplerate srate)
 void StreamCapture::start()
 {
 	size_t channel_count = 0;
-	for(auto &reader : m_readers) {
-		reader->open();
-		channel_count += reader->channel_count();
+	for(auto &source : m_sources) {
+		source->open();
+		channel_count += source->channel_count();
 	}
 	
 	m_spec.channels = channel_count;
@@ -59,8 +59,8 @@ void StreamCapture::resume()
 		m_running = true;
 		m_thread = std::thread(&StreamCapture::capture_thread, this);
 
-		for(auto reader : m_readers) {
-			reader->resume();
+		for(auto source : m_sources) {
+			source->resume();
 		}
 	}
 }
@@ -70,8 +70,8 @@ void StreamCapture::pause()
 {
 	if(m_running) {
 	
-		for(auto reader : m_readers) {
-			reader->pause();
+		for(auto source : m_sources) {
+			source->pause();
 		}
 
 		m_running = false;
@@ -82,16 +82,16 @@ void StreamCapture::pause()
 }
 
 
-void StreamCapture::add_reader(const char *desc)
+void StreamCapture::add_source(const char *desc)
 {
 	char *desc_copy = strdup(desc);
 	
 	char *name = strtok(desc_copy, ":");
 	char *args = strtok(nullptr, "");
 	SDL_AudioSpec dst_spec = m_spec;
-	auto reader = SourceRegistry::create(name, dst_spec, args);
-	if(reader) {
-		m_readers.push_back(reader);
+	auto source = SourceRegistry::create(name, dst_spec, args);
+	if(source) {
+		m_sources.push_back(source);
 	}
 	free(desc_copy);
 }
@@ -100,8 +100,8 @@ void StreamCapture::add_reader(const char *desc)
 size_t StreamCapture::channel_count()
 {
 	size_t channel_count = 0;
-	for(auto &reader : m_readers) {
-		channel_count += reader->channel_count();
+	for(auto &source : m_sources) {
+		channel_count += source->channel_count();
 	}
 	return channel_count;
 }
@@ -113,54 +113,54 @@ void StreamCapture::capture_thread()
 
 	while(m_running) {
 
-		// poll all readers
-		for(auto reader : m_readers) {
-			SDL_AudioStream *sas = reader->get_sdl_audio_stream();
+		// poll all sources
+		for(auto source : m_sources) {
+			SDL_AudioStream *sas = source->get_sdl_audio_stream();
 			int bytes_queued = SDL_GetAudioStreamQueued(sas);
 			if(bytes_queued < 64000) {
-				reader->poll();
+				source->poll();
 			}
 		}
 
 		// calculate common lowest number of available frames
 		size_t frame_count = m_buf.size() / m_streams.channel_count();
-		for(auto reader : m_readers) {
-			SDL_AudioStream *sas = reader->get_sdl_audio_stream();
+		for(auto source : m_sources) {
+			SDL_AudioStream *sas = source->get_sdl_audio_stream();
 			int bytes_avail = SDL_GetAudioStreamAvailable(sas);
 			if(bytes_avail < 0) {
 				printf("SDL_GetAudioStreamAvailable(): %s\n", SDL_GetError());
 				exit(1);
 			}
-			frame_count = std::min(frame_count, (size_t)bytes_avail / reader->frame_size());
+			frame_count = std::min(frame_count, (size_t)bytes_avail / source->frame_size());
 		}
 
-		// collect available frames from all readers into stream buffer
+		// collect available frames from all sources into stream buffer
 		size_t channel = 0;
 		if(frame_count > 0) {
 
 			size_t bytes_max = 0;
 			Sample *buf = (Sample *)m_rb.get_write_ptr(&bytes_max);
 
-			for(auto &reader : m_readers) {
-				// read data from reader SDL audio stream
-				size_t reader_channel_count = reader->channel_count();
-				SDL_AudioStream *sas = reader->get_sdl_audio_stream();
-				int bytes_want = frame_count * reader_channel_count * sizeof(Sample);
+			for(auto &source : m_sources) {
+				// read data from source SDL audio stream
+				size_t source_channel_count = source->channel_count();
+				SDL_AudioStream *sas = source->get_sdl_audio_stream();
+				int bytes_want = frame_count * source_channel_count * sizeof(Sample);
 				int bytes_read = SDL_GetAudioStreamData(sas, m_buf.data(), bytes_want);
 				//assert(bytes_read >= 0);
 
 				// deinterleave into ring buffer
 				Sample *p_src = m_buf.data();
 				Sample *p_dst = buf + channel;
-				size_t src_stride = reader_channel_count;
+				size_t src_stride = source_channel_count;
 				size_t dst_stride = m_streams.channel_count();
 				for(size_t i=0; i<frame_count; i++) {
-					memcpy(p_dst, p_src, reader_channel_count * sizeof(Sample));
+					memcpy(p_dst, p_src, source_channel_count * sizeof(Sample));
 					p_src += src_stride;
 					p_dst += dst_stride;
 				}
 
-				channel += reader_channel_count;
+				channel += source_channel_count;
 			}
 
 			// update ring buffer write pointer and wavecache

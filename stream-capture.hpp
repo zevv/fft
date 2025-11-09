@@ -25,11 +25,11 @@ public:
 	void start();
 	void resume();
 	void pause();
-	void add_reader(const char *desc);
+	void add_source(const char *desc);
 	size_t channel_count();
 
 private:
-	std::vector<Source *> m_readers{};
+	std::vector<Source *> m_sources{};
 	std::vector<Sample> m_buf{};
 	std::thread m_thread;
 	std::atomic<bool> m_running{false};
