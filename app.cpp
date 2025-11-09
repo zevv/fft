@@ -23,7 +23,7 @@
 App::App(SDL_Window *window, SDL_Renderer *renderer)
     : m_win(window)
     , m_rend(renderer)
-	, m_streams()
+	, m_stream()
 {
     resize_window(800, 600);
 }
@@ -60,7 +60,7 @@ void App::load()
 	}
 	if(auto n = cr.find("view")) m_view.load(n);
 	if(auto n = cr.find("panel")) m_root_panel->load(n);
-	if(auto n = cr.find("stream")) m_streams.load(n);
+	if(auto n = cr.find("stream")) m_stream.load(n);
 }
 
 
@@ -78,7 +78,7 @@ void App::save()
 	cw.pop();
 	
 	cw.push("stream");
-	m_streams.save(cw);
+	m_stream.save(cw);
 	cw.pop();
 
 	cw.push("view");
@@ -129,7 +129,7 @@ void App::draw()
 		ImGui::End();
 	}
 
-	m_root_panel->draw(m_view, m_streams, m_rend, 0, 0, m_w, m_h);
+	m_root_panel->draw(m_view, m_stream, m_rend, 0, 0, m_w, m_h);
 
 	ImGui::Render();
 	ImGuiIO& io = ImGui::GetIO();
@@ -221,16 +221,16 @@ void App::init(int argc, char **argv)
 		}
 	}
 	
-	m_streams.set_sample_rate(m_srate);
+	m_stream.set_sample_rate(m_srate);
 	
 	for(int i=optind; i<argc; i++) {
-		m_streams.capture.add_source(argv[i]);
+		m_stream.capture.add_source(argv[i]);
 	}
 	
-	m_streams.allocate(opt_buffer_depth);
-	m_streams.capture.start();
-	m_streams.capture.resume();
-	m_streams.player.seek(m_view.time.playpos);
+	m_stream.allocate(opt_buffer_depth);
+	m_stream.capture.start();
+	m_stream.capture.resume();
+	m_stream.player.seek(m_view.time.playpos);
 }
 
 
@@ -284,14 +284,14 @@ void App::run()
 		if(ImGui::IsKeyPressed(ImGuiKey_C)) {
 			m_capturing ^= 1;
 			if(m_capturing) {
-				m_streams.capture.resume();
+				m_stream.capture.resume();
 			} else {
-				m_streams.capture.pause();
+				m_stream.capture.pause();
 			}
 		}
 
 		// Player control
-		auto &player = m_streams.player;
+		auto &player = m_stream.player;
 
 		if(ImGui::IsKeyPressed(ImGuiKey_Space)) {
 			m_playback ^= 1;

@@ -30,12 +30,12 @@ struct Pixel {
 };
 
 
-void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 {
 	
 	size_t stride = 0;
 	size_t frames_avail = 0;
-	Sample *data = streams.peek(&stride, &frames_avail);
+	Sample *data = stream.peek(&stride, &frames_avail);
 	
 	ImGui::SameLine();
 	ImGui::ToggleButton("A##pproximate FFT", &m_fft_approximate);
@@ -64,7 +64,7 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 	if(ImGui::IsWindowFocused()) {
 
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
-		float f = m_view.freq.cursor * streams.sample_rate() * 0.5f;
+		float f = m_view.freq.cursor * stream.sample_rate() * 0.5f;
 		char note[32];
 		freq_to_note(f, note, sizeof(note));
 		ImGui::Text("f=%.6gHz %s", f, note);
@@ -93,12 +93,12 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 			m_view.freq.from = 0.0f;
 			m_view.freq.to = 1.0;
 			m_view.time.from = 0;
-			m_view.time.to   = frames_avail / streams.sample_rate();
+			m_view.time.to   = frames_avail / stream.sample_rate();
 		}
 
 		if(ImGui::IsMouseInRect(r)) {
 		   if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-			   streams.player.seek(m_view.y_to_t(pos.y, r));
+			   stream.player.seek(m_view.y_to_t(pos.y, r));
 		   }
 
 		   if(ImGui::GetIO().MouseDelta.y != 0) {
@@ -149,7 +149,7 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 		for(int y=0; y<r.h; y++) {
 			Time t = m_view.y_to_t(r.y + y, r);
-			int idx = (int)(streams.sample_rate() * t - m_view.window.size / 2) * stride + ch;
+			int idx = (int)(stream.sample_rate() * t - m_view.window.size / 2) * stride + ch;
 			if(idx < 0) continue;
 			if(idx >= (int)(frames_avail * stride)) break;
 
@@ -184,7 +184,7 @@ void WidgetWaterfall::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 	// darken filtered out area
 	float f_lp, f_hp;
-	streams.player.filter_get(f_lp, f_hp);
+	stream.player.filter_get(f_lp, f_hp);
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 	SDL_FRect filt_rect;

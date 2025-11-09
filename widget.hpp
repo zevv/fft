@@ -43,12 +43,12 @@ public:
 	void copy_to(Widget *w);
 
 	const char *get_name() { return m_info.name; }
-	void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
+	void draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r);
 
 protected:
 
 	virtual void do_copy(Widget *w) {};
-	virtual void do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r) {};
+	virtual void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) {};
 	virtual void do_load(ConfigReader::Node *node) {};
 	virtual void do_save(ConfigWriter &cfg) {};
 

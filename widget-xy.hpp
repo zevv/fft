@@ -21,7 +21,7 @@ private:
 
 	void do_load(ConfigReader::Node *node) override;
 	void do_save(ConfigWriter &cfg) override;
-	void do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r) override;
+	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
 
 	SDL_Texture *m_tex{};
 	double m_peak{1.0};

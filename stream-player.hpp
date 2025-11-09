@@ -9,7 +9,7 @@
 #include "config.hpp"
 #include "biquad.hpp"
 
-class Streams;
+class Stream;
 
 class StreamPlayer {
 public:
@@ -20,7 +20,7 @@ public:
 		float pan{0.0f};
 	};
 
-	StreamPlayer(Streams &streams);
+	StreamPlayer(Stream &stream);
 	~StreamPlayer();
 	
 	void load(ConfigReader::Node *n);
@@ -49,7 +49,7 @@ public:
 	std::vector<Channel>& get_channels() { return m_channels; }
 
 private:
-	Streams &m_streams;	
+	Stream &m_stream;	
 	Samplerate m_srate;
 	std::vector<Channel> m_channels;
 	std::atomic<Time> m_play_pos{0};

@@ -55,14 +55,14 @@ void Widget::copy_to(Widget *w)
 }
 
 
-void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+void Widget::draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 {
 	if(m_view.lock) m_view = view;
 	m_view.time.cursor = view.time.cursor;
 	m_view.time.playpos = view.time.playpos;
 
 	if(m_info.flags & Widget::Info::Flags::ShowChannelMap) {
-		m_channel_map.set_channel_count(streams.channel_count());
+		m_channel_map.set_channel_count(stream.channel_count());
 		m_channel_map.draw();
 	}
 
@@ -155,7 +155,7 @@ void Widget::draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 	// draw widget
 	float t1 = hirestime();
-	do_draw(streams, rend, r);
+	do_draw(stream, rend, r);
 	float t2 = hirestime();
 
 	// draw render time

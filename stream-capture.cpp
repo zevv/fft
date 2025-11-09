@@ -15,8 +15,8 @@
 #include "sourceregistry.hpp"
 
 
-StreamCapture::StreamCapture(Streams &streams, Rb &rb, Wavecache &wavecache) 
-	: m_streams(streams)
+StreamCapture::StreamCapture(Stream &stream, Rb &rb, Wavecache &wavecache) 
+	: m_stream(stream)
 	, m_rb(rb)
 	, m_wavecache(wavecache)
 	, m_spec{SDL_AUDIO_S16, 1, 8000}
@@ -123,7 +123,7 @@ void StreamCapture::capture_thread()
 		}
 
 		// calculate common lowest number of available frames
-		size_t frame_count = m_buf.size() / m_streams.channel_count();
+		size_t frame_count = m_buf.size() / m_stream.channel_count();
 		for(auto source : m_sources) {
 			SDL_AudioStream *sas = source->get_sdl_audio_stream();
 			int bytes_avail = SDL_GetAudioStreamAvailable(sas);
@@ -153,7 +153,7 @@ void StreamCapture::capture_thread()
 				Sample *p_src = m_buf.data();
 				Sample *p_dst = buf + channel;
 				size_t src_stride = source_channel_count;
-				size_t dst_stride = m_streams.channel_count();
+				size_t dst_stride = m_stream.channel_count();
 				for(size_t i=0; i<frame_count; i++) {
 					memcpy(p_dst, p_src, source_channel_count * sizeof(Sample));
 					p_src += src_stride;
@@ -164,8 +164,8 @@ void StreamCapture::capture_thread()
 			}
 
 			// update ring buffer write pointer and wavecache
-			m_rb.write_done(frame_count * m_streams.channel_count() * sizeof(Sample));
-			m_wavecache.feed_frames(buf, frame_count, m_streams.channel_count());
+			m_rb.write_done(frame_count * m_stream.channel_count() * sizeof(Sample));
+			m_wavecache.feed_frames(buf, frame_count, m_stream.channel_count());
 
 			// signal main thread new audio is available
 			uint64_t t_now = SDL_GetTicks();
@@ -175,7 +175,7 @@ void StreamCapture::capture_thread()
 				SDL_zero(event);
 				event.type = SDL_EVENT_USER;
 				event.user.code = k_user_event_audio_capture;
-				event.user.data1 = (void *)(m_rb.bytes_used() / (m_streams.channel_count() * sizeof(Sample)));
+				event.user.data1 = (void *)(m_rb.bytes_used() / (m_stream.channel_count() * sizeof(Sample)));
 				SDL_PushEvent(&event);
 			}
 		} else {

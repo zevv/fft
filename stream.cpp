@@ -12,7 +12,7 @@
 #include "stream.hpp"
 #include "source.hpp"
 
-Streams::Streams()
+Stream::Stream()
 	: player(StreamPlayer(*this))
 	, capture(*this, m_rb, m_wavecache)
 	, m_wavecache(Wavecache(256))
@@ -20,26 +20,26 @@ Streams::Streams()
 }
 
 
-Streams::~Streams()
+Stream::~Stream()
 {
 	player.pause();
 	capture.pause();
 }
 
 
-void Streams::load(ConfigReader::Node *n)
+void Stream::load(ConfigReader::Node *n)
 {
 	player.load(n);
 }
 
 
-void Streams::save(ConfigWriter &cw)
+void Stream::save(ConfigWriter &cw)
 {
 	player.save(cw);
 }
 
 
-void Streams::set_sample_rate(Samplerate srate)
+void Stream::set_sample_rate(Samplerate srate)
 {
 	m_srate = srate;
 	capture.set_sample_rate(srate);
@@ -47,7 +47,7 @@ void Streams::set_sample_rate(Samplerate srate)
 }
 
 
-void Streams::allocate(size_t depth)
+void Stream::allocate(size_t depth)
 {
 	m_channel_count = capture.channel_count();
 
@@ -59,7 +59,7 @@ void Streams::allocate(size_t depth)
 }
 
 
-Sample *Streams::peek(size_t *stride, size_t *frames_avail)
+Sample *Stream::peek(size_t *stride, size_t *frames_avail)
 {
 	size_t bytes_used;
 	Sample *data = (Sample *)m_rb.peek(&bytes_used);
@@ -69,7 +69,7 @@ Sample *Streams::peek(size_t *stride, size_t *frames_avail)
 }
 
 
-Wavecache::Range *Streams::peek_wavecache(size_t *stride, size_t *frames_avail)
+Wavecache::Range *Stream::peek_wavecache(size_t *stride, size_t *frames_avail)
 {
 	return m_wavecache.peek(frames_avail, stride);
 }

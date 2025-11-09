@@ -12,8 +12,8 @@ static void audio_callback_(void *userdata, SDL_AudioStream *stream, int additio
 }
 
 
-StreamPlayer::StreamPlayer(Streams &streams)
-	: m_streams(streams)
+StreamPlayer::StreamPlayer(Stream &stream)
+	: m_stream(stream)
 	, m_srate(8000)
 	, m_frame_size(2 * sizeof(float))
 	, m_buf_frames(4096)
@@ -150,19 +150,19 @@ void StreamPlayer::seek(Time t)
 
 void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount, int total_amount)
 {
-	m_channels.resize(m_streams.channel_count());
+	m_channels.resize(m_stream.channel_count());
 
 	size_t frame_count = total_amount / m_frame_size;
 	if(frame_count > m_buf_frames) frame_count = m_buf_frames;
 
 	size_t stride = 0;
 	size_t avail = 0;
-	Sample *data = m_streams.peek(&stride, &avail);
+	Sample *data = m_stream.peek(&stride, &avail);
 
-	std::vector<float> gain_l(m_streams.channel_count());
-	std::vector<float> gain_r(m_streams.channel_count());
+	std::vector<float> gain_l(m_stream.channel_count());
+	std::vector<float> gain_r(m_stream.channel_count());
 
-	for(size_t ch=0; ch<m_streams.channel_count(); ch++) {
+	for(size_t ch=0; ch<m_stream.channel_count(); ch++) {
 		gain_l[ch] = m_channels[ch].gain * (m_channels[ch].pan <= 0.0f ? 1.0f : (1.0f - m_channels[ch].pan));
 		gain_r[ch] = m_channels[ch].gain * (m_channels[ch].pan >= 0.0f ? 1.0f : (1.0f + m_channels[ch].pan));
 	}
@@ -189,7 +189,7 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 		float g0 = (float)m_xfade / (float)xfade_samples;
 		float g1 = (1.0f - g0);
 
-		for(size_t ch=0; ch<m_streams.channel_count(); ch++) {
+		for(size_t ch=0; ch<m_stream.channel_count(); ch++) {
 
 			if(m_channels[ch].enabled == false) continue;
 

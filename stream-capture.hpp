@@ -18,7 +18,7 @@ class Source;
 
 class StreamCapture {
 public:
-	StreamCapture(Streams &streams, Rb &rb, Wavecache &wavecache);
+	StreamCapture(Stream &stream, Rb &rb, Wavecache &wavecache);
 	~StreamCapture();
 
 	void set_sample_rate(Samplerate srate);
@@ -34,7 +34,7 @@ private:
 	std::thread m_thread;
 	std::atomic<bool> m_running{false};
 	void capture_thread();
-	Streams &m_streams;
+	Stream &m_stream;
 	Rb &m_rb;
 	Wavecache &m_wavecache;
 	SDL_AudioSpec m_spec{};

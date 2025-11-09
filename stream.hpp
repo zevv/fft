@@ -18,11 +18,11 @@
 
 class Source;
 
-class Streams {
+class Stream {
 public:
 
-	Streams();
-	~Streams();
+	Stream();
+	~Stream();
 	void load(ConfigReader::Node *node);
 	void save(ConfigWriter &cfg);
 

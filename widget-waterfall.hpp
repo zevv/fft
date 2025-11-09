@@ -17,7 +17,7 @@ public:
 	~WidgetWaterfall() override;
 
 private:
-	void do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r) override;
+	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
 
 	Fft m_fft{};
 	int8_t m_db_min{};

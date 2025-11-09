@@ -24,7 +24,7 @@ public:
 	void save(ConfigWriter &cfg);
 	Widgets *copy();
 
-	void draw(View &view, Streams &streams, SDL_Renderer *rend, SDL_Rect &r);
+	void draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r);
 
 public:
 

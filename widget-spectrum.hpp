@@ -16,7 +16,7 @@ public:
 	~WidgetSpectrum() override;
 
 private:
-	void do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r) override;
+	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
 
 	float m_amp_cursor{0.0};
 	Fft m_fft{};

@@ -38,7 +38,7 @@ private:
 	int m_w = 800;
 	int m_h = 600;
 	Time m_srate{48000.0};
-	Streams m_streams;
+	Stream m_stream;
 	View m_view{};
 	int m_redraw{1};
 	char m_session_name[64]{"default"};

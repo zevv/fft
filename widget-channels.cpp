@@ -23,14 +23,14 @@ WidgetChannels::~WidgetChannels()
 
 
 
-void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
+void WidgetChannels::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 {
-	auto &channels = streams.player.get_channels();
-	auto &player = streams.player;
+	auto &channels = stream.player.get_channels();
+	auto &player = stream.player;
 	float stretch = player.get_stretch();
 	float pitch = player.get_pitch();
 
-	if(channels.size() != streams.channel_count()) {
+	if(channels.size() != stream.channel_count()) {
 		return;
 	}
 
@@ -46,7 +46,7 @@ void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 			ImGui::SliderFloat("##Gain", &db, -30.0, +30.0, "master %+.0fdB");
 			player.master_gain_set(powf(10.0f, db / 20.0f));
 
-			float fs = streams.sample_rate() * 0.5;
+			float fs = stream.sample_rate() * 0.5;
 			float f_lp, f_hp;
 			player.filter_get(f_lp, f_hp);
 			f_lp *= fs;
@@ -87,7 +87,7 @@ void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 			ImGui::NewLine();
 
-			for(size_t ch=0; ch<streams.channel_count(); ch++) {
+			for(size_t ch=0; ch<stream.channel_count(); ch++) {
 				SDL_Color col = m_channel_map.ch_color(ch);
 				ImVec4 imcol = {col.r / 255.0f, col.g / 255.0f, col.b / 255.0f, 1.0f};
 
@@ -117,7 +117,7 @@ void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 
 			ImGui::NewLine();
 
-			for(size_t ch=0; ch<streams.channel_count(); ch++) {
+			for(size_t ch=0; ch<stream.channel_count(); ch++) {
 				SDL_Color col = m_channel_map.ch_color(ch);
 				ImVec4 imcol = {col.r / 255.0f, col.g / 255.0f, col.b / 255.0f, 1.0f};
 
@@ -138,8 +138,8 @@ void WidgetChannels::do_draw(Streams &streams, SDL_Renderer *rend, SDL_Rect &r)
 			int px = ImGui::GetCursorScreenPos().x;
 			int py = ImGui::GetCursorScreenPos().y;
 
-			for(size_t x=0; x<streams.channel_count(); x++) {
-				for(size_t y=0; y<streams.channel_count(); y++) {
+			for(size_t x=0; x<stream.channel_count(); x++) {
+				for(size_t y=0; y<stream.channel_count(); y++) {
 					SDL_FRect rect;
 					SDL_Color colx = m_channel_map.ch_color(x);
 					SDL_Color coly = m_channel_map.ch_color(y);
