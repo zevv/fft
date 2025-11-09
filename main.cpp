@@ -266,7 +266,7 @@ void Corrie::init(int argc, char **argv)
 	m_streams.set_sample_rate(m_srate);
 	
 	for(int i=optind; i<argc; i++) {
-		m_streams.capture.add_reader(argv[i]);
+		m_streams.capture.add_source(argv[i]);
 	}
 	
 	m_streams.allocate(opt_buffer_depth);
