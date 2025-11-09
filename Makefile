@@ -18,6 +18,7 @@ SRC += widget-channels.cpp
 SRC += stream.cpp
 SRC += wavecache.cpp
 SRC += misc.cpp
+SRC += stream-reader.cpp
 SRC += stream-player.cpp
 SRC += stream-capture.cpp
 SRC += stream-reader-audio.cpp

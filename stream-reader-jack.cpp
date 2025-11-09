@@ -1,11 +1,37 @@
 
 #include <SDL3/SDL_audio.h>
+#include <jack/jack.h>
 
-#include "stream-reader-jack.hpp"
+#include "stream-reader.hpp"
+
+class StreamReaderJack : public StreamReader {
+public:
+	StreamReaderJack(StreamReaderInfo &info, SDL_AudioSpec &dst_spec, char *args);
+	~StreamReaderJack();
+
+	void open() override;
+	void pause() override;
+	void resume() override;
+
+	int process_callback(jack_nframes_t nframes);
+
+private:
+	SDL_AudioSpec m_src_spec{};
+	jack_client_t *m_jack_client{};
+	
+	struct Port {
+		char name[32];
+		jack_port_t *jack_port;
+	};
+
+	size_t m_jack_buffer_size{};
+	std::vector<Port> m_ports;
+	std::vector<float> m_buffer;
+};
 
 
-StreamReaderJack::StreamReaderJack(SDL_AudioSpec &dst_spec)
-	: StreamReader("audio", dst_spec)
+StreamReaderJack::StreamReaderJack(StreamReaderInfo &info, SDL_AudioSpec &dst_spec, char *args)
+	: StreamReader(info, dst_spec)
 {
 }
 
@@ -92,4 +118,9 @@ void StreamReaderJack::resume()
 	jack_activate(m_jack_client);
 }
 
+
+REGISTER_STREAM_READER(StreamReaderJack,
+	.name = "jack",
+	.description = "Jack audio source",
+);
 

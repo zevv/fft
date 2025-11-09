@@ -4,13 +4,30 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "stream-reader-file.hpp"
+#include "stream-reader.hpp"
+#include "misc.hpp"
 
-StreamReaderFile::StreamReaderFile(SDL_AudioSpec &dst_spec, SDL_AudioSpec &src_spec, int fd)
-	: StreamReader("file", dst_spec)
-	, m_src_spec(src_spec)
-	, m_fd(fd)
+class StreamReaderFile : public StreamReader {
+public:
+	StreamReaderFile(StreamReaderInfo &info, SDL_AudioSpec &dst_spec, char *args);
+	~StreamReaderFile();
+
+	void poll() override;
+	void open() override;
+
+private:
+	SDL_AudioSpec m_src_spec{};
+	int m_fd{-1};
+	uint8_t m_buf[65536]{};
+	size_t m_buf_bytes{0};
+};
+
+
+StreamReaderFile::StreamReaderFile(StreamReaderInfo &info, SDL_AudioSpec &dst_spec, char *args)
+	: StreamReader(info, dst_spec)
+	, m_fd(0)
 {
+	m_src_spec = sdl_audiospec_from_str(args);
 }
 
 
@@ -59,4 +76,10 @@ void StreamReaderFile::poll()
 		m_fd = -1;
 	}
 }
+
+
+REGISTER_STREAM_READER(StreamReaderFile,
+	.name = "raw",
+	.description = "raw audio file reader",
+);
 

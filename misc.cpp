@@ -50,6 +50,33 @@ SDL_AudioFormat sdl_audioformat_from_str(const char *s)
 }
 
 
+SDL_AudioSpec sdl_audiospec_from_str(char *s)
+{
+	SDL_AudioSpec fmt;
+	fmt.format = SDL_AUDIO_S16LE;
+	fmt.channels = 1;
+	fmt.freq = 48000;
+
+	while(s) {
+		char *endptr;
+		double val = strtod(s, &endptr);
+		if(endptr != s) {
+			if(val <= 32) fmt.channels = val;
+			if(val >  32) fmt.freq = val;
+		} else {
+			SDL_AudioFormat format = sdl_audioformat_from_str(s);
+			if(format != SDL_AUDIO_UNKNOWN) {
+				fmt.format = format;
+			}
+		}
+		s = strtok(nullptr, ":");
+	}
+
+	return fmt;
+}
+
+
+
 double hirestime()
 {
 	struct timespec ts;

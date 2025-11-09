@@ -12,10 +12,6 @@
 #include "stream.hpp"
 #include "misc.hpp"
 #include "stream-capture.hpp"
-#include "stream-reader-file.hpp"
-#include "stream-reader-generator.hpp"
-#include "stream-reader-audio.hpp"
-#include "stream-reader-jack.hpp"
 
 
 StreamCapture::StreamCapture(Streams &streams, Rb &rb, Wavecache &wavecache) 
@@ -85,87 +81,17 @@ void StreamCapture::pause()
 }
 
 
-SDL_AudioSpec parse_audio_spec(char *s)
-{
-	SDL_AudioSpec fmt;
-	fmt.format = SDL_AUDIO_S16LE;
-	fmt.channels = 1;
-	fmt.freq = 48000;
-
-	while(s) {
-		char *endptr;
-		double val = strtod(s, &endptr);
-		if(endptr != s) {
-			if(val <= 32) fmt.channels = val;
-			if(val >  32) fmt.freq = val;
-		} else {
-			SDL_AudioFormat format = sdl_audioformat_from_str(s);
-			if(format != SDL_AUDIO_UNKNOWN) {
-				fmt.format = format;
-			}
-		}
-		s = strtok(nullptr, ":");
-	}
-
-	return fmt;
-}
-
-
 void StreamCapture::add_reader(const char *desc)
 {
 	char *desc_copy = strdup(desc);
 	
-	const char *type = strtok(desc_copy, ":");
-	
-	if(strcmp(type, "raw") == 0) {
-		const char *fname = strtok(nullptr, ":");
-		wordexp_t p;
-		if(wordexp(fname, &p, 0) == 0) {
-			fname = p.we_wordv[0];
-			SDL_AudioSpec src_spec = parse_audio_spec(strtok(nullptr, ":"));
-			int fd = open(fname, O_RDONLY);
-			if(fd > 0) {
-				SDL_AudioSpec dst_spec = m_spec;
-				dst_spec.channels = src_spec.channels;
-				StreamReader *reader = new StreamReaderFile(dst_spec, src_spec, fd);
-				m_readers.push_back(reader);
-			} else {
-				fprintf(stderr, "open('%s'): %s\n", fname, strerror(errno));
-			}
-			wordfree(&p);
-		}
-	}
-
-	if(strcmp(type, "stdin") == 0) {
-		SDL_AudioSpec src_spec = parse_audio_spec(strtok(nullptr, ":"));
-		SDL_AudioSpec dst_spec = m_spec;
-		dst_spec.channels = src_spec.channels;
-		StreamReader *reader = new StreamReaderFile(dst_spec, src_spec, 0);
+	char *name = strtok(desc_copy, ":");
+	char *args = strtok(nullptr, "");
+	SDL_AudioSpec dst_spec = m_spec;
+	auto reader = StreamReaderReg::create(name, dst_spec, args);
+	if(reader) {
 		m_readers.push_back(reader);
 	}
-	
-	if(strcmp(type, "gen") == 0) {
-		int type = atoi(strtok(nullptr, ":"));
-		StreamReader *reader = new StreamReaderGenerator(m_spec, type);
-		m_readers.push_back(reader);
-	}
-
-	if(strcmp(type, "audio") == 0) {
-		SDL_AudioSpec src_spec = parse_audio_spec(strtok(nullptr, ":"));
-		SDL_AudioSpec dst_spec = m_spec;
-		dst_spec.channels = src_spec.channels;
-		StreamReader *reader = new StreamReaderAudio(dst_spec);
-		m_readers.push_back(reader);
-	}
-	
-	if(strcmp(type, "jack") == 0) {
-		SDL_AudioSpec src_spec = parse_audio_spec(strtok(nullptr, ":"));
-		SDL_AudioSpec dst_spec = m_spec;
-		dst_spec.channels = src_spec.channels;
-		StreamReader *reader = new StreamReaderJack(dst_spec);
-		m_readers.push_back(reader);
-	}
-
 	free(desc_copy);
 }
 

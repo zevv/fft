@@ -1,10 +1,23 @@
 
-#include "stream-reader-audio.hpp"
+#include "stream-reader.hpp"
 
 
-StreamReaderAudio::StreamReaderAudio(SDL_AudioSpec &dst_spec)
-	: StreamReader("audio", dst_spec)
+class StreamReaderAudio : public StreamReader {
+public:
+	StreamReaderAudio(StreamReaderInfo &info, SDL_AudioSpec &dst_spec, char *args);
+	~StreamReaderAudio();
+
+	void open() override;
+	void resume() override;
+	void pause() override;
+};
+
+
+
+StreamReaderAudio::StreamReaderAudio(StreamReaderInfo &info, SDL_AudioSpec &dst_spec, char *args)
+	: StreamReader(info, dst_spec)
 {
+	m_dst_spec = sdl_audiospec_from_str(args);
 }
 
 
@@ -43,4 +56,9 @@ void StreamReaderAudio::resume()
 	}
 }
 
+
+REGISTER_STREAM_READER(StreamReaderAudio,
+	.name = "audio",
+	.description = "SDL audio source",
+);
 

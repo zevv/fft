@@ -20,9 +20,6 @@
 #include "panel.hpp"
 #include "stream.hpp"
 #include "misc.hpp"
-#include "stream-reader-audio.hpp"
-#include "stream-reader-file.hpp"
-#include "stream-reader-generator.hpp"
 #include "view.hpp"
 #include "config.hpp"
 

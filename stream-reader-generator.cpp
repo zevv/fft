@@ -1,13 +1,34 @@
 
 #include <math.h>
 
-#include "stream-reader-generator.hpp"
+
+#include "stream-reader.hpp"
+
+class StreamReaderGenerator : public StreamReader {
+public:
+
+	StreamReaderGenerator(StreamReaderInfo &info, SDL_AudioSpec &dst_spec, char *args);
+	~StreamReaderGenerator();
+
+	void open() override;
+	void poll() override;
+private:
+
+	Sample run();
+	Samplerate m_srate{};
+	Time m_phase{};
+	double m_aux1{};
+	int m_type{};
+	std::vector<Sample> m_buf{};
+};
 
 
-StreamReaderGenerator::StreamReaderGenerator(SDL_AudioSpec &dst_spec, int type)
-	: StreamReader("gen", dst_spec)
+
+
+StreamReaderGenerator::StreamReaderGenerator(StreamReaderInfo &info, SDL_AudioSpec &dst_spec, char *args)
+	: StreamReader(info, dst_spec)
 	, m_srate(dst_spec.freq)
-	, m_type(type)
+	, m_type(0)
 {
 	m_buf.resize(dst_spec.channels * 1024);
 }
