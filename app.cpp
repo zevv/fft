@@ -344,7 +344,7 @@ void App::run()
 					}
 				}
 				if(event.user.code == k_user_event_audio_playback) {
-					size_t frame_idx = (size_t)(uintptr_t)event.user.data1;
+					ssize_t frame_idx = (size_t)(uintptr_t)event.user.data1;
 					m_view.time.playpos = frame_idx / m_srate;
 					size_t frame_count = (size_t)(uintptr_t)event.user.data2;
 					Time dt = (frame_count / m_srate);

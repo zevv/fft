@@ -91,6 +91,7 @@ void WidgetXY::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	m_peak *= 0.95;
 		
 	for(int idx=idx_from; idx<idx_to; idx++) {
+		if(idx < 0 || idx >= (int)frames_avail) continue;
 		Sample vx = frames_data[idx * frames_stride + ch_x];
 		Sample vy = frames_data[idx * frames_stride + ch_y];
 		m_peak = std::max(m_peak, (double)fabs(vx));
