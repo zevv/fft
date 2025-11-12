@@ -68,7 +68,7 @@ private:
 	struct {
 		std::atomic<float> f_hp{0.0f};
 		std::atomic<float> f_lp{1.0f};
-		Biquad bq_hp[2];
-		Biquad bq_lp[2];
+		Biquad bq_hp[2][2];
+		Biquad bq_lp[2][2];
 	} m_filter;
 };

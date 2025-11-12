@@ -144,6 +144,7 @@ public:
 		Time to{1.0};
 		Time cursor{0.5};
 		Time playpos{0.0};
+		Time analysis{0.0};
 		Time sel_from{0.0};
 		Time sel_to{0.0};
 	};

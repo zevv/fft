@@ -63,11 +63,11 @@ void SourceGenerator::gen_sine(std::vector<Sample> &buf)
 
 void SourceGenerator::gen_saw(std::vector<Sample> &buf)
 {
-	Time dp = 440.0 / m_srate;
-	for(size_t i=0; i<buf.size(); i++) {
-		buf[i] = (m_phase - 0.5) * k_sample_max;
-		m_phase += dp;
-		if(m_phase > 1.0) m_phase -= 1.0;
+	Sample v = 0;
+
+	if(m_type == 0) {
+		v = sin(m_phase) * k_sample_max;
+		m_phase += 4000.0 * 2.0 * M_PI / m_srate;
 	}
 }
 
@@ -81,7 +81,6 @@ void SourceGenerator::gen_sweep(std::vector<Sample> &buf)
 		if(m_phase > 2.0 * M_PI) m_phase -= 2.0 * M_PI;
 	}
 }
-
 
 void SourceGenerator::poll()
 {

@@ -74,8 +74,10 @@ void StreamPlayer::filter_set(float f_lp, float f_hp)
 		m_filter.f_hp = f_hp;
 
 		for(size_t i=0; i<2; i++) {
-			m_filter.bq_hp[i].configure(Biquad::Type::HP, f_hp);
-			m_filter.bq_lp[i].configure(Biquad::Type::LP, f_lp);
+			for(size_t j=0; j<2; j++) {
+				m_filter.bq_hp[i][j].configure(Biquad::Type::HP, f_hp);
+				m_filter.bq_lp[i][j].configure(Biquad::Type::LP, f_lp);
+			}
 		}
 	}
 
@@ -206,8 +208,10 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 		}
 
 		for(size_t lr=0; lr<2; lr++) {
-			if(m_filter.f_hp > 0.0f) v[lr] = m_filter.bq_hp[0].run(v[lr]);
-			if(m_filter.f_lp < 1.0f) v[lr] = m_filter.bq_lp[0].run(v[lr]);
+			for(size_t j=0; j<2; j++) {
+				if(m_filter.f_hp > 0.0f) v[lr] = m_filter.bq_hp[0][j].run(v[lr]);
+				if(m_filter.f_lp < 1.0f) v[lr] = m_filter.bq_lp[0][j].run(v[lr]);
+			}
 			m_buf[i*2 + lr] = v[lr];
 		}
 

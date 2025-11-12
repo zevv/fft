@@ -324,6 +324,7 @@ void App::run()
 		}
 
 
+
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
 		{
@@ -346,6 +347,7 @@ void App::run()
 					if(!m_playback) {
 						m_view.time.from += dt;
 						m_view.time.to += dt;
+						m_view.time.analysis = m_view.time.to - m_view.window.size / m_srate * 0.5;
 					}
 					size_t used = 0;
 					m_stream.peek(nullptr, &used);
@@ -361,6 +363,7 @@ void App::run()
 					Time dt = (frame_count / m_srate);
 					m_view.time.from += dt;
 					m_view.time.to += dt;
+					m_view.time.analysis = m_view.time.playpos;
 				}
 			}
 

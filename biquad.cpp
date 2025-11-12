@@ -7,6 +7,7 @@
  */
 
 #include <math.h>
+#include <stdio.h>
 #include <stdbool.h>
 #include <algorithm>
 
@@ -25,7 +26,9 @@ void Biquad::configure(Type type, float freq, float Q)
 	float a0 = 0.0, a1 = 0.0, a2 = 0.0;
 	float b0 = 0.0, b1 = 0.0, b2 = 0.0;
 
-	float w0 = M_PI * freq;
+	printf("%f\n", freq);
+
+	float w0 = M_PI * freq * 0.5;
 	float alpha = sin(w0) / (2.0*Q);
 	float cos_w0 = cos(w0);
 

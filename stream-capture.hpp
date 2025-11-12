@@ -36,7 +36,7 @@ private:
 	std::atomic<bool> m_running{false};
 	void capture_thread();
 	Stream &m_stream;
-	Rb &m_rb;
+	Rb &m_rb; // TODO remove
 	Wavecache &m_wavecache;
 	SDL_AudioSpec m_spec{};
 };

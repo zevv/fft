@@ -59,7 +59,7 @@ void WidgetSpectrum::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		size_t stride = 0;
 		size_t avail = 0;
 		Sample *data = stream.peek(&stride, &avail);
-		int idx = ((int)(stream.sample_rate() * m_view.time.playpos - m_view.window.size * 0.5)) * stride + ch;
+		int idx = ((int)(stream.sample_rate() * m_view.time.analysis - m_view.window.size * 0.5)) * stride + ch;
 
 		if(idx < 0) continue;
 		if(idx >= (int)(avail * stride)) continue;
