@@ -110,13 +110,16 @@ void App::draw()
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
-	if(0) {
+	ImVec2 pos;
+
+	if(1) {
 		ImGuiWindowFlags flags = 0;
 		flags |= ImGuiWindowFlags_NoCollapse;
 		flags |= ImGuiWindowFlags_NoMove;
 		flags |= ImGuiWindowFlags_NoTitleBar;
 		flags |= ImGuiWindowFlags_NoSavedSettings;
 		flags |= ImGuiWindowFlags_NoNavInputs;
+		flags |= ImGuiWindowFlags_NoScrollbar;
 
 		ImGui::SetNextWindowPos(ImVec2{0, 0});
 		ImGui::SetNextWindowSize(ImVec2(m_w, 16));
@@ -125,11 +128,12 @@ void App::draw()
 		ImGui::ToggleButton("C##capture", &m_capturing);
 		ImGui::SameLine();
 		ImGui::ToggleButton("P##playback", &m_playback);
-		ImGui::SameLine();
+		pos = ImGui::GetCursorScreenPos();
 		ImGui::End();
 	}
 
-	m_root_panel->draw(m_view, m_stream, m_rend, 0, 0, m_w, m_h);
+	pos.y += 2;
+	m_root_panel->draw(m_view, m_stream, m_rend, 0, pos.y, m_w, m_h - pos.y);
 
 	ImGui::Render();
 	ImGuiIO& io = ImGui::GetIO();
