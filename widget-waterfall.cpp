@@ -87,20 +87,13 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		freq_to_note(f, note, sizeof(note));
 		ImGui::Text("f=%.6gHz %s", f, note);
 
-		auto pos = ImGui::GetIO().MousePos;
-		if(pos.x >= 0) {
-			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				m_view.freq.cursor += m_view.dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
-			} else {
-				m_view.freq.cursor = m_view.x_to_freq(pos.x, r);
-			}
-		
-		}
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
 			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+				// RMB drag/zoom freq
 				m_view.pan_freq(-ImGui::GetIO().MouseDelta.x / r.w);
 				m_view.zoom_freq(ImGui::GetIO().MouseDelta.y);
 			} else {
+				// RMB drag/zoom time
 				m_view.pan_t(ImGui::GetIO().MouseDelta.y / r.w);
 				m_view.zoom_t(ImGui::GetIO().MouseDelta.x);
 			}
@@ -115,18 +108,20 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		}
 
 		if(ImGui::IsMouseInRect(r)) {
-		   if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-			   stream.player.seek(m_view.y_to_t(pos.y, r));
-		   }
 
-		   if(ImGui::GetIO().MouseDelta.y != 0) {
-			   auto pos = ImGui::GetIO().MousePos;
-			   if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				   m_view.time.cursor += m_view.dy_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
-			   } else {
-				   m_view.time.cursor = m_view.y_to_t(pos.y, r);
-			   }
-		   }
+			auto pos = ImGui::GetIO().MousePos;
+
+			if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+				stream.player.seek(m_view.y_to_t(pos.y, r));
+			}
+
+			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+				m_view.freq.cursor += m_view.dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
+				m_view.time.cursor += m_view.dy_to_dt(ImGui::GetIO().MouseDelta.y, r) * 0.1;
+			} else {
+				m_view.freq.cursor = m_view.x_to_freq(pos.x, r);
+				m_view.time.cursor = m_view.y_to_t(pos.y, r);
+			}
 		}
 	}
 
