@@ -133,9 +133,9 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	}
 	m_peak *= 0.9f;
 
-	float idx_from = m_view.x_to_t(r.x,       r) * stream.sample_rate();
-	float idx_to   = m_view.x_to_t(r.x + r.w, r) * stream.sample_rate();
-	float step = (idx_to - idx_from) / r.w;
+	double idx_from = m_view.x_to_t(r.x,       r) * stream.sample_rate();
+	double idx_to   = m_view.x_to_t(r.x + r.w, r) * stream.sample_rate();
+	double step = (idx_to - idx_from) / r.w;
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
