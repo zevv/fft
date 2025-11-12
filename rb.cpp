@@ -47,6 +47,12 @@ void Rb::set_size(size_t size)
 }
 
 
+size_t Rb::size()
+{
+	return m_size;
+}
+
+
 void Rb::clear()
 {
 	if(m_fd != -1) {

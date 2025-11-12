@@ -100,6 +100,33 @@ void App::resize_window(int w, int h)
 	m_resize = true;
 }
 
+void App::draw_topbar()
+{
+	bool cap = m_capturing;
+	ImGui::ToggleButton("C##capture", &cap);
+	if(cap != m_capturing) capture_toggle();
+
+	ImGui::SameLine();
+
+	bool play = m_playback;
+	ImGui::ToggleButton("P##playback", &play);
+	if(play != m_playback) play_toggle();
+	
+	ImGui::SameLine();
+	ImGui::Text("srate: %.0fHz", m_srate);
+
+	size_t frames_avail{};
+	m_stream.peek(nullptr, &frames_avail);
+	ImGui::SameLine();
+	char buf[32];
+	duration_to_str(frames_avail / m_srate, buf, sizeof(buf));
+	float bytes = m_stream.channel_count() * sizeof(Sample) * frames_avail;
+	ImGui::Text("/ capture: %s, %.1fMb", buf, bytes / (1024.0 * 1024.0));
+
+
+
+}
+
 
 void App::draw()
 {
@@ -110,30 +137,29 @@ void App::draw()
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
-	ImVec2 pos;
+	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 2.0f);
 
-	if(1) {
-		ImGuiWindowFlags flags = 0;
-		flags |= ImGuiWindowFlags_NoCollapse;
-		flags |= ImGuiWindowFlags_NoMove;
-		flags |= ImGuiWindowFlags_NoTitleBar;
-		flags |= ImGuiWindowFlags_NoSavedSettings;
-		flags |= ImGuiWindowFlags_NoNavInputs;
-		flags |= ImGuiWindowFlags_NoScrollbar;
+	ImGui::SetNextWindowPos(ImVec2{0, 0});
+	ImGui::SetNextWindowSize(ImVec2(m_w, 16));
 
-		ImGui::SetNextWindowPos(ImVec2{0, 0});
-		ImGui::SetNextWindowSize(ImVec2(m_w, 16));
+	ImGuiWindowFlags flags = 0;
+	flags |= ImGuiWindowFlags_NoCollapse;
+	flags |= ImGuiWindowFlags_NoMove;
+	flags |= ImGuiWindowFlags_NoTitleBar;
+	flags |= ImGuiWindowFlags_NoSavedSettings;
+	flags |= ImGuiWindowFlags_NoNavInputs;
+	flags |= ImGuiWindowFlags_NoScrollbar;
+	ImGui::Begin("main", nullptr, flags);
 
-		ImGui::Begin("main", nullptr, ImGuiWindowFlags_NoTitleBar);
-		ImGui::ToggleButton("C##capture", &m_capturing);
-		ImGui::SameLine();
-		ImGui::ToggleButton("P##playback", &m_playback);
-		pos = ImGui::GetCursorScreenPos();
-		ImGui::End();
-	}
+	draw_topbar();
+
+	ImVec2 pos = ImGui::GetCursorScreenPos();
+	ImGui::End();
 
 	pos.y += 2;
 	m_root_panel->draw(m_view, m_stream, m_rend, 0, pos.y, m_w, m_h - pos.y);
+		
+	ImGui::PopStyleVar();
 
 	ImGui::Render();
 	ImGuiIO& io = ImGui::GetIO();
@@ -283,6 +309,28 @@ void App::req_redraw()
 }
 
 
+void App::play_toggle()
+{
+	m_playback ^= 1;
+	if(m_playback) {
+		m_stream.player.resume();
+	} else {
+		m_stream.player.pause();
+	}
+}
+
+
+void App::capture_toggle()
+{
+	m_capturing ^= 1;
+	if(m_capturing) {
+		m_stream.capture.resume();
+	} else {
+		m_stream.capture.pause();
+	}
+}
+
+
 void App::run()
 {
 	bool done = false;
@@ -291,24 +339,14 @@ void App::run()
 
 		// Capture control
 		if(ImGui::IsKeyPressed(ImGuiKey_C)) {
-			m_capturing ^= 1;
-			if(m_capturing) {
-				m_stream.capture.resume();
-			} else {
-				m_stream.capture.pause();
-			}
+			capture_toggle();
 		}
 
 		// Player control
 		auto &player = m_stream.player;
 
-		if(ImGui::IsKeyPressed(ImGuiKey_Space)) {
-			m_playback ^= 1;
-			if(m_playback) {
-				player.resume();
-			} else {
-				player.pause();
-			}
+		if(ImGui::IsKeyPressed(ImGuiKey_Space) || ImGui::IsKeyPressed(ImGuiKey_P)) {
+			play_toggle();
 		}
 
 		float factor = ImGui::IsKeyDown(ImGuiKey_LeftShift) ? 2.0 : 1.059463;
@@ -355,10 +393,6 @@ void App::run()
 					}
 					size_t used = 0;
 					m_stream.peek(nullptr, &used);
-					if(used > 10000 * m_srate) {
-						done = true;
-					}
-
 				}
 				if(event.user.code == k_user_event_audio_playback) {
 					ssize_t frame_idx = (size_t)(uintptr_t)event.user.data1;

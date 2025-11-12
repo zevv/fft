@@ -252,8 +252,6 @@ void Panel::draw(View &view, Stream &stream, SDL_Renderer *rend, int x, int y, i
 
 		m_has_focus = ImGui::IsWindowFocused();
 
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 2.0f);
-
 		if(ImGui::IsWindowHovered() &&
 		   !ImGui::IsMouseDragging(ImGuiMouseButton_Left) &&
 		   !ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
@@ -318,7 +316,6 @@ void Panel::draw(View &view, Stream &stream, SDL_Renderer *rend, int x, int y, i
 		m_widget->draw(view, stream, rend, r);
 		SDL_SetRenderClipRect(rend, nullptr);
 
-		ImGui::PopStyleVar();
 		ImGui::End();
 
 	} 

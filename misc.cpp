@@ -103,6 +103,26 @@ void freq_to_note(double freq, char *note, size_t note_len)
 	snprintf(note, note_len, "%s%d %+d", name[nr], oct, cents);
 }
 
+
+void duration_to_str(Time d, char *buf, size_t buf_len)
+{
+	if(d < 1.0) {
+		snprintf(buf, buf_len, "%.0fms", d * 1000.0);
+	} else if(d < 60.0) {
+		snprintf(buf, buf_len, "%.2fs", d);
+	} else if(d < 3600.0) {
+		int m = (int)(d / 60.0);
+		int s = (int)(d) % 60;
+		snprintf(buf, buf_len, "%d:%02d", m, s);
+	} else {
+		int h = (int)(d / 3600.0);
+		int m = ((int)(d) % 3600) / 60;
+		int s = (int)(d) % 60;
+		snprintf(buf, buf_len, "%d:%02d:%02d", h, m, s);
+	}
+}
+
+
 namespace ImGui {
 bool ToggleButton(const char* str_id, bool* v)
 {
@@ -125,3 +145,4 @@ bool IsMouseInRect(SDL_Rect const &rect)
 }
 
 }
+

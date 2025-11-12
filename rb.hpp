@@ -9,6 +9,7 @@ public:
 	Rb();
 	~Rb();
 	void set_size(size_t size);
+	size_t size();
 
 	size_t bytes_used();
 

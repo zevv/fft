@@ -18,6 +18,9 @@ public:
 	void load();
 	void save();
 
+	void play_toggle();
+	void capture_toggle();
+
 	void init(int argc, char **argv);
 	void usage();
 	void run();
@@ -27,6 +30,7 @@ public:
 	void req_redraw();
 
 	void draw();
+	void draw_topbar();
 	void resize_window(int w, int h);
 
 private:

@@ -30,7 +30,7 @@ public:
 	size_t channel_count() { return m_channel_count; }
 	void allocate(size_t depth);
 	Samplerate sample_rate() { return m_srate; }
-	Sample *peek(size_t *stride, size_t *used = nullptr);
+	Sample *peek(size_t *stride, size_t *frames_avail = nullptr);
 	Wavecache::Range *peek_wavecache(size_t *stride, size_t *used = nullptr);
 	Rb &get_rb() { return m_rb; }
 	Wavecache &get_wavecache() { return m_wavecache; }
