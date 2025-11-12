@@ -9,16 +9,14 @@
 #include <atomic>
 #include <vector>
 
-#include "rb.hpp"
 #include "types.hpp"
-#include "wavecache.hpp"
 #include "source.hpp"
 
 class Source;
 
 class Capture {
 public:
-	Capture(Stream &stream, Rb &rb, Wavecache &wavecache);
+	Capture(Stream &stream);
 	~Capture();
 
 	void set_sample_rate(Samplerate srate);
@@ -36,8 +34,6 @@ private:
 	std::atomic<bool> m_running{false};
 	void capture_thread();
 	Stream &m_stream;
-	Rb &m_rb; // TODO remove
-	Wavecache &m_wavecache;
 	SDL_AudioSpec m_spec{};
 };
 

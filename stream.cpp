@@ -14,7 +14,7 @@
 
 Stream::Stream()
 	: player(Player(*this))
-	, capture(*this, m_rb, m_wavecache)
+	, capture(*this)
 	, m_wavecache(Wavecache(256))
 {
 }

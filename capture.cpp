@@ -15,10 +15,8 @@
 #include "sourceregistry.hpp"
 
 
-Capture::Capture(Stream &stream, Rb &rb, Wavecache &wavecache) 
+Capture::Capture(Stream &stream)
 	: m_stream(stream)
-	, m_rb(rb)
-	, m_wavecache(wavecache)
 	, m_spec{SDL_AUDIO_S16, 1, 8000}
 {
 }
@@ -139,7 +137,7 @@ void Capture::capture_thread()
 		if(frame_count > 0) {
 
 			size_t bytes_max = 0;
-			Sample *buf = (Sample *)m_rb.get_write_ptr(&bytes_max);
+			Sample *buf = (Sample *)m_stream.get_rb().get_write_ptr(&bytes_max);
 
 			for(auto &source : m_sources) {
 				// read data from source SDL audio stream
@@ -164,8 +162,8 @@ void Capture::capture_thread()
 			}
 
 			// update ring buffer write pointer and wavecache
-			m_rb.write_done(frame_count * m_stream.channel_count() * sizeof(Sample));
-			m_wavecache.feed_frames(buf, frame_count, m_stream.channel_count());
+			m_stream.get_rb().write_done(frame_count * m_stream.channel_count() * sizeof(Sample));
+			m_stream.get_wavecache().feed_frames(buf, frame_count, m_stream.channel_count());
 
 			// signal main thread new audio is available
 			uint64_t t_now = SDL_GetTicks();
@@ -175,7 +173,7 @@ void Capture::capture_thread()
 				SDL_zero(event);
 				event.type = SDL_EVENT_USER;
 				event.user.code = k_user_event_audio_capture;
-				event.user.data1 = (void *)(m_rb.bytes_used() / (m_stream.channel_count() * sizeof(Sample)));
+				event.user.data1 = (void *)(m_stream.get_rb().bytes_used() / (m_stream.channel_count() * sizeof(Sample)));
 				SDL_PushEvent(&event);
 			}
 		} else {
