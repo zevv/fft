@@ -11,7 +11,7 @@
 
 class Stream;
 
-class StreamPlayer {
+class Player {
 public:
 	
 	struct Channel {
@@ -20,8 +20,8 @@ public:
 		float pan{0.0f};
 	};
 
-	StreamPlayer(Stream &stream);
-	~StreamPlayer();
+	Player(Stream &stream);
+	~Player();
 	
 	void load(ConfigReader::Node *n);
 	void save(ConfigWriter &cw);

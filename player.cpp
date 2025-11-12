@@ -7,12 +7,12 @@
 
 static void audio_callback_(void *userdata, SDL_AudioStream *stream, int additional_amount, int total_amount)
 {
-	StreamPlayer *player = (StreamPlayer *)userdata;
+	Player *player = (Player *)userdata;
 	player->audio_callback(stream, additional_amount, total_amount);
 }
 
 
-StreamPlayer::StreamPlayer(Stream &stream)
+Player::Player(Stream &stream)
 	: m_stream(stream)
 	, m_srate(8000)
 	, m_frame_size(2 * sizeof(float))
@@ -32,7 +32,7 @@ StreamPlayer::StreamPlayer(Stream &stream)
 }
 
 
-StreamPlayer::~StreamPlayer()
+Player::~Player()
 {
 	if(m_sdl_audio_stream) {
 		SDL_DestroyAudioStream(m_sdl_audio_stream);
@@ -40,7 +40,7 @@ StreamPlayer::~StreamPlayer()
 }
 
 
-void StreamPlayer::set_sample_rate(Samplerate srate)
+void Player::set_sample_rate(Samplerate srate)
 {
 	m_srate = srate;
 	SDL_AudioSpec src_spec, dst_spec;
@@ -53,20 +53,20 @@ void StreamPlayer::set_sample_rate(Samplerate srate)
 }
 
 
-void StreamPlayer::set_channel_count(size_t count)
+void Player::set_channel_count(size_t count)
 {
 	m_channels.resize(std::max(count, m_channels.size()));
 }
 
 
-void StreamPlayer::filter_get(float &f_lp, float &f_hp)
+void Player::filter_get(float &f_lp, float &f_hp)
 {
 	f_lp = m_filter.f_lp;
 	f_hp = m_filter.f_hp;
 }
 
 
-void StreamPlayer::filter_set(float f_lp, float f_hp)
+void Player::filter_set(float f_lp, float f_hp)
 {
 	if(f_lp != m_filter.f_lp || f_hp != m_filter.f_hp) {
 
@@ -84,7 +84,7 @@ void StreamPlayer::filter_set(float f_lp, float f_hp)
 }
 
 
-void StreamPlayer::load(ConfigReader::Node *n)
+void Player::load(ConfigReader::Node *n)
 {
 	auto nc = n->find("player");
 	float stretch = 1.0f;
@@ -117,7 +117,7 @@ void StreamPlayer::load(ConfigReader::Node *n)
 }
 
 
-void StreamPlayer::save(ConfigWriter &cw)
+void Player::save(ConfigWriter &cw)
 {
 	cw.push("player");
 	cw.write("stretch", m_stretch);
@@ -138,7 +138,7 @@ void StreamPlayer::save(ConfigWriter &cw)
 }
 
 
-void StreamPlayer::seek(Time t)
+void Player::seek(Time t)
 {
 	m_play_pos = t;
 	SDL_Event event{};
@@ -150,7 +150,7 @@ void StreamPlayer::seek(Time t)
 }
 
 
-void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount, int total_amount)
+void Player::audio_callback(SDL_AudioStream *stream, int additional_amount, int total_amount)
 {
 	m_channels.resize(m_stream.channel_count());
 
@@ -238,14 +238,14 @@ void StreamPlayer::audio_callback(SDL_AudioStream *stream, int additional_amount
 }
 
 
-void StreamPlayer::resume()
+void Player::resume()
 {
 	SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audio_stream));
 	SDL_ClearAudioStream(m_sdl_audio_stream);
 }
 
 
-void StreamPlayer::pause()
+void Player::pause()
 {
 	SDL_PauseAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audio_stream));
 	SDL_ClearAudioStream(m_sdl_audio_stream);

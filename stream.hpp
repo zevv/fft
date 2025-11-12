@@ -12,8 +12,8 @@
 #include "config.hpp"
 #include "types.hpp"
 #include "wavecache.hpp"
-#include "stream-player.hpp"
-#include "stream-capture.hpp"
+#include "player.hpp"
+#include "capture.hpp"
 
 
 class Source;
@@ -33,8 +33,8 @@ public:
 	Sample *peek(size_t *stride, size_t *used = nullptr);
 	Wavecache::Range *peek_wavecache(size_t *stride, size_t *used = nullptr);
 	
-	StreamPlayer player;
-	StreamCapture capture;
+	Player player;
+	Capture capture;
 
 private:
 

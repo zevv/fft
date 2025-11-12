@@ -13,7 +13,7 @@
 #include "source.hpp"
 
 Stream::Stream()
-	: player(StreamPlayer(*this))
+	: player(Player(*this))
 	, capture(*this, m_rb, m_wavecache)
 	, m_wavecache(Wavecache(256))
 {

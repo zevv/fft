@@ -11,11 +11,11 @@
 
 #include "stream.hpp"
 #include "misc.hpp"
-#include "stream-capture.hpp"
+#include "capture.hpp"
 #include "sourceregistry.hpp"
 
 
-StreamCapture::StreamCapture(Stream &stream, Rb &rb, Wavecache &wavecache) 
+Capture::Capture(Stream &stream, Rb &rb, Wavecache &wavecache) 
 	: m_stream(stream)
 	, m_rb(rb)
 	, m_wavecache(wavecache)
@@ -24,7 +24,7 @@ StreamCapture::StreamCapture(Stream &stream, Rb &rb, Wavecache &wavecache)
 }
 
 
-StreamCapture::~StreamCapture()
+Capture::~Capture()
 {
 	pause();
 	for(auto source : m_sources) {
@@ -33,13 +33,13 @@ StreamCapture::~StreamCapture()
 }
 
 
-void StreamCapture::set_sample_rate(Samplerate srate)
+void Capture::set_sample_rate(Samplerate srate)
 {
 	m_spec.freq = srate;
 }
 
 
-void StreamCapture::start()
+void Capture::start()
 {
 	size_t channel_count = 0;
 	for(auto &source : m_sources) {
@@ -52,12 +52,12 @@ void StreamCapture::start()
 }
 
 
-void StreamCapture::resume()
+void Capture::resume()
 {
 	if(!m_running) {
 
 		m_running = true;
-		m_thread = std::thread(&StreamCapture::capture_thread, this);
+		m_thread = std::thread(&Capture::capture_thread, this);
 
 		for(auto source : m_sources) {
 			source->resume();
@@ -66,7 +66,7 @@ void StreamCapture::resume()
 }
 
 
-void StreamCapture::pause()
+void Capture::pause()
 {
 	if(m_running) {
 	
@@ -82,7 +82,7 @@ void StreamCapture::pause()
 }
 
 
-void StreamCapture::add_source(const char *desc)
+void Capture::add_source(const char *desc)
 {
 	char *desc_copy = strdup(desc);
 	
@@ -97,7 +97,7 @@ void StreamCapture::add_source(const char *desc)
 }
 
 
-size_t StreamCapture::channel_count()
+size_t Capture::channel_count()
 {
 	size_t channel_count = 0;
 	for(auto &source : m_sources) {
@@ -107,7 +107,7 @@ size_t StreamCapture::channel_count()
 }
 
 
-void StreamCapture::capture_thread()
+void Capture::capture_thread()
 {
 	uint64_t t_event = SDL_GetTicks() + 10;
 

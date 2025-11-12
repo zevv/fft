@@ -16,10 +16,10 @@
 
 class Source;
 
-class StreamCapture {
+class Capture {
 public:
-	StreamCapture(Stream &stream, Rb &rb, Wavecache &wavecache);
-	~StreamCapture();
+	Capture(Stream &stream, Rb &rb, Wavecache &wavecache);
+	~Capture();
 
 	void set_sample_rate(Samplerate srate);
 	void start();
