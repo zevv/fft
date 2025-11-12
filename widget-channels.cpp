@@ -73,11 +73,10 @@ void WidgetChannels::draw_vu(Stream &stream, size_t ch)
 	size_t frames_avail;
 	Sample *frames_data = stream.peek(&frames_stride, &frames_avail);
 
-	Sample peak = 0;
-	
 	ssize_t idx_from = std::max((ssize_t)(m_view.time.analysis * stream.sample_rate()), (ssize_t)0);
 	ssize_t idx_to   = std::min((ssize_t)(idx_from + m_view.window.size), (ssize_t)frames_avail);
 
+	Sample peak = 0;
 	for(ssize_t idx=idx_from; idx<idx_to; idx++) {
 		Sample v = frames_data[idx * frames_stride + ch];
 		peak = std::max(peak, v);
@@ -90,26 +89,30 @@ void WidgetChannels::draw_vu(Stream &stream, size_t ch)
 	// don't use ImGui::ProgressBar!
 	ImGui::SameLine();
 	ImGui::PushID((int)ch);
-	auto io = ImGui::GetIO();
-	float width = 200.0f;
-	float height = ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2.0f - 4;
-	ImGui::InvisibleButton("vu", ImVec2(width, height));
+
+	float width = 150;
+	float height = ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2.0f;
+	ImVec2 pos1, pos2;
+	ImGui::SetNextItemWidth(width);
+	float val = 0.0;
+	ImGui::DragFloat("##vu", &val, 0.0f, 0.0f, 1.0f, "");
+
 	ImDrawList* draw_list = ImGui::GetWindowDrawList();
 	ImVec2 pos = ImGui::GetItemRectMin();
-	// background
-	draw_list->AddRectFilled(pos, ImVec2(pos.x + width, pos.y + height), IM_COL32(64, 64, 64, 255));
+	pos.y += 4;
+	pos.x += 4;
 	// peak
 	float peak_x = (m_vu_peak[ch] + 60.0f) / 60.0f * width;
 	peak_x = std::clamp(peak_x, 0.0f, width);
-	draw_list->AddRectFilled(pos, ImVec2(pos.x + peak_x, pos.y + height), IM_COL32(0, 200, 0, 255));
+	draw_list->AddRectFilled(pos, ImVec2(pos.x + peak_x - 8, pos.y + height - 8), IM_COL32(0, 200, 0, 255));
 	// decay
 	float decay_x = (m_vu_decay[ch] + 60.0f) / 60.0f * width;
 	decay_x = std::clamp(decay_x, 0.0f, width);
-	draw_list->AddRectFilled(ImVec2(pos.x + decay_x - 2, pos.y), ImVec2(pos.x + decay_x + 2, pos.y + height), IM_COL32(255, 255, 0, 255));
+	draw_list->AddRectFilled(ImVec2(pos.x + decay_x - 8, pos.y), ImVec2(pos.x + decay_x - 4, pos.y + height - 8), IM_COL32(255, 255, 0, 255));
 
-	
 
-	
+
+
 	ImGui::PopID();
 }
 
