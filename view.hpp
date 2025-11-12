@@ -140,33 +140,33 @@ public:
 
 
 	struct VTime {
-		Time from{0.0};
-		Time to{1.0};
-		Time cursor{0.5};
-		Time playpos{0.0};
-		Time analysis{0.0};
-		Time sel_from{0.0};
-		Time sel_to{0.0};
+		Time from{0.0}; // time view range start
+		Time to{1.0}; // time view range end
+		Time cursor{0.5}; // user time cursor position
+		Time playpos{0.0}; // current playback position
+		Time analysis{0.0}; // current analysis position, synced with capture/playback state
+		Time sel_from{0.0}; // selection range start
+		Time sel_to{0.0}; // selection range end
 	};
 
 	struct VFreq {
-		Frequency from{0.0};
-		Frequency to{22000.0};
-		Frequency cursor{11000.0};
+		Frequency from{0.0}; // frequency view range start
+		Frequency to{22000.0}; // frequency view range end
+		Frequency cursor{11000.0}; // user frequency cursor position
 	};
 
 	struct VWindow {
-		int size{256};
-		Window::Type window_type{Window::Type::Hanning};
-		double window_beta{0.5};
+		int size{256}; // analysis window size
+		Window::Type window_type{Window::Type::Hanning}; // analysis window type
+		double window_beta{0.5}; // analysis window beta (gaussian, kaiser)
 	};
 
 	struct VAperture {
-		float center{-40.0f};
-		float range{80.0f};
+		float center{-40.0f}; // waterfall aperture dB center
+		float range{80.0f}; // waterfall aperture dB range
 	};
 	
-	bool lock{true};
+	bool lock{true}; // view is locked to global view
 	VTime time{};
 	VFreq freq{};
 	VWindow window{};
