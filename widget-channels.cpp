@@ -30,10 +30,6 @@ void WidgetChannels::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	float stretch = player.get_stretch();
 	float pitch = player.get_pitch();
 
-	if(channels.size() != stream.channel_count()) {
-		return;
-	}
-
 	if(ImGui::BeginTabBar("Channels")) {
 
 		if(ImGui::BeginTabItem("Playback")) {

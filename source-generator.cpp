@@ -78,3 +78,10 @@ Sample SourceGenerator::run()
 		
 	return v;
 }
+
+
+REGISTER_STREAM_READER(SourceGenerator,
+	.name = "gen",
+	.description = "signal generator",
+);
+

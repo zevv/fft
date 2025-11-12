@@ -22,7 +22,7 @@ public:
 		: m_info(info)
 		, m_frame_size(dst_spec.channels * sizeof(Sample))
 		, m_dst_spec(dst_spec)
-		, m_args(strdup(args))
+		, m_args(strdup(args ? args : "-"))
 	{}
 
 	virtual ~Source() {

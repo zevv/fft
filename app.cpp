@@ -226,6 +226,11 @@ void App::init(int argc, char **argv)
 	for(int i=optind; i<argc; i++) {
 		m_stream.capture.add_source(argv[i]);
 	}
+
+	if(m_stream.capture.channel_count() == 0) {
+		fprintf(stderr, "error: no input sources specified\n");
+		::exit(1);
+	}
 	
 	m_stream.allocate(opt_buffer_depth);
 	m_stream.capture.start();
