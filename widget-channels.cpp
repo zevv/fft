@@ -25,8 +25,8 @@ private:
 	void do_draw_colors_tab(Stream &stream, SDL_Renderer *rend, SDL_Rect &r);
 	void draw_vu(Stream &stream, size_t channel, ImVec4 col);
 
-	std::vector<int8_t> m_vu_peak;
-	std::vector<int8_t> m_vu_decay;
+	ssize_t m_vu_idx_prev{0};
+	std::vector<Sample> m_vu_peak{};
 };
 
 
@@ -64,29 +64,12 @@ void WidgetChannels::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 
 		ImGui::EndTabBar();
 	}
+
 }
 
 
 void WidgetChannels::draw_vu(Stream &stream, size_t ch, ImVec4 col)
 {
-	size_t frames_stride;
-	size_t frames_avail;
-	Sample *frames_data = stream.peek(&frames_stride, &frames_avail);
-
-	ssize_t idx_from = std::max((ssize_t)(m_view.time.analysis * stream.sample_rate()), (ssize_t)0);
-	ssize_t idx_to   = std::min((ssize_t)(idx_from + m_view.window.size), (ssize_t)frames_avail);
-
-	Sample peak = 0;
-	for(ssize_t idx=idx_from; idx<idx_to; idx++) {
-		Sample v = frames_data[idx * frames_stride + ch];
-		peak = std::max(peak, v);
-	}
-
-	m_vu_peak[ch] = 20.0f * log10f((float)peak/k_sample_max + 1e-10f);
-	if(m_vu_decay[ch] > -127) m_vu_decay[ch] -= 1;
-	m_vu_decay[ch] = std::max(m_vu_decay[ch], m_vu_peak[ch]);
-
-	// don't use ImGui::ProgressBar!
 	ImGui::PushID((int)ch);
 
 	float width = 80;
@@ -100,15 +83,18 @@ void WidgetChannels::draw_vu(Stream &stream, size_t ch, ImVec4 col)
 	ImVec2 pos = ImGui::GetItemRectMin();
 	pos.y += 4;
 	pos.x += 4;
-	// peak
-	float peak_x = (m_vu_peak[ch] + 60.0f) / 60.0f * width;
-	peak_x = std::clamp(peak_x, 0.0f, width);
-	draw_list->AddRectFilled(pos, ImVec2(pos.x + peak_x - 8, pos.y + height - 8),  IM_COL32(100, 100, 100, 255));
 
-	// decay
-	float decay_x = (m_vu_decay[ch] + 60.0f) / 60.0f * width;
-	decay_x = std::clamp(decay_x, 0.0f, width);
-	draw_list->AddRectFilled(ImVec2(pos.x + decay_x - 8, pos.y), ImVec2(pos.x + decay_x - 4, pos.y + height - 8),
+	float db_range = 60.0f;
+	float db = 20.0f * log10f((float)m_vu_peak[ch]/k_sample_max + 1e-10f);
+	float db_clamped = std::clamp(db, -db_range, 0.0f);
+	float x = (db_clamped + db_range) / db_range * width;
+
+	for(float i=0; i<x-8; i+=8) {
+		draw_list->AddRectFilled(ImVec2(pos.x + i, pos.y), ImVec2(pos.x + i + 4, pos.y + height - 8),
+			IM_COL32(64, 64, 64, 255));
+	}
+	//draw_list->AddRectFilled(pos, ImVec2(pos.x + x - 8, pos.y + height - 8),  IM_COL32(100, 100, 100, 255));
+	draw_list->AddRectFilled(ImVec2(pos.x + x - 8, pos.y), ImVec2(pos.x + x - 4, pos.y + height - 8),
 		IM_COL32((uint8_t)(col.x * 255.0f), (uint8_t)(col.y * 255.0f), (uint8_t)(col.z * 255.0f), 255));
 
 	ImGui::PopID();
@@ -117,8 +103,28 @@ void WidgetChannels::draw_vu(Stream &stream, size_t ch, ImVec4 col)
 
 void WidgetChannels::do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 {
-	m_vu_peak.resize(stream.channel_count(), -120);
-	m_vu_decay.resize(stream.channel_count(), -120);
+	m_vu_peak.resize(stream.channel_count());
+
+	size_t frames_stride;
+	size_t frames_avail;
+	Sample *frames_data = stream.peek(&frames_stride, &frames_avail);
+	ssize_t idx_to   = frames_avail;
+	ssize_t idx_from = std::max({m_vu_idx_prev, idx_to - 10000, (ssize_t)0 });
+	m_vu_idx_prev = idx_to;
+
+	float decay = powf(0.97f, (float)(idx_to - idx_from) / 100.0f);
+	
+	for(size_t ch=0; ch<stream.channel_count(); ch++) {
+		m_vu_peak[ch] *= decay;
+		for(ssize_t idx=idx_from; idx<idx_to; idx++) {
+			Sample v = frames_data[idx * frames_stride + ch];
+			m_vu_peak[ch] = std::max(m_vu_peak[ch], v);
+		}
+	}
+
+
+
+
 
 	auto &channels = stream.player.get_channels();
 	auto &player = stream.player;
@@ -185,7 +191,7 @@ void WidgetChannels::do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SD
 				SDL_Color col = m_channel_map.ch_color(ch);
 				ImVec4 imcol = {col.r / 255.0f, col.g / 255.0f, col.b / 255.0f, 1.0f};
 
-				ImGui::TextColored(imcol, "ch %zu", ch+1);
+				ImGui::TextColored(imcol, "%zu", ch+1);
 
 				ImGui::SameLine();
 				draw_vu(stream, ch, imcol);
