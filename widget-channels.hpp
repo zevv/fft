@@ -11,13 +11,3 @@
 #include "widget.hpp"
 
 
-class WidgetChannels : public Widget {
-
-public:
-	WidgetChannels(Widget::Info &info);
-	~WidgetChannels() override;
-
-private:
-
-	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
-};

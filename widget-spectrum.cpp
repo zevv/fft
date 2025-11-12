@@ -8,7 +8,24 @@
 #include <imgui.h>
 
 #include "widgetregistry.hpp"
-#include "widget-spectrum.hpp"
+#include "fft.hpp"
+
+
+
+class WidgetSpectrum : public Widget {
+public:
+	WidgetSpectrum(Widget::Info &info);
+	~WidgetSpectrum() override;
+
+private:
+	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
+
+	float m_amp_cursor{0.0};
+	Fft m_fft{};
+
+	std::vector<Sample> m_out_graph;
+};
+
 
 
 WidgetSpectrum::WidgetSpectrum(Widget::Info &info)

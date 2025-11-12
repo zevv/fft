@@ -9,8 +9,26 @@
 
 #include "misc.hpp"
 #include "widgetregistry.hpp"
-#include "widget-waterfall.hpp"
 #include "histogram.hpp"
+#include "fft.hpp"
+
+
+
+class WidgetWaterfall : public Widget {
+public:
+	WidgetWaterfall(Widget::Info &info);
+	~WidgetWaterfall() override;
+
+private:
+	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
+
+	Fft m_fft{};
+	int8_t m_db_min{};
+	int8_t m_db_max{};
+	bool m_agc{true};
+	bool m_fft_approximate{true};
+};
+
 
 
 WidgetWaterfall::WidgetWaterfall(Widget::Info &info)

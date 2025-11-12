@@ -8,8 +8,29 @@
 #include <imgui.h>
 
 #include "misc.hpp"
+#include "histogram.hpp"
 #include "widgetregistry.hpp"
-#include "widget-histogram.hpp"
+
+
+
+class WidgetHistogram : public Widget {
+
+public:
+	WidgetHistogram(Widget::Info &info);
+	~WidgetHistogram() override;
+
+private:
+	void do_load(ConfigReader::Node *node) override;
+	void do_save(ConfigWriter &cfg) override;
+	void do_copy(Widget *w) override;
+	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
+
+	bool m_agc{true};
+	int m_nbins{64};
+	Sample m_vmin{};
+	Sample m_vmax{};
+	std::array<Histogram, 8> m_hists{};
+};
 
 
 WidgetHistogram::WidgetHistogram(Widget::Info &info)

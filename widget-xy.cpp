@@ -8,8 +8,26 @@
 #include <imgui.h>
 
 #include "widgetregistry.hpp"
-#include "widget-xy.hpp"
 #include "misc.hpp"
+
+
+class WidgetXY : public Widget {
+
+public:
+	WidgetXY(Widget::Info &info);
+	~WidgetXY() override;
+
+private:
+
+	void do_load(ConfigReader::Node *node) override;
+	void do_save(ConfigWriter &cfg) override;
+	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
+
+	SDL_Texture *m_tex{};
+	double m_peak{1.0};
+	float m_decay{0.2};
+	bool m_agc{true};
+};
 
 
 WidgetXY::WidgetXY(Widget::Info &info)
