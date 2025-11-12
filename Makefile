@@ -53,8 +53,8 @@ DEPS = $(OBJS:.o=.d)
 CXXFLAGS += -std=c++23
 CXXFLAGS += -g 
 CXXFLAGS += -Wall -Wformat -Werror
-CXXFLAGS += -Wno-unused-but-set-variable -Wno-unused-variable
-CXXFLAGS += -O0 -ffast-math
+CXXFLAGS += -Wno-unused-but-set-variable -Wno-unused-variable -Wno-format-truncation
+CXXFLAGS += -O3 -ffast-math
 CXXFLAGS += -march=native
 CXXFLAGS += -MMD
 CXXFLAGS += -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends

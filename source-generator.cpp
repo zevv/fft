@@ -15,7 +15,10 @@ public:
 	void poll() override;
 private:
 
-	Sample run();
+	void gen_sine(std::vector<Sample> &buf);
+	void gen_saw(std::vector<Sample> &buf);
+	void gen_sweep(std::vector<Sample> &buf);
+
 	Samplerate m_srate{};
 	Time m_phase{};
 	double m_aux1{};
@@ -29,9 +32,9 @@ private:
 SourceGenerator::SourceGenerator(Source::Info &info, SDL_AudioSpec &dst_spec, char *args)
 	: Source(info, dst_spec, args)
 	, m_srate(dst_spec.freq)
-	, m_type(0)
+	, m_type(1)
 {
-	m_buf.resize(dst_spec.channels * 1024);
+	m_buf.resize(1024);
 }
 
 
@@ -47,36 +50,46 @@ void SourceGenerator::open()
 }
 
 
-void SourceGenerator::poll()
+void SourceGenerator::gen_sine(std::vector<Sample> &buf)
 {
-	for(size_t i=0; i<1024; i++) {
-		m_buf[i] = run();
+	Time dp = 440.0 * 2.0 * M_PI / m_srate;
+	for(size_t i=0; i<buf.size(); i++) {
+		buf[i] = sin(m_phase) * k_sample_max;
+		m_phase += dp;
+		if(m_phase > 2.0 * M_PI) m_phase -= 2.0 * M_PI;
 	}
-	SDL_PutAudioStreamData(m_sdl_stream, m_buf.data(), 1024 * sizeof(Sample));
 }
 
 
-Sample SourceGenerator::run()
+void SourceGenerator::gen_saw(std::vector<Sample> &buf)
 {
-	Sample v = 0;
-
-	if(m_type == 0) {
-		v = sin(m_phase) * k_sample_max;
-		m_phase += 440.0 * 2.0 * M_PI / m_srate;
+	Time dp = 440.0 / m_srate;
+	for(size_t i=0; i<buf.size(); i++) {
+		buf[i] = (m_phase - 0.5) * k_sample_max;
+		m_phase += dp;
+		if(m_phase > 1.0) m_phase -= 1.0;
 	}
+}
 
-	if(m_type == 1) {
-		v = (m_phase - 0.5) * k_sample_max;
-		m_phase += 440.0 / m_srate;
-	}
-	
-	if(m_type == 2) {
-		v = sin(m_phase) * k_sample_max;
+
+void SourceGenerator::gen_sweep(std::vector<Sample> &buf)
+{
+	for(size_t i=0; i<buf.size(); i++) {
+		buf[i] = sin(m_phase) * k_sample_max;
 		m_phase += m_aux1 * 2.0 * M_PI / m_srate;
 		m_aux1 += 0.1;
+		if(m_phase > 2.0 * M_PI) m_phase -= 2.0 * M_PI;
 	}
-		
-	return v;
+}
+
+
+void SourceGenerator::poll()
+{
+	if(m_type == 0) gen_sine(m_buf);
+	if(m_type == 1) gen_saw(m_buf);
+	if(m_type == 2) gen_sweep(m_buf);
+
+	SDL_PutAudioStreamData(m_sdl_stream, m_buf.data(), m_buf.size() * sizeof(Sample));
 }
 
 

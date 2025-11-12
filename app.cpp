@@ -347,6 +347,12 @@ void App::run()
 						m_view.time.from += dt;
 						m_view.time.to += dt;
 					}
+					size_t used = 0;
+					m_stream.peek(nullptr, &used);
+					if(used > 10000 * m_srate) {
+						done = true;
+					}
+
 				}
 				if(event.user.code == k_user_event_audio_playback) {
 					ssize_t frame_idx = (size_t)(uintptr_t)event.user.data1;
