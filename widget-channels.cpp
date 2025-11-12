@@ -2,6 +2,7 @@
 #include <string>
 #include <math.h>
 #include <assert.h>
+#include <vector>
 #include <algorithm>
 
 #include <SDL3/SDL.h>
@@ -22,6 +23,10 @@ private:
 
 	void do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SDL_Rect &r);
 	void do_draw_colors_tab(Stream &stream, SDL_Renderer *rend, SDL_Rect &r);
+	void draw_vu(Stream &stream, size_t channel);
+
+	std::vector<int8_t> m_vu_peak;
+	std::vector<int8_t> m_vu_decay;
 };
 
 
@@ -62,8 +67,58 @@ void WidgetChannels::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 }
 
 
+void WidgetChannels::draw_vu(Stream &stream, size_t ch)
+{
+	size_t frames_stride;
+	size_t frames_avail;
+	Sample *frames_data = stream.peek(&frames_stride, &frames_avail);
+
+	Sample peak = 0;
+	
+	ssize_t idx_from = std::max((ssize_t)(m_view.time.analysis * stream.sample_rate()), (ssize_t)0);
+	ssize_t idx_to   = std::min((ssize_t)(idx_from + m_view.window.size), (ssize_t)frames_avail);
+
+	for(ssize_t idx=idx_from; idx<idx_to; idx++) {
+		Sample v = frames_data[idx * frames_stride + ch];
+		peak = std::max(peak, v);
+	}
+
+	m_vu_peak[ch] = 20.0f * log10f((float)peak/k_sample_max + 1e-10f);
+	if(m_vu_decay[ch] > -127) m_vu_decay[ch] -= 2;
+	m_vu_decay[ch] = std::max(m_vu_decay[ch], m_vu_peak[ch]);
+
+	// don't use ImGui::ProgressBar!
+	ImGui::SameLine();
+	ImGui::PushID((int)ch);
+	auto io = ImGui::GetIO();
+	float width = 200.0f;
+	float height = ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2.0f - 4;
+	ImGui::InvisibleButton("vu", ImVec2(width, height));
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	ImVec2 pos = ImGui::GetItemRectMin();
+	// background
+	draw_list->AddRectFilled(pos, ImVec2(pos.x + width, pos.y + height), IM_COL32(64, 64, 64, 255));
+	// peak
+	float peak_x = (m_vu_peak[ch] + 60.0f) / 60.0f * width;
+	peak_x = std::clamp(peak_x, 0.0f, width);
+	draw_list->AddRectFilled(pos, ImVec2(pos.x + peak_x, pos.y + height), IM_COL32(0, 200, 0, 255));
+	// decay
+	float decay_x = (m_vu_decay[ch] + 60.0f) / 60.0f * width;
+	decay_x = std::clamp(decay_x, 0.0f, width);
+	draw_list->AddRectFilled(ImVec2(pos.x + decay_x - 2, pos.y), ImVec2(pos.x + decay_x + 2, pos.y + height), IM_COL32(255, 255, 0, 255));
+
+	
+
+	
+	ImGui::PopID();
+}
+
+
 void WidgetChannels::do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 {
+	m_vu_peak.resize(stream.channel_count(), -120);
+	m_vu_decay.resize(stream.channel_count(), -120);
+
 	auto &channels = stream.player.get_channels();
 	auto &player = stream.player;
 	float stretch = player.get_stretch();
@@ -130,6 +185,8 @@ void WidgetChannels::do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SD
 				ImVec4 imcol = {col.r / 255.0f, col.g / 255.0f, col.b / 255.0f, 1.0f};
 
 				ImGui::TextColored(imcol, "ch %zu", ch+1);
+
+				draw_vu(stream, ch);
 
 				ImGui::PushID(ch);
 
