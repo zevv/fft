@@ -100,7 +100,7 @@ void freq_to_note(double freq, char *note, size_t note_len)
 	int nr = midi_number % 12;
 	int oct = (midi_number / 12) - 1;
 	int cents = static_cast<int>(round(1200.0 * log2(freq / (440.0 * pow(2.0, (midi_number - 69) / 12.0)))));
-	snprintf(note, note_len, "%s%d%+d", name[nr], oct, cents);
+	snprintf(note, note_len, "%s%d %+d", name[nr], oct, cents);
 }
 
 namespace ImGui {

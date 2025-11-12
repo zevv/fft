@@ -91,9 +91,9 @@ void WidgetHistogram::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	Sample vmin = frames_data[0];
 	Sample vmax = frames_data[0];
 
-	int idx_cursor = m_view.time.cursor * stream.sample_rate();
-	int idx_from = std::max(idx_cursor - m_view.window.size * 0.5, 0.0);
-	int idx_to   = std::min(idx_cursor + m_view.window.size * 0.5, (double)frames_avail);
+	int idx_analysis = m_view.time.analysis * stream.sample_rate();
+	int idx_from = std::max(idx_analysis - m_view.window.size * 0.5, 0.0);
+	int idx_to   = std::min(idx_analysis + m_view.window.size * 0.5, (double)frames_avail);
 
 	for(int idx=idx_from; idx<idx_to; idx++) {
 		for(int ch : m_channel_map.enabled_channels()) {
