@@ -23,7 +23,7 @@ private:
 
 	void do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SDL_Rect &r);
 	void do_draw_colors_tab(Stream &stream, SDL_Renderer *rend, SDL_Rect &r);
-	void draw_vu(Stream &stream, size_t channel);
+	void draw_vu(Stream &stream, size_t channel, ImVec4 col);
 
 	std::vector<int8_t> m_vu_peak;
 	std::vector<int8_t> m_vu_decay;
@@ -67,7 +67,7 @@ void WidgetChannels::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 }
 
 
-void WidgetChannels::draw_vu(Stream &stream, size_t ch)
+void WidgetChannels::draw_vu(Stream &stream, size_t ch, ImVec4 col)
 {
 	size_t frames_stride;
 	size_t frames_avail;
@@ -83,14 +83,13 @@ void WidgetChannels::draw_vu(Stream &stream, size_t ch)
 	}
 
 	m_vu_peak[ch] = 20.0f * log10f((float)peak/k_sample_max + 1e-10f);
-	if(m_vu_decay[ch] > -127) m_vu_decay[ch] -= 2;
+	if(m_vu_decay[ch] > -127) m_vu_decay[ch] -= 1;
 	m_vu_decay[ch] = std::max(m_vu_decay[ch], m_vu_peak[ch]);
 
 	// don't use ImGui::ProgressBar!
-	ImGui::SameLine();
 	ImGui::PushID((int)ch);
 
-	float width = 150;
+	float width = 80;
 	float height = ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2.0f;
 	ImVec2 pos1, pos2;
 	ImGui::SetNextItemWidth(width);
@@ -104,14 +103,13 @@ void WidgetChannels::draw_vu(Stream &stream, size_t ch)
 	// peak
 	float peak_x = (m_vu_peak[ch] + 60.0f) / 60.0f * width;
 	peak_x = std::clamp(peak_x, 0.0f, width);
-	draw_list->AddRectFilled(pos, ImVec2(pos.x + peak_x - 8, pos.y + height - 8), IM_COL32(0, 200, 0, 255));
+	draw_list->AddRectFilled(pos, ImVec2(pos.x + peak_x - 8, pos.y + height - 8),  IM_COL32(100, 100, 100, 255));
+
 	// decay
 	float decay_x = (m_vu_decay[ch] + 60.0f) / 60.0f * width;
 	decay_x = std::clamp(decay_x, 0.0f, width);
-	draw_list->AddRectFilled(ImVec2(pos.x + decay_x - 8, pos.y), ImVec2(pos.x + decay_x - 4, pos.y + height - 8), IM_COL32(255, 255, 0, 255));
-
-
-
+	draw_list->AddRectFilled(ImVec2(pos.x + decay_x - 8, pos.y), ImVec2(pos.x + decay_x - 4, pos.y + height - 8),
+		IM_COL32((uint8_t)(col.x * 255.0f), (uint8_t)(col.y * 255.0f), (uint8_t)(col.z * 255.0f), 255));
 
 	ImGui::PopID();
 }
@@ -189,7 +187,8 @@ void WidgetChannels::do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SD
 
 				ImGui::TextColored(imcol, "ch %zu", ch+1);
 
-				draw_vu(stream, ch);
+				ImGui::SameLine();
+				draw_vu(stream, ch, imcol);
 
 				ImGui::PushID(ch);
 
