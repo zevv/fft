@@ -100,20 +100,11 @@ void Rb::write_done(size_t len)
 }
 
 
-void *Rb::read(size_t len)
-{
-	assert(len <= bytes_used() && "read xrun");
-	void *ptr = peek(nullptr);
-	m_tail += len;
-	return ptr;
-}
-
-
 void *Rb::peek(size_t *used)
 {
 	assert(m_head >= m_tail && "rb underflow");
 	if (used) {
-		*used = bytes_used();
+		*used = m_head - m_tail;
 	}
 	size_t read_idx = m_tail % m_size;
 	return m_map1 + read_idx;

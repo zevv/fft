@@ -16,7 +16,6 @@ public:
 	void *get_write_ptr(size_t *bytes_max = nullptr);
 	void write_done(size_t len);
 
-	void *read(size_t len);
 	void *peek(size_t *used = nullptr);
 
 
