@@ -14,6 +14,7 @@ void duration_to_str(Time duration, char *buf, size_t buf_len);
 
 double hirestime();
 void freq_to_note(double freq, char *note, size_t note_len);
+void bitline(const char *fmt, ...);
 
 namespace ImGui {
 	bool ToggleButton(const char* str_id, bool* v);

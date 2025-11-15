@@ -82,8 +82,29 @@ SDL_AudioSpec sdl_audiospec_from_str(char *args)
 double hirestime()
 {
 	struct timespec ts;
-	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts);
+	clock_gettime(CLOCK_TAI, &ts);
 	return ts.tv_sec + ts.tv_nsec * 1e-9;
+}
+
+
+void bitline(const char *fmt, ...)
+{
+	static FILE *f = nullptr;
+	if(f == nullptr) {
+		f = fopen("/tmp/bitline.log", "w");
+	}
+
+	va_list args;
+	va_start(args, fmt);
+
+	if(f) {
+		fprintf(f, "%f ", hirestime());
+		vfprintf(f, fmt, args);
+		fprintf(f, "\n");
+		fflush(f);
+	}
+	
+	va_end(args);
 }
 
 
