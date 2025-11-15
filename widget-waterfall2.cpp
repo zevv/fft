@@ -342,9 +342,6 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	// filter pos
 	float f_lp, f_hp;
 	stream.player.filter_get(f_lp, f_hp);
-	//vcursor(rend, r, m_view.freq_to_x(f_lp, r), true);
-	//vcursor(rend, r, m_view.freq_to_x(f_hp, r), true);
-
 
 	// selection
 	if(m_view.time.sel_from != m_view.time.sel_to) {
