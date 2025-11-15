@@ -61,8 +61,6 @@ private:
 	bool m_agc{true};
 	std::vector<SDL_Texture *> m_ch_tex;
 
-	bool m_fft_approximate{true};
-
 	std::vector<Worker *> m_workers;
 	Queue<Job> m_job_queue{32};
 	Queue<Result> m_result_queue{32};
@@ -138,7 +136,7 @@ void WidgetWaterfall2::allocate_channels(SDL_Renderer *rend, size_t channels, in
 
 	for(auto &w : m_workers) {
 		w->fft.configure(m_view.window.size, m_view.window.window_type, m_view.window.window_beta);
-		w->fft.set_approximate(m_fft_approximate);
+		w->fft.set_approximate(true);
 	}
 }
 
@@ -279,9 +277,6 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	size_t frames_avail = 0;
 	Sample *data = stream.peek(&stride, &frames_avail);
 	
-	//ImGui::SameLine();
-	//ImGui::ToggleButton("A##pproximate FFT", &m_fft_approximate);
-
 	ImGui::SameLine();
 	ImGui::ToggleButton("AGC", &m_agc);
 
