@@ -128,8 +128,8 @@ public:
 			time.from = mid - 0.001;
 			time.to   = mid + 0.001;
 		}
-		if(freq.from < 0.0) freq.from = 0.0;
-		if(freq.to   > 1.0) freq.to   = 1.0;
+		//if(freq.from < 0.0) freq.from = 0.0;
+		//if(freq.to   > 1.0) freq.to   = 1.0;
 		if(freq.from >= freq.to) {
 			Frequency mid = 0.5 * (freq.from + freq.to);
 			freq.from = mid - 0.001;

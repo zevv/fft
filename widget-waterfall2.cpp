@@ -74,7 +74,7 @@ private:
 WidgetWaterfall2::WidgetWaterfall2(Widget::Info &info)
 	: Widget(info)
 {
-	for(size_t i=0; i<2; i++) {
+	for(size_t i=0; i<8; i++) {
 		Worker *w = new Worker();
 		w->id = (int)i;
 		w->thread = std::thread(&WidgetWaterfall2::work, this, w->id);
@@ -85,9 +85,6 @@ WidgetWaterfall2::WidgetWaterfall2(Widget::Info &info)
 
 WidgetWaterfall2::~WidgetWaterfall2()
 {
-	for(auto &ch : m_channels) {
-		if(ch.tex) SDL_DestroyTexture(ch.tex);
-	}
 	for(size_t i=0; i<m_workers.size(); i++) {
 		Job job;
 		job.cmd = JobCmd::Stop;
@@ -97,6 +94,9 @@ WidgetWaterfall2::~WidgetWaterfall2()
 	for(auto w : m_workers) {
 		w->thread.join();
 		delete w;
+	}
+	for(auto &ch : m_channels) {
+		if(ch.tex) SDL_DestroyTexture(ch.tex);
 	}
 }
 
@@ -152,6 +152,8 @@ void WidgetWaterfall2::job_run_gen(Job &job)
 	ssize_t idx = job.idx;
 	uint32_t v = job.v;
 	int fft_w = job.channel->fft.out_size();
+		
+	memset(job.pixels, 0, job.pitch * job.h * 4);
 
 	for(int y=0; y<job.h; y++) {
 
@@ -173,7 +175,7 @@ void WidgetWaterfall2::job_run_gen(Job &job)
 		}
 	}
 
-	//m_result_queue.push(job);
+	m_result_queue.push(job);
 }
 
 
@@ -183,17 +185,15 @@ void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rec
 	
 	while(m_jobs_in_flight > 0) {
 		Job job;
-		m_result_queue.pop(job, false);
-		m_jobs_in_flight--;
+		if(m_result_queue.pop(job, true)) {
+			m_jobs_in_flight--;
+		}
 	}
 
 	// render previous results
 	
 	SDL_FRect dst;
-	dst.x = r.x;
-	dst.y = r.y;
-	dst.w = r.w;
-	dst.h = r.h;
+	SDL_RectToFRect(&r, &dst);
 	for(auto &ch : m_channels) {
 		if(ch.tex) {
 			SDL_UnlockTexture(ch.tex);
@@ -212,14 +212,11 @@ void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rec
 		
 	for(int ch : m_channel_map.enabled_channels()) {
 	
-		SDL_Texture *tex = m_channels[ch].tex;
-			
 		SDL_Color col = m_channel_map.ch_color(ch);
 
 		uint32_t *pixels;
 		int pitch;
-		SDL_LockTexture(tex, nullptr, (void **)&pixels, &pitch);
-		memset(pixels, 0, pitch * r.h);
+		SDL_LockTexture(m_channels[ch].tex, nullptr, (void **)&pixels, &pitch);
 
 		Time t = m_view.time.from;
 		Time dt = (m_view.time.to - m_view.time.from) / r.h;
@@ -240,7 +237,7 @@ void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rec
 		job.idx_max = frames_avail * stride;
 		job.v = *(uint32_t *)&col & 0x00FFFFFF;
 
-		if(1) {
+		if(0) {
 			job_run_gen(job);
 		} else {
 			m_job_queue.push(job);
@@ -271,13 +268,11 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
 			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				// RMB drag/zoom freq
-				m_view.pan_freq(-ImGui::GetIO().MouseDelta.x / r.w);
-				m_view.zoom_freq(ImGui::GetIO().MouseDelta.y);
+				m_view.zoom_t(ImGui::GetIO().MouseDelta.y);
+				m_view.zoom_freq(ImGui::GetIO().MouseDelta.x);
 			} else {
-				// RMB drag/zoom time
+				m_view.pan_freq(-ImGui::GetIO().MouseDelta.x / r.w);
 				m_view.pan_t(ImGui::GetIO().MouseDelta.y / r.w);
-				m_view.zoom_t(ImGui::GetIO().MouseDelta.x);
 			}
 		}
 
