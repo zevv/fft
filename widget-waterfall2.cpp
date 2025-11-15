@@ -61,8 +61,6 @@ private:
 	bool m_agc{true};
 	std::vector<SDL_Texture *> m_ch_tex;
 
-	bool m_fft_approximate{true};
-
 	std::vector<Worker *> m_workers;
 	Queue<Job> m_job_queue{32};
 	Queue<Result> m_result_queue{32};
@@ -138,7 +136,7 @@ void WidgetWaterfall2::allocate_channels(SDL_Renderer *rend, size_t channels, in
 
 	for(auto &w : m_workers) {
 		w->fft.configure(m_view.window.size, m_view.window.window_type, m_view.window.window_beta);
-		w->fft.set_approximate(m_fft_approximate);
+		w->fft.set_approximate(true);
 	}
 }
 
@@ -153,6 +151,13 @@ void WidgetWaterfall2::job_run_gen(Worker &worker, Job &job)
 	res.aperture.min = INT8_MAX;
 	res.aperture.max = INT8_MIN;
 
+	double p_lo = 0.01;
+	double p_hi = 0.99;
+	double db_lo = -120;
+	double db_hi = -120;
+	double gain = 1.0e-3;
+	double n = 0;
+
 	for(int y=job.y.min; y<job.y.max; y++) {
 
 		idx += job.didx;
@@ -164,20 +169,29 @@ void WidgetWaterfall2::job_run_gen(Worker &worker, Job &job)
 
 		for(int x=0; x<job.w; x++) {
 			Frequency f = job.f.min + (job.f.max - job.f.min) * x / job.w;
-			int db = tabread2(fft_out, f, (int8_t)-127);
 
-			res.aperture.min = std::min(res.aperture.min, (int8_t)db);
-			res.aperture.max = std::max(res.aperture.max, (int8_t)db);
-			res.aperture_valid = true;
+			if(f >= 0 && f <= 1.0) {
+				int db = tabread2(fft_out, f, (int8_t)-127);
 
-			uint32_t intensity = 0;
-			if(job.aperture.max > job.aperture.min) {
-				intensity = std::clamp(255 * (db - job.aperture.min) / (job.aperture.max - job.aperture.min), 0, 255);
+				db_lo += gain * ((db < db_lo) ? (p_lo - 1.0) : p_lo);
+				db_hi += gain * ((db < db_hi) ? (p_hi - 1.0) : p_hi);
+
+				res.aperture.min = std::min(res.aperture.min, (int8_t)db);
+				res.aperture.max = std::max(res.aperture.max, (int8_t)db);
+				res.aperture_valid = true;
+
+				if(job.aperture.max > job.aperture.min) {
+					int intensity = std::clamp(255 * (db - job.aperture.min) / (job.aperture.max - job.aperture.min), 0, 255);
+					*p = v | (intensity << 24);
+				}
 			}
+			p++;
 
-			*p++ = v | (intensity << 24);
 		}
 	}
+
+	res.aperture.min = db_lo;
+	res.aperture.max = db_hi;
 
 	m_result_queue.push(res);
 }
@@ -277,9 +291,6 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	size_t frames_avail = 0;
 	Sample *data = stream.peek(&stride, &frames_avail);
 	
-	//ImGui::SameLine();
-	//ImGui::ToggleButton("A##pproximate FFT", &m_fft_approximate);
-
 	ImGui::SameLine();
 	ImGui::ToggleButton("AGC", &m_agc);
 
@@ -311,6 +322,17 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 			m_view.time.from = 0;
 			m_view.time.to   = frames_avail / stream.sample_rate();
 		}
+			
+		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
+			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+				m_view.zoom_t(ImGui::GetIO().MouseDelta.y);
+				m_view.zoom_freq(ImGui::GetIO().MouseDelta.x);
+			} else {
+				m_view.pan_freq(-ImGui::GetIO().MouseDelta.x / r.w);
+				m_view.pan_t(ImGui::GetIO().MouseDelta.y / r.h);
+			}
+		}
+
 
 		if(ImGui::IsMouseInRect(r)) {
 			
@@ -320,47 +342,18 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 				stream.player.seek(m_view.y_to_t(pos.y, r));
 			}
 		
-			else if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-				if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-					m_view.zoom_t(ImGui::GetIO().MouseDelta.y);
-					m_view.zoom_freq(ImGui::GetIO().MouseDelta.x);
-				} else {
-					m_view.pan_freq(-ImGui::GetIO().MouseDelta.x / r.w);
-					m_view.pan_t(ImGui::GetIO().MouseDelta.y / r.h);
-				}
-			}
-
-			else {
-
-				if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-					m_view.freq.cursor += m_view.dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
-					m_view.time.cursor += m_view.dy_to_dt(ImGui::GetIO().MouseDelta.y, r) * 0.1;
-				} else {
-					m_view.freq.cursor = m_view.x_to_freq(pos.x, r);
-					m_view.time.cursor = m_view.y_to_t(pos.y, r);
-				}
+			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+				m_view.freq.cursor += m_view.dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
+				m_view.time.cursor += m_view.dy_to_dt(ImGui::GetIO().MouseDelta.y, r) * 0.1;
+			} else {
+				m_view.freq.cursor = m_view.x_to_freq(pos.x, r);
+				m_view.time.cursor = m_view.y_to_t(pos.y, r);
 			}
 		}
 	}
 
 	gen_waterfall(stream, rend, r);
 
-	// filter pos
-	float f_lp, f_hp;
-	stream.player.filter_get(f_lp, f_hp);
-	//vcursor(rend, r, m_view.freq_to_x(f_lp, r), true);
-	//vcursor(rend, r, m_view.freq_to_x(f_hp, r), true);
-
-
-	// selection
-	if(m_view.time.sel_from != m_view.time.sel_to) {
-		float sx_from = m_view.t_to_y(m_view.time.sel_from, r);
-		float sx_to   = m_view.t_to_y(m_view.time.sel_to,   r);
-		SDL_SetRenderDrawColor(rend, 128, 128, 255, 64);
-		SDL_FRect sr = { (float)r.x, sx_from, (float)r.w, sx_to - sx_from };
-		SDL_RenderFillRect(rend, &sr);
-	}
-	
 	// cursors
 	cursor(rend, r, m_view.freq_to_x(m_view.freq.cursor, r),
 			Widget::CursorFlags::Vertical |
