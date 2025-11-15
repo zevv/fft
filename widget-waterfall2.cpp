@@ -48,7 +48,8 @@ private:
 	};
 
 	struct Result {
-		Aperture aperture;
+		Aperture aperture{};
+		bool aperture_valid{};
 	};
 
 	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
@@ -168,6 +169,7 @@ void WidgetWaterfall2::job_run_gen(Worker &worker, Job &job)
 
 			res.aperture.min = std::min(res.aperture.min, (int8_t)db);
 			res.aperture.max = std::max(res.aperture.max, (int8_t)db);
+			res.aperture_valid = true;
 
 			int intensity = std::clamp(255 * (db - job.aperture.min) / (job.aperture.max - job.aperture.min), 0, 255);
 			*p++ = v | (uint32_t)(intensity << 24);
@@ -187,8 +189,10 @@ void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rec
 	while(m_jobs_in_flight > 0) {
 		Result res;
 		m_result_queue.pop(res, true);
-		aperture_accum.min = std::max(aperture_accum.min, res.aperture.min);
-		aperture_accum.max = std::min(aperture_accum.max, res.aperture.max);
+		if(res.aperture_valid) {
+			aperture_accum.min = std::max(aperture_accum.min, res.aperture.min);
+			aperture_accum.max = std::min(aperture_accum.max, res.aperture.max);
+		}
 		m_jobs_in_flight--;
 	}
 
