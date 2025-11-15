@@ -6,6 +6,11 @@ typedef double Time;
 typedef double Frequency;
 typedef double Samplerate;
 
+template<typename T>
+struct Range {
+	T min, max;
+};
+
 static const int k_user_event_audio_capture = 1;
 static const int k_user_event_audio_playback = 2;
 

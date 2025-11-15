@@ -18,6 +18,8 @@ public:
 
 private:
 
+	typedef Range<int8_t> Aperture;
+
 	struct Worker {
 		int id;
 		std::thread thread;
@@ -42,6 +44,11 @@ private:
 		ssize_t idx;
 		ssize_t didx;
 		ssize_t idx_max;
+		Aperture aperture;
+	};
+
+	struct Result {
+		Aperture aperture;
 	};
 
 	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
@@ -50,14 +57,16 @@ private:
 	void allocate_channels(SDL_Renderer *rend, size_t channels, int w, int h);
 	void job_run_gen(Worker &worker, Job &job);
 
+	bool m_agc{true};
 	std::vector<SDL_Texture *> m_ch_tex;
 
 	bool m_fft_approximate{true};
 
 	std::vector<Worker *> m_workers;
 	Queue<Job> m_job_queue{32};
-	Queue<Job> m_result_queue{32};
+	Queue<Result> m_result_queue{32};
 	size_t m_jobs_in_flight{0};
+	Aperture m_aperture{-120, -0};
 };
 
 
@@ -131,13 +140,17 @@ void WidgetWaterfall2::allocate_channels(SDL_Renderer *rend, size_t channels, in
 		w->fft.set_approximate(m_fft_approximate);
 	}
 }
-		
+
 
 void WidgetWaterfall2::job_run_gen(Worker &worker, Job &job)
 {
 	ssize_t idx = job.idx;
 	uint32_t v = job.v;
 	int fft_w = worker.fft.out_size();
+
+	Result res;
+	res.aperture.min = INT8_MAX;
+	res.aperture.max = INT8_MIN;
 		
 
 	for(int y=job.y_from; y<job.y_to; y++) {
@@ -151,15 +164,17 @@ void WidgetWaterfall2::job_run_gen(Worker &worker, Job &job)
 
 		for(int x=0; x<job.w; x++) {
 			Frequency f = job.f_from + (job.f_to - job.f_from) * x / job.w;
-			int8_t db_min = -120;
-			int8_t db_max = -50;
-			int db = tabread2(fft_out, f, db_min);
-			int intensity = std::clamp(255 * (db - db_min) / (db_max - db_min), 0, 255);
+			int db = tabread2(fft_out, f, (int8_t)-120);
+
+			res.aperture.min = std::min(res.aperture.min, (int8_t)db);
+			res.aperture.max = std::max(res.aperture.max, (int8_t)db);
+
+			int intensity = std::clamp(255 * (db - job.aperture.min) / (job.aperture.max - job.aperture.min), 0, 255);
 			*p++ = v | (uint32_t)(intensity << 24);
 		}
 	}
 
-	m_result_queue.push(job);
+	m_result_queue.push(res);
 }
 
 
@@ -167,10 +182,18 @@ void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rec
 {
 	// wait for workers
 
+	Aperture aperture_accum = { -120, 0 };
+
 	while(m_jobs_in_flight > 0) {
-		Job job;
-		m_result_queue.pop(job, true);
+		Result res;
+		m_result_queue.pop(res, true);
+		aperture_accum.min = std::max(aperture_accum.min, res.aperture.min);
+		aperture_accum.max = std::min(aperture_accum.max, res.aperture.max);
 		m_jobs_in_flight--;
+	}
+
+	if(m_agc) {
+		m_aperture = aperture_accum;
 	}
 
 	// render previous results
@@ -227,6 +250,7 @@ void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rec
 				job.didx = didx;
 				job.idx_max = frames_avail * stride;
 				job.v = *(uint32_t *)&col & 0x00FFFFFF;
+				job.aperture = m_aperture;
 
 				m_job_queue.push(job);
 				m_jobs_in_flight++;
@@ -246,6 +270,20 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	
 	ImGui::SameLine();
 	ImGui::ToggleButton("A##pproximate FFT", &m_fft_approximate);
+
+	ImGui::SameLine();
+	ImGui::ToggleButton("AGC", &m_agc);
+
+	if(!m_agc) {
+		ImGui::SameLine();
+		ImGui::SetNextItemWidth(100);
+		ImGui::SliderFloat("##db center", &m_view.aperture.center, 0.0f, -100.0f, "%.1f");
+		ImGui::SameLine();
+		ImGui::SetNextItemWidth(100);
+		ImGui::SliderFloat("##db range", &m_view.aperture.range, 100.0f, 0.0f, "%.1f");
+		m_aperture.min = std::clamp((int)(m_view.aperture.center - m_view.aperture.range), -120, 0);
+		m_aperture.max = std::clamp((int)(m_view.aperture.center + m_view.aperture.range), -120, 0);
+	}
 
 	if(ImGui::IsWindowFocused()) {
 
