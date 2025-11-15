@@ -108,7 +108,7 @@ void WidgetChannels::do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SD
 	size_t frames_stride;
 	size_t frames_avail;
 	Sample *frames_data = stream.peek(&frames_stride, &frames_avail);
-	ssize_t idx_to   = frames_avail;
+	ssize_t idx_to   = std::min((ssize_t)(m_view.time.analysis * stream.sample_rate()), (ssize_t)frames_avail);
 	ssize_t idx_from = std::max({m_vu_idx_prev, idx_to - 10000, (ssize_t)0 });
 	m_vu_idx_prev = idx_to;
 
