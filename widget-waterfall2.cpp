@@ -164,18 +164,20 @@ void WidgetWaterfall2::job_run_gen(Worker &worker, Job &job)
 
 		for(int x=0; x<job.w; x++) {
 			Frequency f = job.f.min + (job.f.max - job.f.min) * x / job.w;
-			int db = tabread2(fft_out, f, (int8_t)-127);
+			if(f >=0 && f <= 1.0) {
 
-			res.aperture.min = std::min(res.aperture.min, (int8_t)db);
-			res.aperture.max = std::max(res.aperture.max, (int8_t)db);
-			res.aperture_valid = true;
+				int db = tabread2(fft_out, f, (int8_t)-127);
 
-			uint32_t intensity = 0;
-			if(job.aperture.max > job.aperture.min) {
-				intensity = std::clamp(255 * (db - job.aperture.min) / (job.aperture.max - job.aperture.min), 0, 255);
+				res.aperture.min = std::min(res.aperture.min, (int8_t)db);
+				res.aperture.max = std::max(res.aperture.max, (int8_t)db);
+				res.aperture_valid = true;
+
+				if(job.aperture.max > job.aperture.min) {
+					uint32_t alpha = std::clamp(255 * (db - job.aperture.min) / (job.aperture.max - job.aperture.min), 0, 255);
+					*p = v | (alpha << 24);
+				}
 			}
-
-			*p++ = v | (intensity << 24);
+			p++;
 		}
 	}
 
@@ -311,6 +313,16 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 			m_view.time.from = 0;
 			m_view.time.to   = frames_avail / stream.sample_rate();
 		}
+			
+		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
+			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+				m_view.zoom_t(ImGui::GetIO().MouseDelta.y);
+				m_view.zoom_freq(ImGui::GetIO().MouseDelta.x);
+			} else {
+				m_view.pan_freq(-ImGui::GetIO().MouseDelta.x / r.w);
+				m_view.pan_t(ImGui::GetIO().MouseDelta.y / r.h);
+			}
+		}
 
 		if(ImGui::IsMouseInRect(r)) {
 			
@@ -320,25 +332,12 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 				stream.player.seek(m_view.y_to_t(pos.y, r));
 			}
 		
-			else if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-				if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-					m_view.zoom_t(ImGui::GetIO().MouseDelta.y);
-					m_view.zoom_freq(ImGui::GetIO().MouseDelta.x);
-				} else {
-					m_view.pan_freq(-ImGui::GetIO().MouseDelta.x / r.w);
-					m_view.pan_t(ImGui::GetIO().MouseDelta.y / r.h);
-				}
-			}
-
-			else {
-
-				if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-					m_view.freq.cursor += m_view.dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
-					m_view.time.cursor += m_view.dy_to_dt(ImGui::GetIO().MouseDelta.y, r) * 0.1;
-				} else {
-					m_view.freq.cursor = m_view.x_to_freq(pos.x, r);
-					m_view.time.cursor = m_view.y_to_t(pos.y, r);
-				}
+			if(ImGui::IsKeyDown(ImGuiKey_LeftShift) && !ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
+				m_view.freq.cursor += m_view.dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
+				m_view.time.cursor += m_view.dy_to_dt(ImGui::GetIO().MouseDelta.y, r) * 0.1;
+			} else {
+				m_view.freq.cursor = m_view.x_to_freq(pos.x, r);
+				m_view.time.cursor = m_view.y_to_t(pos.y, r);
 			}
 		}
 	}
