@@ -23,29 +23,44 @@ public:
 
 private:
 
-	enum class JobCmd {
-		Gen, Stop
-	};
-
-	struct Job {
-		JobCmd cmd;
-		int id;
-	};
-
 	struct Worker {
 		int id;
 		std::thread thread;
 		Fft fft;
 	};
 
+	struct Channel {
+		SDL_Texture *tex{nullptr};
+		Fft fft;
+	};
+
+	enum class JobCmd {
+		Gen, Stop
+	};
+
+	struct Job {
+		JobCmd cmd;
+		Sample *data;
+		size_t data_stride;
+		int id;
+		Channel *channel;
+		int w, h;
+		uint32_t *pixels;
+		size_t pitch;
+		uint32_t v;
+		ssize_t idx;
+		ssize_t didx;
+		ssize_t idx_max;
+	};
+
 	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
 	void gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect &r);
 	void work(int worker_id);
-	void allocate_textures(SDL_Renderer *rend, size_t channels, int w, int h);
+	void allocate_channels(SDL_Renderer *rend, size_t channels, int w, int h);
+	void job_run_gen(Job &job);
 
-	std::vector<SDL_Texture *> m_ch_tex;
+	std::vector<Channel> m_channels;
 
-	Fft m_fft{};
 	bool m_fft_approximate{true};
 
 	std::vector<Worker *> m_workers;
@@ -56,7 +71,6 @@ private:
 
 WidgetWaterfall2::WidgetWaterfall2(Widget::Info &info)
 	: Widget(info)
-	, m_fft(true)
 {
 	for(size_t i=0; i<2; i++) {
 		Worker *w = new Worker();
@@ -69,8 +83,8 @@ WidgetWaterfall2::WidgetWaterfall2(Widget::Info &info)
 
 WidgetWaterfall2::~WidgetWaterfall2()
 {
-	for(auto tex : m_ch_tex) {
-		if(tex) SDL_DestroyTexture(tex);
+	for(auto &ch : m_channels) {
+		if(ch.tex) SDL_DestroyTexture(ch.tex);
 	}
 	for(size_t i=0; i<m_workers.size(); i++) {
 		Job job;
@@ -104,24 +118,54 @@ void WidgetWaterfall2::work(int tid)
 }
 
 
-void WidgetWaterfall2::allocate_textures(SDL_Renderer *rend, size_t channels, int w, int h)
+void WidgetWaterfall2::allocate_channels(SDL_Renderer *rend, size_t channels, int w, int h)
 {
-	m_ch_tex.resize(channels);
+	m_channels.resize(channels);
 
-	for(size_t ch=0; ch<channels; ch++) {
-		if(!m_ch_tex[ch] || m_ch_tex[ch]->w != w || m_ch_tex[ch]->h != h) {
-			if(m_ch_tex[ch]) {
-				SDL_DestroyTexture(m_ch_tex[ch]);
+	for(auto &ch : m_channels) {
+		if(!ch.tex || ch.tex->w != w || ch.tex->h != h) {
+			if(ch.tex) {
+				SDL_DestroyTexture(ch.tex);
 			}
-			m_ch_tex[ch] = SDL_CreateTexture(
+			ch.tex = SDL_CreateTexture(
 					rend, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, w, h);
-			SDL_SetTextureBlendMode(m_ch_tex[ch], SDL_BLENDMODE_ADD);
-			SDL_SetTextureScaleMode(m_ch_tex[ch], SDL_SCALEMODE_LINEAR);
+			SDL_SetTextureBlendMode(ch.tex, SDL_BLENDMODE_ADD);
+			SDL_SetTextureScaleMode(ch.tex, SDL_SCALEMODE_LINEAR);
 		}
+
+		ch.fft.configure(m_view.window.size, m_view.window.window_type, m_view.window.window_beta);
+		ch.fft.set_approximate(m_fft_approximate);
 	}
 }
 		
 
+void WidgetWaterfall2::job_run_gen(Job &job)
+{
+	ssize_t idx = job.id;
+	uint32_t v = job.v;
+	int fft_w = job.channel->fft.out_size();
+
+	for(int y=0; y<job.h; y++) {
+
+		idx += job.didx;
+		if(idx < 0) continue;
+		if(idx >= job.idx_max) break;
+
+		auto fft_out = job.channel->fft.run(&job.data[idx], job.data_stride);
+		uint32_t *p = job.pixels + y * job.pitch;
+
+		for(int x=0; x<job.w; x++) {
+			Frequency f = m_view.freq.from + (m_view.freq.to - m_view.freq.from) * x / job.w;
+			int bin = fft_w * f;
+			int db = (bin > 0 && bin < fft_w) ? fft_out[bin] : -100;
+			int db_min = -100;
+			int db_max = -50;
+			int intensity = std::clamp(255 * (db - db_min) / (db_max - db_min), 0, 255);
+			*p++ = v | (uint32_t)(intensity << 24);
+		}
+
+	}
+}
 
 void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 {
@@ -129,9 +173,7 @@ void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rec
 	size_t frames_avail = 0;
 	Sample *data = stream.peek(&stride, &frames_avail);
 	
-	m_fft.configure(m_view.window.size, m_view.window.window_type, m_view.window.window_beta);
-
-	int fft_w = m_fft.out_size();
+	int fft_w = m_view.window.size / 2 + 1;
 
 	SDL_FRect src;
 	src.x = m_view.freq.from * fft_w;
@@ -145,11 +187,11 @@ void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rec
 	dst.w = r.w;
 	dst.h = r.h;
 
-	allocate_textures(rend, stream.channel_count(), r.w, r.h);
+	allocate_channels(rend, stream.channel_count(), r.w, r.h);
 		
 	for(int ch : m_channel_map.enabled_channels()) {
 	
-		SDL_Texture *tex = m_ch_tex[ch];
+		SDL_Texture *tex = m_channels[ch].tex;
 			
 		SDL_Color col = m_channel_map.ch_color(ch);
 
@@ -158,30 +200,29 @@ void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rec
 		SDL_LockTexture(tex, nullptr, (void **)&pixels, &pitch);
 		memset(pixels, 0, pitch * r.h);
 
-		for(int y=0; y<r.h; y++) {
-			Time t = m_view.y_to_t(r.y + y, r);
-			int idx = (int)(stream.sample_rate() * t - m_view.window.size / 2) * stride + ch;
-			if(idx < 0) continue;
-			if(idx >= (int)(frames_avail * stride)) break;
+		Time t = m_view.time.from;
+		Time dt = (m_view.time.to - m_view.time.from) / r.h;
+		ssize_t idx = ceil(stream.sample_rate() * t - m_view.window.size / 2) * stride + ch;
+		ssize_t didx = ceil(stream.sample_rate() * dt) * stride;
 
-			auto fft_out = m_fft.run(&data[idx], stride);
-			uint32_t v = *(uint32_t *)&col & 0x00FFFFFF;
-			uint32_t *p = pixels + y * (pitch / 4);
+		Job job;
+		job.cmd = JobCmd::Gen;
+		job.data = data + ch;
+		job.data_stride = stride;
+		job.channel = &m_channels[ch];
+		job.w = r.w;
+		job.h = r.h;
+		job.pixels = pixels;
+		job.pitch = pitch / 4;
+		job.idx = idx;
+		job.didx = didx;
+		job.idx_max = frames_avail * stride;
+		job.v = *(uint32_t *)&col & 0x00FFFFFF;
 
-			for(int x=0; x<r.w; x++) {
-				Frequency f = m_view.freq.from + (m_view.freq.to - m_view.freq.from) * x / r.w;
-				int bin = fft_w * f;
-				int db = (bin > 0 && bin < fft_w) ? fft_out[bin] : -100;
-				int db_min = -100;
-				int db_max = -50;
-				int8_t intensity = 0.0;
-				if(db > db_min && db_max > db_min) {
-					intensity = std::clamp(255 * (db - db_min) / (db_max - db_min), 0, 255);
-				}
-				*p++ = v | (uint32_t)(intensity << 24);
-			}
 
-		}
+		job_run_gen(job);
+
+
 		SDL_UnlockTexture(tex);
 		SDL_RenderTexture(rend, tex, &src, &dst);
 	}
@@ -198,7 +239,6 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	
 	ImGui::SameLine();
 	ImGui::ToggleButton("A##pproximate FFT", &m_fft_approximate);
-	m_fft.set_approximate(m_fft_approximate);
 
 	if(ImGui::IsWindowFocused()) {
 

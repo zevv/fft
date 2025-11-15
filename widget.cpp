@@ -154,9 +154,9 @@ void Widget::draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	}
 
 	// draw widget
-	float t1 = hirestime();
+	double t1 = hirestime();
 	do_draw(stream, rend, r);
-	float t2 = hirestime();
+	double t2 = hirestime();
 
 	// draw render time
 	if(1) {
