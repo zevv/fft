@@ -135,7 +135,7 @@ public:
 			freq.from = mid - 0.001;
 			freq.to   = mid + 0.001;
 		}
-		window.size = std::clamp(window.size, 16, 16384);
+		window.size = std::clamp(window.size, 16, 32768);
 	}
 
 

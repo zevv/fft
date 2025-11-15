@@ -1,6 +1,8 @@
 
 #include <time.h>
 #include <math.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <stdio.h>
 
 
@@ -89,20 +91,21 @@ double hirestime()
 
 void bitline(const char *fmt, ...)
 {
-	static FILE *f = nullptr;
-	if(f == nullptr) {
-		f = fopen("/tmp/bitline.log", "w");
+	static int fd = -1;
+	if(fd == -1) {
+		fd = open("/tmp/bitline.log", O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	}
 
 	va_list args;
 	va_start(args, fmt);
+	
+	char buf[256];
+	int l = 0;
+	l += snprintf(buf+l, sizeof(buf)-l, "%f ", hirestime());
+	l += vsnprintf(buf+l, sizeof(buf)-l, fmt, args);
+	l += snprintf(buf+l, sizeof(buf)-l, "\n");
 
-	if(f) {
-		fprintf(f, "%f ", hirestime());
-		vfprintf(f, fmt, args);
-		fprintf(f, "\n");
-		fflush(f);
-	}
+	write(fd, buf, l);
 	
 	va_end(args);
 }

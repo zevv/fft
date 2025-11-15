@@ -1,8 +1,3 @@
-
-#include <string>
-#include <math.h>
-#include <assert.h>
-#include <algorithm>
 #include <thread>
 
 #include <SDL3/SDL.h>
@@ -29,11 +24,6 @@ private:
 		Fft fft;
 	};
 
-	struct Channel {
-		SDL_Texture *tex{nullptr};
-		Fft fft;
-	};
-
 	enum class JobCmd {
 		Gen, Stop
 	};
@@ -43,8 +33,9 @@ private:
 		Sample *data;
 		size_t data_stride;
 		int id;
-		Channel *channel;
-		int w, h;
+		int w;
+		int y_from, y_to;
+		Frequency f_from, f_to;
 		uint32_t *pixels;
 		size_t pitch;
 		uint32_t v;
@@ -55,11 +46,11 @@ private:
 
 	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
 	void gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect &r);
-	void work(int worker_id);
+	void work(Worker &w);
 	void allocate_channels(SDL_Renderer *rend, size_t channels, int w, int h);
-	void job_run_gen(Job &job);
+	void job_run_gen(Worker &worker, Job &job);
 
-	std::vector<Channel> m_channels;
+	std::vector<SDL_Texture *> m_ch_tex;
 
 	bool m_fft_approximate{true};
 
@@ -74,10 +65,13 @@ private:
 WidgetWaterfall2::WidgetWaterfall2(Widget::Info &info)
 	: Widget(info)
 {
-	for(size_t i=0; i<8; i++) {
+	size_t nthreads = std::thread::hardware_concurrency();
+	for(size_t i=0; i<nthreads; i++) {
 		Worker *w = new Worker();
 		w->id = (int)i;
-		w->thread = std::thread(&WidgetWaterfall2::work, this, w->id);
+		w->thread = std::thread([this, w]() {
+			this->work(*w);
+		});
 		m_workers.push_back(w);
 	}
 }
@@ -95,81 +89,71 @@ WidgetWaterfall2::~WidgetWaterfall2()
 		w->thread.join();
 		delete w;
 	}
-	for(auto &ch : m_channels) {
-		if(ch.tex) SDL_DestroyTexture(ch.tex);
+	for(auto &tex : m_ch_tex) {
+		if(tex) SDL_DestroyTexture(tex);
 	}
 }
 
 
-void WidgetWaterfall2::work(int tid)
+void WidgetWaterfall2::work(Worker &w)
 {
 	while(true) {
 		Job job;
-		bitline("+ t%d.wait", hirestime(), tid);
 		m_job_queue.pop(job, true);
-		bitline("- t%d.wait", hirestime(), tid);
-		
-		bitline("+ t%d.work.%d", hirestime(), tid, job.cmd);
 
 		if(job.cmd == JobCmd::Stop) {
 			break;
 		}
 
 		if(job.cmd == JobCmd::Gen) {
-			bitline("+ t%d.job.gen.%d", hirestime(), tid, job.id);
-			job_run_gen(job);
-			bitline("- t%d.job.gen.%d", hirestime(), tid, job.id);
+			bitline("+ t%d.job.gen.%d", hirestime(), w.id, job.id);
+			job_run_gen(w, job);
+			bitline("- t%d.job.gen.%d", hirestime(), w.id, job.id);
 		}
-
-		bitline("- t%d.work.%d", hirestime(), tid, job.cmd);
 	}
 }
 
 
 void WidgetWaterfall2::allocate_channels(SDL_Renderer *rend, size_t channels, int w, int h)
 {
-	m_channels.resize(channels);
+	m_ch_tex.resize(channels);
 
-	for(auto &ch : m_channels) {
-		if(!ch.tex || ch.tex->w != w || ch.tex->h != h) {
-			if(ch.tex) {
-				SDL_DestroyTexture(ch.tex);
-			}
-			ch.tex = SDL_CreateTexture(
-					rend, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, w, h);
-			SDL_SetTextureBlendMode(ch.tex, SDL_BLENDMODE_ADD);
-			SDL_SetTextureScaleMode(ch.tex, SDL_SCALEMODE_LINEAR);
+	for(auto &tex : m_ch_tex) {
+		if(!tex || tex->w != w || tex->h != h) {
+			if(tex) SDL_DestroyTexture(tex);
+			tex = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, w, h);
+			SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_ADD);
 		}
+	}
 
-		ch.fft.configure(m_view.window.size, m_view.window.window_type, m_view.window.window_beta);
-		ch.fft.set_approximate(m_fft_approximate);
+	for(auto &w : m_workers) {
+		w->fft.configure(m_view.window.size, m_view.window.window_type, m_view.window.window_beta);
+		w->fft.set_approximate(m_fft_approximate);
 	}
 }
 		
 
-void WidgetWaterfall2::job_run_gen(Job &job)
+void WidgetWaterfall2::job_run_gen(Worker &worker, Job &job)
 {
 	ssize_t idx = job.idx;
 	uint32_t v = job.v;
-	int fft_w = job.channel->fft.out_size();
+	int fft_w = worker.fft.out_size();
 		
-	memset(job.pixels, 0, job.pitch * job.h * 4);
 
-	for(int y=0; y<job.h; y++) {
+	for(int y=job.y_from; y<job.y_to; y++) {
 
 		idx += job.didx;
 		if(idx < 0) continue;
 		if(idx >= job.idx_max) break;
 
-		auto fft_out = job.channel->fft.run(&job.data[idx], job.data_stride);
+		auto fft_out = worker.fft.run(&job.data[idx], job.data_stride);
 		uint32_t *p = job.pixels + y * job.pitch;
 
 		for(int x=0; x<job.w; x++) {
-			Frequency f = m_view.freq.from + (m_view.freq.to - m_view.freq.from) * x / job.w;
-			int bin = fft_w * f;
-			int db = (bin > 0 && bin < fft_w) ? fft_out[bin] : -100;
-			int db_min = -100;
-			int db_max = -50;
+			Frequency f = job.f_from + (job.f_to - job.f_from) * x / job.w;
+			int8_t db_min = -120;
+			int8_t db_max = -50;
+			int db = tabread2(fft_out, f, db_min);
 			int intensity = std::clamp(255 * (db - db_min) / (db_max - db_min), 0, 255);
 			*p++ = v | (uint32_t)(intensity << 24);
 		}
@@ -182,22 +166,21 @@ void WidgetWaterfall2::job_run_gen(Job &job)
 void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 {
 	// wait for workers
-	
+
 	while(m_jobs_in_flight > 0) {
 		Job job;
-		if(m_result_queue.pop(job, true)) {
-			m_jobs_in_flight--;
-		}
+		m_result_queue.pop(job, true);
+		m_jobs_in_flight--;
 	}
 
 	// render previous results
 	
 	SDL_FRect dst;
 	SDL_RectToFRect(&r, &dst);
-	for(auto &ch : m_channels) {
-		if(ch.tex) {
-			SDL_UnlockTexture(ch.tex);
-			SDL_RenderTexture(rend, ch.tex, nullptr, &dst);
+	for(auto &tex : m_ch_tex) {
+		if(tex) {
+			SDL_UnlockTexture(tex);
+			SDL_RenderTexture(rend, tex, nullptr, &dst);
 		}
 	}
 
@@ -209,42 +192,48 @@ void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rec
 	size_t stride = 0;
 	size_t frames_avail = 0;
 	Sample *data = stream.peek(&stride, &frames_avail);
-		
-	for(int ch : m_channel_map.enabled_channels()) {
 	
+	for(size_t ch=0; ch<stream.channel_count(); ch++) {
+
 		SDL_Color col = m_channel_map.ch_color(ch);
 
 		uint32_t *pixels;
 		int pitch;
-		SDL_LockTexture(m_channels[ch].tex, nullptr, (void **)&pixels, &pitch);
+		SDL_LockTexture(m_ch_tex[ch], nullptr, (void **)&pixels, &pitch);
 
-		Time t = m_view.time.from;
-		Time dt = (m_view.time.to - m_view.time.from) / r.h;
-		ssize_t idx = ceil(stream.sample_rate() * t - m_view.window.size / 2) * stride + ch;
-		ssize_t didx = ceil(stream.sample_rate() * dt) * stride;
+		memset(pixels, 0, pitch * r.h);
 
-		Job job;
-		job.cmd = JobCmd::Gen;
-		job.data = data;
-		job.data_stride = stride;
-		job.channel = &m_channels[ch];
-		job.w = r.w;
-		job.h = r.h;
-		job.pixels = pixels;
-		job.pitch = pitch / 4;
-		job.idx = idx;
-		job.didx = didx;
-		job.idx_max = frames_avail * stride;
-		job.v = *(uint32_t *)&col & 0x00FFFFFF;
+		if(m_channel_map.is_channel_enabled(ch)) {
 
-		if(0) {
-			job_run_gen(job);
-		} else {
-			m_job_queue.push(job);
-			m_jobs_in_flight++;
+			for(int y=0; y<r.h; y+=128) {
+
+				Time t = m_view.y_to_t(y + r.y, r);
+				Time dt = (m_view.time.to - m_view.time.from) / r.h;
+				ssize_t idx = ceil(stream.sample_rate() * t - m_view.window.size / 2) * stride + ch;
+				ssize_t didx = ceil(stream.sample_rate() * dt) * stride;
+
+				Job job;
+				job.cmd = JobCmd::Gen;
+				job.data = data;
+				job.data_stride = stride;
+				job.w = r.w;
+				job.y_from = y;
+				job.y_to = std::min(y + 128, r.h);
+				job.f_from = m_view.freq.from;
+				job.f_to = m_view.freq.to;
+				job.pixels = pixels;
+				job.pitch = pitch / 4;
+				job.idx = idx;
+				job.didx = didx;
+				job.idx_max = frames_avail * stride;
+				job.v = *(uint32_t *)&col & 0x00FFFFFF;
+
+				m_job_queue.push(job);
+				m_jobs_in_flight++;
+			}
 		}
-	}
 
+	}
 }
 
 
@@ -292,35 +281,26 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 				stream.player.seek(m_view.y_to_t(pos.y, r));
 			}
 
-			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				m_view.freq.cursor += m_view.dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
-				m_view.time.cursor += m_view.dy_to_dt(ImGui::GetIO().MouseDelta.y, r) * 0.1;
-			} else {
-				m_view.freq.cursor = m_view.x_to_freq(pos.x, r);
-				m_view.time.cursor = m_view.y_to_t(pos.y, r);
-			}
+			//if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+			//	m_view.freq.cursor += m_view.dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
+			//	m_view.time.cursor += m_view.dy_to_dt(ImGui::GetIO().MouseDelta.y, r) * 0.1;
+			//} else {
+			//	m_view.freq.cursor = m_view.x_to_freq(pos.x, r);
+			//	m_view.time.cursor = m_view.y_to_t(pos.y, r);
+			//}
+			m_view.freq.cursor = m_view.x_to_freq(pos.x, r);
+			m_view.time.cursor = m_view.y_to_t(pos.y, r);
 		}
 	}
 
 	gen_waterfall(stream, rend, r);
 
-	// darken filtered out area
+	// filter pos
 	float f_lp, f_hp;
 	stream.player.filter_get(f_lp, f_hp);
+	//vcursor(rend, r, m_view.freq_to_x(f_lp, r), true);
+	//vcursor(rend, r, m_view.freq_to_x(f_hp, r), true);
 
-	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
-	SDL_FRect filt_rect;
-	filt_rect.y = r.y;
-	filt_rect.h = r.h;
-	int x_hp = m_view.freq_to_x(f_hp, r);
-	filt_rect.x = r.x;
-	filt_rect.w = x_hp - r.x;
-	SDL_SetRenderDrawColor(rend, 0, 0, 0, 128);
-	SDL_RenderFillRect(rend, &filt_rect);
-	int x_lp = m_view.freq_to_x(f_lp, r);
-	filt_rect.x = x_lp;
-	filt_rect.w = r.x + r.w - x_lp;
-	SDL_RenderFillRect(rend, &filt_rect);
 
 	// selection
 	if(m_view.time.sel_from != m_view.time.sel_to) {

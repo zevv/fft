@@ -2,6 +2,10 @@
 
 #pragma once
 
+#include <vector>
+#include <math.h>
+#include <algorithm>
+
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_audio.h>
 
@@ -22,3 +26,27 @@ namespace ImGui {
 }
 
 
+template<typename T>
+T tabread2(const std::vector<T>& vs, double pos, T v_oob = T{})
+{
+    if (pos < 0.0 || pos > 1.0) {
+        return v_oob;
+    }
+    if (vs.empty()) {
+        return v_oob;
+    }
+    if (pos == 1.0) {
+        return vs.back();
+    }
+    if (vs.size() == 1) {
+        return vs[0];
+    }
+    double p = pos * static_cast<double>(vs.size() - 1);
+    size_t i = static_cast<size_t>(p);
+    size_t j = i + 1;
+    double a0 = p - static_cast<double>(i);
+    double a1 = 1.0 - a0;
+    const T& v0 = vs[i];
+    const T& v1 = vs[j];
+    return (v0 * a1) + (v1 * a0);
+}
