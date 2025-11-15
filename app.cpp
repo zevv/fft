@@ -121,9 +121,11 @@ void App::draw_topbar()
 	char buf[32];
 	duration_to_str(frames_avail / m_srate, buf, sizeof(buf));
 	float bytes = m_stream.channel_count() * sizeof(Sample) * frames_avail;
-	ImGui::Text("/ capture: %s, %.1fMb", buf, bytes / (1024.0 * 1024.0));
+	ImGui::Text("| capture: %s, %.1fMb", buf, bytes / (1024.0 * 1024.0));
 
-
+	auto io = ImGui::GetIO();
+	ImGui::SameLine();
+	ImGui::Text("| %.1f fps", io.Framerate);
 
 }
 
