@@ -64,7 +64,9 @@ private:
 	bool m_fft_approximate{true};
 
 	std::vector<Worker *> m_workers;
-	Queue<Job> m_queue_jobs{4};
+	Queue<Job> m_job_queue{32};
+	Queue<Job> m_result_queue{32};
+	size_t m_jobs_in_flight{0};
 };
 
 
@@ -90,7 +92,7 @@ WidgetWaterfall2::~WidgetWaterfall2()
 		Job job;
 		job.cmd = JobCmd::Stop;
 		job.id = (int)i;
-		m_queue_jobs.push(job);
+		m_job_queue.push(job);
 	}
 	for(auto w : m_workers) {
 		w->thread.join();
@@ -104,16 +106,22 @@ void WidgetWaterfall2::work(int tid)
 	while(true) {
 		Job job;
 		bitline("+ t%d.wait", hirestime(), tid);
-		m_queue_jobs.pop(job, true);
+		m_job_queue.pop(job, true);
 		bitline("- t%d.wait", hirestime(), tid);
+		
+		bitline("+ t%d.work.%d", hirestime(), tid, job.cmd);
 
 		if(job.cmd == JobCmd::Stop) {
 			break;
 		}
 
-		bitline("+ t%d.work.%d", hirestime(), tid, job.id);
-		usleep(100 * 1000);
-		bitline("- t%d.work.%d", hirestime(), tid, job.id);
+		if(job.cmd == JobCmd::Gen) {
+			bitline("+ t%d.job.gen.%d", hirestime(), tid, job.id);
+			job_run_gen(job);
+			bitline("- t%d.job.gen.%d", hirestime(), tid, job.id);
+		}
+
+		bitline("- t%d.work.%d", hirestime(), tid, job.cmd);
 	}
 }
 
@@ -141,7 +149,7 @@ void WidgetWaterfall2::allocate_channels(SDL_Renderer *rend, size_t channels, in
 
 void WidgetWaterfall2::job_run_gen(Job &job)
 {
-	ssize_t idx = job.id;
+	ssize_t idx = job.idx;
 	uint32_t v = job.v;
 	int fft_w = job.channel->fft.out_size();
 
@@ -163,31 +171,44 @@ void WidgetWaterfall2::job_run_gen(Job &job)
 			int intensity = std::clamp(255 * (db - db_min) / (db_max - db_min), 0, 255);
 			*p++ = v | (uint32_t)(intensity << 24);
 		}
-
 	}
+
+	//m_result_queue.push(job);
 }
+
 
 void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 {
-	size_t stride = 0;
-	size_t frames_avail = 0;
-	Sample *data = stream.peek(&stride, &frames_avail);
+	// wait for workers
 	
-	int fft_w = m_view.window.size / 2 + 1;
+	while(m_jobs_in_flight > 0) {
+		Job job;
+		m_result_queue.pop(job, false);
+		m_jobs_in_flight--;
+	}
 
-	SDL_FRect src;
-	src.x = m_view.freq.from * fft_w;
-	src.y = 0;
-	src.w = (m_view.freq.to - m_view.freq.from) * fft_w;
-	src.h = r.h;
-
+	// render previous results
+	
 	SDL_FRect dst;
 	dst.x = r.x;
 	dst.y = r.y;
 	dst.w = r.w;
 	dst.h = r.h;
+	for(auto &ch : m_channels) {
+		if(ch.tex) {
+			SDL_UnlockTexture(ch.tex);
+			SDL_RenderTexture(rend, ch.tex, nullptr, &dst);
+		}
+	}
 
+	// allocate channel textures
 	allocate_channels(rend, stream.channel_count(), r.w, r.h);
+
+	// queue jobs
+
+	size_t stride = 0;
+	size_t frames_avail = 0;
+	Sample *data = stream.peek(&stride, &frames_avail);
 		
 	for(int ch : m_channel_map.enabled_channels()) {
 	
@@ -207,7 +228,7 @@ void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rec
 
 		Job job;
 		job.cmd = JobCmd::Gen;
-		job.data = data + ch;
+		job.data = data;
 		job.data_stride = stride;
 		job.channel = &m_channels[ch];
 		job.w = r.w;
@@ -219,12 +240,12 @@ void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rec
 		job.idx_max = frames_avail * stride;
 		job.v = *(uint32_t *)&col & 0x00FFFFFF;
 
-
-		job_run_gen(job);
-
-
-		SDL_UnlockTexture(tex);
-		SDL_RenderTexture(rend, tex, &src, &dst);
+		if(1) {
+			job_run_gen(job);
+		} else {
+			m_job_queue.push(job);
+			m_jobs_in_flight++;
+		}
 	}
 
 }
@@ -337,4 +358,3 @@ REGISTER_WIDGET(WidgetWaterfall2,
 			 Widget::Info::Flags::ShowWindowSize |
 			 Widget::Info::Flags::ShowWindowType,
 );
-
