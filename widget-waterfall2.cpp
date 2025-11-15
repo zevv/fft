@@ -36,8 +36,8 @@ private:
 		size_t data_stride;
 		int id;
 		int w;
-		int y_from, y_to;
-		Frequency f_from, f_to;
+		Range<int> y;
+		Range<Frequency> f;
 		uint32_t *pixels;
 		size_t pitch;
 		uint32_t v;
@@ -67,7 +67,7 @@ private:
 	Queue<Job> m_job_queue{32};
 	Queue<Result> m_result_queue{32};
 	size_t m_jobs_in_flight{0};
-	Aperture m_aperture{-120, -0};
+	Aperture m_aperture{-127, -0};
 };
 
 
@@ -76,6 +76,7 @@ WidgetWaterfall2::WidgetWaterfall2(Widget::Info &info)
 	: Widget(info)
 {
 	size_t nthreads = std::thread::hardware_concurrency();
+	printf("WidgetWaterfall2: starting %zu worker threads\n", nthreads);
 	for(size_t i=0; i<nthreads; i++) {
 		Worker *w = new Worker();
 		w->id = (int)i;
@@ -92,7 +93,6 @@ WidgetWaterfall2::~WidgetWaterfall2()
 	for(size_t i=0; i<m_workers.size(); i++) {
 		Job job;
 		job.cmd = JobCmd::Stop;
-		job.id = (int)i;
 		m_job_queue.push(job);
 	}
 	for(auto w : m_workers) {
@@ -116,9 +116,9 @@ void WidgetWaterfall2::work(Worker &w)
 		}
 
 		if(job.cmd == JobCmd::Gen) {
-			bitline("+ t%d.job.gen.%d", hirestime(), w.id, job.id);
+			bitline("+ t%d.job.gen", hirestime(), w.id);
 			job_run_gen(w, job);
-			bitline("- t%d.job.gen.%d", hirestime(), w.id, job.id);
+			bitline("- t%d.job.gen", hirestime(), w.id);
 		}
 	}
 }
@@ -152,9 +152,8 @@ void WidgetWaterfall2::job_run_gen(Worker &worker, Job &job)
 	Result res;
 	res.aperture.min = INT8_MAX;
 	res.aperture.max = INT8_MIN;
-		
 
-	for(int y=job.y_from; y<job.y_to; y++) {
+	for(int y=job.y.min; y<job.y.max; y++) {
 
 		idx += job.didx;
 		if(idx < 0) continue;
@@ -164,15 +163,19 @@ void WidgetWaterfall2::job_run_gen(Worker &worker, Job &job)
 		uint32_t *p = job.pixels + y * job.pitch;
 
 		for(int x=0; x<job.w; x++) {
-			Frequency f = job.f_from + (job.f_to - job.f_from) * x / job.w;
-			int db = tabread2(fft_out, f, (int8_t)-120);
+			Frequency f = job.f.min + (job.f.max - job.f.min) * x / job.w;
+			int db = tabread2(fft_out, f, (int8_t)-127);
 
 			res.aperture.min = std::min(res.aperture.min, (int8_t)db);
 			res.aperture.max = std::max(res.aperture.max, (int8_t)db);
 			res.aperture_valid = true;
 
-			int intensity = std::clamp(255 * (db - job.aperture.min) / (job.aperture.max - job.aperture.min), 0, 255);
-			*p++ = v | (uint32_t)(intensity << 24);
+			uint32_t intensity = 0;
+			if(job.aperture.max > job.aperture.min) {
+				intensity = std::clamp(255 * (db - job.aperture.min) / (job.aperture.max - job.aperture.min), 0, 255);
+			}
+
+			*p++ = v | (intensity << 24);
 		}
 	}
 
@@ -184,18 +187,18 @@ void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rec
 {
 	// wait for workers
 
-	Aperture aperture_accum = { -120, 0 };
+	Aperture aperture_accum = { 0, -127 };
 
 	while(m_jobs_in_flight > 0) {
 		Result res;
 		m_result_queue.pop(res, true);
 		if(res.aperture_valid) {
-			aperture_accum.min = std::max(aperture_accum.min, res.aperture.min);
-			aperture_accum.max = std::min(aperture_accum.max, res.aperture.max);
+			aperture_accum.min = std::min(aperture_accum.min, res.aperture.min);
+			aperture_accum.max = std::max(aperture_accum.max, res.aperture.max);
 		}
 		m_jobs_in_flight--;
 	}
-
+			
 	if(m_agc) {
 		m_aperture = aperture_accum;
 	}
@@ -212,6 +215,7 @@ void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rec
 	}
 
 	// allocate channel textures
+
 	allocate_channels(rend, stream.channel_count(), r.w, r.h);
 
 	// queue jobs
@@ -244,10 +248,10 @@ void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rec
 				job.data = data;
 				job.data_stride = stride;
 				job.w = r.w;
-				job.y_from = y;
-				job.y_to = std::min(y + 128, r.h);
-				job.f_from = m_view.freq.from;
-				job.f_to = m_view.freq.to;
+				job.y.min = y;
+				job.y.max = std::min(y + 128, r.h);
+				job.f.min = m_view.freq.from;
+				job.f.max = m_view.freq.to;
 				job.pixels = pixels;
 				job.pitch = pitch / 4;
 				job.idx = idx;
@@ -285,8 +289,8 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(100);
 		ImGui::SliderFloat("##db range", &m_view.aperture.range, 100.0f, 0.0f, "%.1f");
-		m_aperture.min = std::clamp((int)(m_view.aperture.center - m_view.aperture.range), -120, 0);
-		m_aperture.max = std::clamp((int)(m_view.aperture.center + m_view.aperture.range), -120, 0);
+		m_aperture.min = std::clamp((int)(m_view.aperture.center - m_view.aperture.range), -127, 0);
+		m_aperture.max = std::clamp((int)(m_view.aperture.center + m_view.aperture.range), -127, 0);
 	}
 
 	if(ImGui::IsWindowFocused()) {
