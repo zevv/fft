@@ -277,8 +277,8 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	size_t frames_avail = 0;
 	Sample *data = stream.peek(&stride, &frames_avail);
 	
-	ImGui::SameLine();
-	ImGui::ToggleButton("A##pproximate FFT", &m_fft_approximate);
+	//ImGui::SameLine();
+	//ImGui::ToggleButton("A##pproximate FFT", &m_fft_approximate);
 
 	ImGui::SameLine();
 	ImGui::ToggleButton("AGC", &m_agc);
