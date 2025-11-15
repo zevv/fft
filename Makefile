@@ -63,6 +63,10 @@ CXXFLAGS += $(PKG_CFLAGS)
 
 LIBS += -ldl $(PKG_LIBS)
 
+ifdef bitline
+CXXFLAGS += -DBITLINE
+endif
+
 ifdef clang
 CXX=clang++
 LD=clang++

@@ -120,6 +120,7 @@ void humanize(double val, char *buf, size_t buf_len)
 
 void bitline(const char *fmt, ...)
 {
+#ifdef BITLINE
 	static int fd = -1;
 	if(fd == -1) {
 		fd = open("/tmp/bitline.log", O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -137,6 +138,7 @@ void bitline(const char *fmt, ...)
 	write(fd, buf, l);
 	
 	va_end(args);
+#endif
 }
 
 
