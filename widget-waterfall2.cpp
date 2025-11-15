@@ -302,17 +302,7 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		humanize(f, fbuf, sizeof(fbuf));
 		char note[32];
 		freq_to_note(f, note, sizeof(note));
-		ImGui::Text("%sHz %s", fbuf, note);
-
-		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				m_view.zoom_t(ImGui::GetIO().MouseDelta.y);
-				m_view.zoom_freq(ImGui::GetIO().MouseDelta.x);
-			} else {
-				m_view.pan_freq(-ImGui::GetIO().MouseDelta.x / r.w);
-				m_view.pan_t(ImGui::GetIO().MouseDelta.y / r.w);
-			}
-		}
+		ImGui::Text("%sHz / %s / %+d..%+d dB", fbuf, note, m_aperture.min, m_aperture.max);
 
 
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
@@ -323,22 +313,33 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		}
 
 		if(ImGui::IsMouseInRect(r)) {
-
+			
 			auto pos = ImGui::GetIO().MousePos;
 
 			if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
 				stream.player.seek(m_view.y_to_t(pos.y, r));
 			}
+		
+			else if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
+				if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+					m_view.zoom_t(ImGui::GetIO().MouseDelta.y);
+					m_view.zoom_freq(ImGui::GetIO().MouseDelta.x);
+				} else {
+					m_view.pan_freq(-ImGui::GetIO().MouseDelta.x / r.w);
+					m_view.pan_t(ImGui::GetIO().MouseDelta.y / r.h);
+				}
+			}
 
-			//if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-			//	m_view.freq.cursor += m_view.dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
-			//	m_view.time.cursor += m_view.dy_to_dt(ImGui::GetIO().MouseDelta.y, r) * 0.1;
-			//} else {
-			//	m_view.freq.cursor = m_view.x_to_freq(pos.x, r);
-			//	m_view.time.cursor = m_view.y_to_t(pos.y, r);
-			//}
-			m_view.freq.cursor = m_view.x_to_freq(pos.x, r);
-			m_view.time.cursor = m_view.y_to_t(pos.y, r);
+			else {
+
+				if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+					m_view.freq.cursor += m_view.dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
+					m_view.time.cursor += m_view.dy_to_dt(ImGui::GetIO().MouseDelta.y, r) * 0.1;
+				} else {
+					m_view.freq.cursor = m_view.x_to_freq(pos.x, r);
+					m_view.time.cursor = m_view.y_to_t(pos.y, r);
+				}
+			}
 		}
 	}
 
@@ -361,7 +362,6 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	}
 	
 	// cursors
-	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 	cursor(rend, r, m_view.freq_to_x(m_view.freq.cursor, r),
 			Widget::CursorFlags::Vertical |
 			Widget::CursorFlags::Shadow);
@@ -376,8 +376,8 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 			Widget::CursorFlags::Shadow |
 			Widget::CursorFlags::PlayPosition);
 
+	// harmonic helper bars
 	if(m_view.freq.cursor > 0.0 && m_view.freq.cursor < 1.0) {
-		// harmonic helper bars at multiples of f if distance between bars> 10
 		int dx = m_view.freq_to_x(m_view.freq.cursor * 2, r) - m_view.freq_to_x(m_view.freq.cursor, r);
 		if(dx > 10) {
 			for(Frequency f=m_view.freq.cursor*2; f<m_view.freq.to; f+=m_view.freq.cursor) {
@@ -386,7 +386,6 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 						Widget::CursorFlags::HarmonicHelper);
 			}
 		}
-		// harmonic helper bars at divisions of f until distance < 10
 		int x0 = m_view.freq_to_x(0.0, r);
 		for(Frequency f = m_view.freq.cursor * 0.5f; f>m_view.freq.from; f*=0.5f) {
 			int x = m_view.freq_to_x(f, r);

@@ -98,6 +98,26 @@ void WidgetSpectrum::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 			Widget::CursorFlags::Vertical |
 			Widget::CursorFlags::Shadow);
 
+	// harmonic helper bars
+	if(m_view.freq.cursor > 0.0 && m_view.freq.cursor < 1.0) {
+		int dx = m_view.freq_to_x(m_view.freq.cursor * 2, r) - m_view.freq_to_x(m_view.freq.cursor, r);
+		if(dx > 10) {
+			for(Frequency f=m_view.freq.cursor*2; f<m_view.freq.to; f+=m_view.freq.cursor) {
+				cursor(rend, r, m_view.freq_to_x(f, r),
+						Widget::CursorFlags::Vertical |
+						Widget::CursorFlags::HarmonicHelper);
+			}
+		}
+		int x0 = m_view.freq_to_x(0.0, r);
+		for(Frequency f = m_view.freq.cursor * 0.5f; f>m_view.freq.from; f*=0.5f) {
+			int x = m_view.freq_to_x(f, r);
+			if(x - x0 < 10) break;
+			cursor(rend, r, x, 
+					Widget::CursorFlags::Vertical |
+					Widget::CursorFlags::HarmonicHelper);
+		}
+	}
+
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
 }
