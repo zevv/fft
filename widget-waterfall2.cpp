@@ -292,6 +292,8 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	}
 
 	if(ImGui::IsWindowFocused()) {
+			
+		auto pos = ImGui::GetIO().MousePos;
 
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
 		char fbuf[64];
@@ -301,6 +303,25 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		freq_to_note(f, note, sizeof(note));
 		ImGui::Text("%sHz / %s / %+d..%+d dB", fbuf, note, m_aperture.min, m_aperture.max);
 
+		static int x_drag_start = -1;
+		static int y_drag_start = -1;
+
+		if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+			x_drag_start = pos.x;
+			y_drag_start = pos.y;
+		}
+
+		if(ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+			x_drag_start = -1;
+			y_drag_start = -1;
+		}
+
+		if(x_drag_start != -1) {
+			int dx = pos.x - x_drag_start;
+			int dy = pos.y - y_drag_start;
+			m_view.pan_freq(-dx / r.w);
+			m_view.pan_t(dy / r.h);
+		}
 
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
 			m_view.freq.from = 0.0f;
@@ -320,7 +341,6 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 
 		if(ImGui::IsMouseInRect(r)) {
 			
-			auto pos = ImGui::GetIO().MousePos;
 
 			if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
 				stream.player.seek(m_view.y_to_t(pos.y, r));
