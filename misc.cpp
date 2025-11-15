@@ -89,6 +89,35 @@ double hirestime()
 }
 
 
+void humanize(double val, char *buf, size_t buf_len)
+{
+	struct scale {
+		double v;
+		const char *suffix;
+	} scales[] = {
+		{ 1e12, "T" },
+		{ 1e9,  "G" },
+		{ 1e6,  "M" },
+		{ 1e3,  "k" },
+		{ 1.0,  "" },
+		{ 1e-3, "m" },
+		{ 1e-6, "μ" },
+		{ 1e-9, "n" },
+		{ 1e-12,"p" },
+		{ 0.0,  nullptr }
+	};
+
+	for(int i=0; scales[i].suffix != nullptr; i++) {
+		if(fabs(val) >= scales[i].v * 0.99) {
+			double v = val / scales[i].v;
+			snprintf(buf, buf_len, "%.4g %s", v, scales[i].suffix);
+			return;
+		}
+	}
+}
+
+
+
 void bitline(const char *fmt, ...)
 {
 	static int fd = -1;

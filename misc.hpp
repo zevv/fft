@@ -20,6 +20,8 @@ double hirestime();
 void freq_to_note(double freq, char *note, size_t note_len);
 void bitline(const char *fmt, ...);
 
+void humanize(double val, char *buf, size_t buf_len);
+
 namespace ImGui {
 	bool ToggleButton(const char* str_id, bool* v);
 	bool IsMouseInRect(const SDL_Rect& r);
