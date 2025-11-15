@@ -182,13 +182,15 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	double w_idx_to   = (m_view.time.to   - m_view.time.analysis) * stream.sample_rate() + m_view.window.size * 0.5;
 	graph(rend, r, w.data().data(), w.size(), 1, w_idx_from, w_idx_to, 0.0f, +1.0f);
 
-	// cursor
-	int cx = m_view.t_to_x(m_view.time.cursor, r);
-	hcursor(rend, r, cx, false);
-	
-	// play position
-	int px = m_view.t_to_x(m_view.time.playpos, r);
-	hcursor(rend, r, px, true);
+	// cursors
+	cursor(rend, r, m_view.t_to_x(m_view.time.cursor, r),
+			CursorFlags::Vertical |
+			CursorFlags::Shadow);
+	cursor(rend, r, m_view.t_to_x(m_view.time.playpos, r),
+			CursorFlags::Vertical |
+			CursorFlags::PlayPosition |
+			Widget::CursorFlags::Arrows |
+			Widget::CursorFlags::Shadow);
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 

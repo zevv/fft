@@ -94,8 +94,9 @@ void WidgetSpectrum::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	}
 	
 	// cursor
-	int cx = m_view.freq_to_x(m_view.freq.cursor, r);
-	hcursor(rend, r, cx, false);
+	cursor(rend, r, m_view.freq_to_x(m_view.freq.cursor, r),
+			Widget::CursorFlags::Vertical |
+			Widget::CursorFlags::Shadow);
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 

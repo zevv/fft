@@ -402,48 +402,62 @@ void Widget::grid_horizontal(SDL_Renderer *rend, SDL_Rect &r, float v_min, float
 	grid_aux(rend, r, v_min, v_max, true);
 }
 
-static void cursor(SDL_Renderer *rend, float x0, float y0, float x1, float y1, float aw, SDL_FColor col, bool flip)
+
+void Widget::cursor(SDL_Renderer *rend, SDL_Rect &r, int v, int flags)
 {
-	float ah = 6;
-	SDL_Vertex v[8];
-	v[0].position.x = x0 - aw;        v[0].position.y = y0;
-	v[1].position.x = x1 + aw;        v[1].position.y = y0;
-	v[2].position.x = x0;             v[2].position.y = y0 + ah;
-	v[3].position.x = x1;             v[3].position.y = y0 + ah;
-	v[4].position.x = x0;             v[4].position.y = y1 - ah;
-	v[5].position.x = x1;             v[5].position.y = y1 - ah;
-	v[6].position.x = x0 - aw;        v[6].position.y = y1;
-	v[7].position.x = x1 + aw;        v[7].position.y = y1;
-	if(flip) {
-		for(int i=0; i<8; i++) {
-			float tmp = v[i].position.y;
-			v[i].position.y = v[i].position.x;
-			v[i].position.x = tmp;
-		}
+    auto draw_cursor = [&](float u0, float v0, float u1, float v1, float v_arrow, bool horizontal, SDL_FColor col) {
+        
+        float u_arrow = 6.0f;
+        SDL_Vertex vtx[8];
+
+        auto set_pos = [horizontal](SDL_FPoint& pos, float u, float v) {
+            if (horizontal) {
+                pos.x = u; pos.y = v;
+            } else {
+                pos.x = v; pos.y = u;
+            }
+        };
+
+        set_pos(vtx[0].position, u0,           v0 - v_arrow);
+        set_pos(vtx[1].position, u0,           v1 + v_arrow);
+        set_pos(vtx[2].position, u0 + u_arrow, v0);
+        set_pos(vtx[3].position, u0 + u_arrow, v1);
+        set_pos(vtx[4].position, u1 - u_arrow, v0);
+        set_pos(vtx[5].position, u1 - u_arrow, v1);
+        set_pos(vtx[6].position, u1,           v0 - v_arrow);
+        set_pos(vtx[7].position, u1,           v1 + v_arrow);
+
+        for (int i = 0; i < 8; i++) vtx[i].color = col;
+
+        int indices[] = { 0, 1, 2, 1, 2, 3, 2, 3, 4, 3, 4, 5, 4, 5, 6, 5, 6, 7 };
+        
+        SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, col.a);
+        SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
+        SDL_RenderGeometry(rend, nullptr, vtx, 8, indices, 18);
+    };
+
+    float arrow_size = 0.0f;
+    if (flags & CursorFlags::Arrows) {
+        arrow_size = 4.0f;
+    }
+
+	SDL_FColor col = { 1.00, 1.00, 0.75, 1.0 };
+	if(flags & CursorFlags::PlayPosition) {
+		col = {0.0, 0.75, 1.0, 1.0};
 	}
-	for(int i=0; i<8; i++) v[i].color = col;
-	int indices[] = { 0, 1, 2, 1, 2, 3, 2, 3, 4, 3, 4, 5, 4, 5, 6, 5, 6, 7 };
-	SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, col.a);
-	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
-	SDL_RenderGeometry(rend, nullptr, v, 8, indices, 18);
-}
+	if(flags & CursorFlags::HarmonicHelper) {
+		col = {1.0, 1.0, 1.0, 0.4};
+	}
 
-
-void Widget::vcursor(SDL_Renderer *rend, SDL_Rect &r, int y, bool playpos)
-{
-	float aw = playpos ? 4.0f : 0.0f;
-	SDL_FColor col = {192, 192, 192, 255};
-	if(playpos) col = {0, 96, 128, 255};
-	cursor(rend, y-1, r.x, y+2, r.x + r.w, aw, {0, 0, 0, 255}, true);
-	cursor(rend, y, r.x, y+1, r.x + r.w, aw, col, true);
-}
-
-void Widget::hcursor(SDL_Renderer *rend, SDL_Rect &r, int x, bool playpos)
-{
-	float aw = playpos ? 4.0f : 0.0f;
-	SDL_FColor col = {192, 192, 192, 255};
-	if(playpos) col = {0, 96, 128, 255};
-	cursor(rend, x-1, r.y, x+2, r.y + r.h, aw, {0, 0, 0, 255}, false);
-	cursor(rend, x, r.y, x+1, r.y + r.h, aw, col, false);
-}
-
+    if (flags & CursorFlags::Horizontal) {
+		if (flags & CursorFlags::Shadow) {
+			draw_cursor(r.x, v - 1, r.x + r.w, v + 2, 0.0f, true, {0, 0, 0, 128});
+		}
+		draw_cursor(r.x, v, r.x + r.w, v + 1, arrow_size, true, col);
+    } else {
+        if (flags & CursorFlags::Shadow) {
+            draw_cursor(r.y, v - 1, r.y + r.h, v + 2, 0.0f, false, {0, 0, 0, 128});
+        }
+        draw_cursor(r.y, v, r.y + r.h, v + 1, arrow_size, false, col);
+    }
+}	

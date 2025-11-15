@@ -228,11 +228,20 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 
 	// cursors
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
-	int cx = m_view.freq_to_x(m_view.freq.cursor, r);
-	int cy = m_view.t_to_y(m_view.time.cursor, r);
-	vcursor(rend, r, cy, false);
-	hcursor(rend, r, cx, false);
-	vcursor(rend, r, m_view.t_to_y(m_view.time.playpos, r), true);
+	cursor(rend, r, m_view.freq_to_x(m_view.freq.cursor, r),
+			Widget::CursorFlags::Vertical |
+			Widget::CursorFlags::Shadow);
+
+	cursor(rend, r, m_view.t_to_y(m_view.time.cursor, r),
+			Widget::CursorFlags::Horizontal | 
+			Widget::CursorFlags::Shadow);
+
+	cursor(rend, r, m_view.t_to_y(m_view.time.playpos, r), 
+			Widget::CursorFlags::Horizontal | 
+			Widget::CursorFlags::Arrows |
+			Widget::CursorFlags::Shadow |
+			Widget::CursorFlags::PlayPosition);
+
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 

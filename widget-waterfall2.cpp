@@ -362,11 +362,40 @@ void WidgetWaterfall2::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	
 	// cursors
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
-	int cx = m_view.freq_to_x(m_view.freq.cursor, r);
-	int cy = m_view.t_to_y(m_view.time.cursor, r);
-	vcursor(rend, r, cy, false);
-	hcursor(rend, r, cx, false);
-	vcursor(rend, r, m_view.t_to_y(m_view.time.playpos, r), true);
+	cursor(rend, r, m_view.freq_to_x(m_view.freq.cursor, r),
+			Widget::CursorFlags::Vertical |
+			Widget::CursorFlags::Shadow);
+
+	cursor(rend, r, m_view.t_to_y(m_view.time.cursor, r),
+			Widget::CursorFlags::Horizontal | 
+			Widget::CursorFlags::Shadow);
+
+	cursor(rend, r, m_view.t_to_y(m_view.time.playpos, r), 
+			Widget::CursorFlags::Horizontal | 
+			Widget::CursorFlags::Arrows |
+			Widget::CursorFlags::Shadow |
+			Widget::CursorFlags::PlayPosition);
+
+	if(m_view.freq.cursor > 0.0 && m_view.freq.cursor < 1.0) {
+		// harmonic helper bars at multiples of f if distance between bars> 10
+		int dx = m_view.freq_to_x(m_view.freq.cursor * 2, r) - m_view.freq_to_x(m_view.freq.cursor, r);
+		if(dx > 10) {
+			for(Frequency f=m_view.freq.cursor*2; f<m_view.freq.to; f+=m_view.freq.cursor) {
+				cursor(rend, r, m_view.freq_to_x(f, r),
+						Widget::CursorFlags::Vertical |
+						Widget::CursorFlags::HarmonicHelper);
+			}
+		}
+		// harmonic helper bars at divisions of f until distance < 10
+		int x0 = m_view.freq_to_x(0.0, r);
+		for(Frequency f = m_view.freq.cursor * 0.5f; f>m_view.freq.from; f*=0.5f) {
+			int x = m_view.freq_to_x(f, r);
+			if(x - x0 < 10) break;
+			cursor(rend, r, x, 
+					Widget::CursorFlags::Vertical |
+					Widget::CursorFlags::HarmonicHelper);
+		}
+	}
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
