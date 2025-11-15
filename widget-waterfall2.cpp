@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include <imgui.h>
+#include <array>
 
 #include "misc.hpp"
 #include "widgetregistry.hpp"
@@ -48,8 +49,7 @@ private:
 	};
 
 	struct Result {
-		Aperture aperture{};
-		bool aperture_valid{};
+		std::array<size_t, 128> bin{};
 	};
 
 	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
@@ -147,9 +147,11 @@ void WidgetWaterfall2::job_run_gen(Worker &worker, Job &job)
 	uint32_t v = job.v;
 	int fft_w = worker.fft.out_size();
 
+	if(job.aperture.max == job.aperture.min) {
+		job.aperture.max++;
+	}
+	
 	Result res;
-	res.aperture.min = INT8_MAX;
-	res.aperture.max = INT8_MIN;
 
 	for(int y=job.y.min; y<job.y.max; y++) {
 
@@ -163,17 +165,10 @@ void WidgetWaterfall2::job_run_gen(Worker &worker, Job &job)
 		for(int x=0; x<job.w; x++) {
 			Frequency f = job.f.min + (job.f.max - job.f.min) * x / job.w;
 			if(f >=0 && f <= 1.0) {
-
 				int db = tabread2(fft_out, f, (int8_t)-127);
-
-				res.aperture.min = std::min(res.aperture.min, (int8_t)db);
-				res.aperture.max = std::max(res.aperture.max, (int8_t)db);
-				res.aperture_valid = true;
-
-				if(job.aperture.max > job.aperture.min) {
-					uint32_t alpha = std::clamp(255 * (db - job.aperture.min) / (job.aperture.max - job.aperture.min), 0, 255);
-					*p = v | (alpha << 24);
-				}
+				res.bin[db + 127] ++;
+				uint32_t alpha = std::clamp(255 * (db - job.aperture.min) / (job.aperture.max - job.aperture.min), 0, 255);
+				*p = v | (alpha << 24);
 			}
 			p++;
 		}
@@ -187,20 +182,33 @@ void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rec
 {
 	// wait for workers
 
-	Aperture aperture_accum = { 0, -127 };
+	std::array<size_t, 128> bin{};
 
 	while(m_jobs_in_flight > 0) {
 		Result res;
 		m_result_queue.pop(res, true);
-		if(res.aperture_valid) {
-			aperture_accum.min = std::min(aperture_accum.min, res.aperture.min);
-			aperture_accum.max = std::max(aperture_accum.max, res.aperture.max);
-		}
+		for(size_t i=0; i<128; i++) bin[i] += res.bin[i];
 		m_jobs_in_flight--;
 	}
+
 			
 	if(m_agc) {
-		m_aperture = aperture_accum;
+		size_t total = 1;
+		for(auto &b : bin) total += b;
+
+		size_t sum = 0;
+		bool found_low = false;
+		for(size_t i=0; i<128; i++) {
+			sum += bin[i];
+			if(!found_low && sum >= total * 0.01) {
+				m_aperture.min = i - 127;
+				found_low = true;
+			}
+			if(sum >= total *0.99) {
+				m_aperture.max = i - 127;
+				break;
+			}
+		}
 	}
 
 	// render previous results
