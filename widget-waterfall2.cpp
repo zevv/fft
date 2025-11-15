@@ -236,12 +236,12 @@ void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rec
 
 		if(m_channel_map.is_channel_enabled(ch)) {
 
-			for(int y=0; y<r.h; y+=128) {
+			Time t = m_view.time.from;
+			Time dt = (m_view.time.to - m_view.time.from) / r.h;
+			ssize_t idx = ceil(stream.sample_rate() * t - m_view.window.size / 2) * stride + ch;
+			ssize_t didx = floor(stream.sample_rate() * dt) * stride;
 
-				Time t = m_view.y_to_t(y + r.y, r);
-				Time dt = (m_view.time.to - m_view.time.from) / r.h;
-				ssize_t idx = ceil(stream.sample_rate() * t - m_view.window.size / 2) * stride + ch;
-				ssize_t didx = ceil(stream.sample_rate() * dt) * stride;
+			for(int y=0; y<r.h; y+=128) {
 
 				Job job;
 				job.cmd = JobCmd::Gen;
@@ -262,6 +262,7 @@ void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rec
 
 				m_job_queue.push(job);
 				m_jobs_in_flight++;
+				idx += 128 * didx;
 			}
 		}
 

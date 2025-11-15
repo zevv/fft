@@ -110,7 +110,7 @@ void humanize(double val, char *buf, size_t buf_len)
 	for(int i=0; scales[i].suffix != nullptr; i++) {
 		if(fabs(val) >= scales[i].v * 0.99) {
 			double v = val / scales[i].v;
-			snprintf(buf, buf_len, "%.4g %s", v, scales[i].suffix);
+			snprintf(buf, buf_len, "%.5g %s", v, scales[i].suffix);
 			return;
 		}
 	}
