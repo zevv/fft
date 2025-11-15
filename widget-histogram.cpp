@@ -29,7 +29,7 @@ private:
 	int m_nbins{64};
 	Sample m_vmin{};
 	Sample m_vmax{};
-	std::array<Histogram, 8> m_hists{};
+	std::array<Histogram<Sample>, 8> m_hists{};
 };
 
 
@@ -116,7 +116,7 @@ void WidgetHistogram::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		graph(rend, r,
 				b.data(), b.size(), 1,
 				0, m_nbins-1,
-				(size_t)0, m_hists[ch].get_peak());
+				(size_t)0, (size_t)m_hists[ch].get_peak());
 	}
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);

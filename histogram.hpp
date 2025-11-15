@@ -3,31 +3,86 @@
 
 #include <vector>
 
+
+template<typename T>
 class Histogram {
 public:
-	Histogram();
-	Histogram(int bins, double min, double max);
+	Histogram() = default;
 
-	void clear();
-	void set_nbins(size_t n);
-	void set_range(double min, double max);
-	std::vector<size_t> &bins() { return m_bin; }
+	Histogram(size_t bins, T min, T max)
+		: m_bins(bins), m_min(min), m_max(max)
+	{
+		m_data.resize(bins);
+	}
 
-	inline void add(double v) {
-		int bin = (v - m_min) / m_binwidth;
-		if (bin >= 0 && bin < (int)m_bin.size()) {
-			m_bin[bin]++;
-			m_total++;
+	void add(T value)
+	{
+		if(value >= m_min && value <= m_max) {
+			size_t bin = ((double)(value - m_min) / (double)(m_max - m_min) * m_bins);
+			m_data[bin]++;
 		}
 	}
 
-	double get_percentile(double p) const;
-	size_t get_peak() const;
+	void set_range(T min, T max)
+	{
+		m_min = min;
+		m_max = max;
+	}
+
+	void set_nbins(size_t bins)
+	{
+		m_bins = bins;
+		m_data.resize(bins);
+	}
+
+	void clear()
+	{
+		std::fill(m_data.begin(), m_data.end(), 0);
+	}
+
+	std::vector<size_t> &bins()
+	{
+		return m_data;
+	}
+
+	T find_percentile(double p) const
+	{
+		size_t total = 0;
+		for(auto &b : m_data) total += b;
+		size_t target = total * p;
+		size_t sum = 0;
+		for(size_t i=0; i<m_bins; i++) {
+			sum += m_data[i];
+			if(sum >= target) {
+				T val = m_min + (T)((double)i / (double)m_bins * (double)(m_max - m_min));
+				return val;
+			}
+		}
+		return m_max;
+	}
+
+	T get_peak() const
+	{
+		size_t peak = 0;
+		for(auto &b : m_data) {
+			if(b > peak) peak = b;
+		}
+		return peak;
+	}
+
+	void add(const Histogram<T> &other)
+	{
+		for(size_t i=0; i<m_bins; i++) {
+			m_data[i] += other.m_data[i];
+		}
+	}
 
 private:
-	std::vector<size_t> m_bin{};
-	size_t m_total{};
-	double m_min{};
-	double m_binwidth{};
-
+	size_t m_bins;
+	T m_min;
+	T m_max;
+	std::vector<size_t> m_data;
 };
+
+
+

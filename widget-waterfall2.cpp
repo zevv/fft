@@ -6,10 +6,9 @@
 
 #include "misc.hpp"
 #include "widgetregistry.hpp"
-#include "histogram.hpp"
 #include "fft.hpp"
 #include "queue.hpp"
-
+#include "histogram.hpp"
 
 
 class WidgetWaterfall2 : public Widget {
@@ -49,7 +48,7 @@ private:
 	};
 
 	struct Result {
-		std::array<size_t, 128> bin{};
+		Histogram<int8_t> hist{256, -128, 127};
 	};
 
 	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
@@ -166,7 +165,7 @@ void WidgetWaterfall2::job_run_gen(Worker &worker, Job &job)
 			Frequency f = job.f.min + (job.f.max - job.f.min) * x / job.w;
 			if(f >=0 && f <= 1.0) {
 				int db = tabread2(fft_out, f, (int8_t)-127);
-				res.bin[db + 127] ++;
+				res.hist.add(db);
 				uint32_t alpha = std::clamp(255 * (db - job.aperture.min) / (job.aperture.max - job.aperture.min), 0, 255);
 				*p = v | (alpha << 24);
 			}
@@ -182,33 +181,18 @@ void WidgetWaterfall2::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rec
 {
 	// wait for workers
 
-	std::array<size_t, 128> bin{};
+	Histogram<int8_t> hist(256, -128, 127);
 
 	while(m_jobs_in_flight > 0) {
 		Result res;
 		m_result_queue.pop(res, true);
-		for(size_t i=0; i<128; i++) bin[i] += res.bin[i];
+		hist.add(res.hist);
 		m_jobs_in_flight--;
 	}
-
 			
 	if(m_agc) {
-		size_t total = 1;
-		for(auto &b : bin) total += b;
-
-		size_t sum = 0;
-		bool found_low = false;
-		for(size_t i=0; i<128; i++) {
-			sum += bin[i];
-			if(!found_low && sum >= total * 0.01) {
-				m_aperture.min = i - 127;
-				found_low = true;
-			}
-			if(sum >= total *0.99) {
-				m_aperture.max = i - 127;
-				break;
-			}
-		}
+		m_aperture.min = hist.find_percentile(0.01);
+		m_aperture.max = hist.find_percentile(0.99);
 	}
 
 	// render previous results
