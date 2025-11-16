@@ -192,7 +192,7 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 			
 	if(m_agc) {
 		m_aperture.min = hist.find_percentile(0.01);
-		m_aperture.max = hist.find_percentile(0.99);
+		m_aperture.max = hist.find_percentile(0.99) + 10;
 	}
 
 	// render previous results
