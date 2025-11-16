@@ -52,6 +52,9 @@ private:
 		Histogram<int8_t> hist{256, -128, 127};
 	};
 
+	void do_load(ConfigReader::Node *node) override;
+	void do_save(ConfigWriter &cfg) override;
+	void do_copy(Widget *w) override;
 	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
 	void gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect &r);
 	void work(Worker &w);
@@ -102,6 +105,28 @@ WidgetWaterfall::~WidgetWaterfall()
 	for(auto &tex : m_ch_tex) {
 		if(tex) SDL_DestroyTexture(tex);
 	}
+}
+
+
+void WidgetWaterfall::do_load(ConfigReader::Node *node)
+{
+	auto *wnode = node->find("waterfall");
+	wnode->read("rotate", m_rotate);
+}
+
+
+void WidgetWaterfall::do_save(ConfigWriter &cw)
+{
+	cw.push("waterfall");
+	cw.write("rotate", m_rotate);
+	cw.pop();
+}
+
+
+void WidgetWaterfall::do_copy(Widget *w)
+{
+	WidgetWaterfall *wh = dynamic_cast<WidgetWaterfall*>(w);
+	wh->m_rotate = m_rotate;
 }
 
 

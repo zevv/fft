@@ -461,90 +461,57 @@ void Widget::cursor(SDL_Renderer *rend, SDL_Rect &r, int v, int flags)
         draw_cursor(r.y, v, r.y + r.h, v + 1, arrow_size, false, col);
     }
 }	
-	
+
+
 void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &cfg)
 {
 
-	if(cfg.frequency == View::Axis::X) {
-		printf("freq x\n");
+	if(cfg.frequency != View::Axis::None) {
+
+		CursorFlags dir = (cfg.frequency == View::Axis::X) ? 
+			Widget::CursorFlags::Vertical : Widget::CursorFlags::Horizontal;
+	
+		// frequqncy cursor
 		cursor(rend, r, m_view.from_freq(cfg, r, m_view.freq.cursor),
-				Widget::CursorFlags::Vertical |
-				Widget::CursorFlags::Shadow);
+				dir | Widget::CursorFlags::Shadow);
 
 		// harmonic helper bars
 		if(m_view.freq.cursor > 0.0 && m_view.freq.cursor < 1.0) {
 			Frequency fc = m_view.freq.cursor;
 			int p0 = m_view.from_freq(cfg, r, fc * 2);
 			int p1 = m_view.from_freq(cfg, r, fc);
-			printf("%d %d\n", p0, p1);
 			if(abs(p0 - p1) > 10) {
 				for(Frequency f=fc*2; f<m_view.freq.to; f+=fc) {
 					cursor(rend, r, m_view.from_freq(cfg, r, f),
-							Widget::CursorFlags::Vertical |
-							Widget::CursorFlags::HarmonicHelper);
+							dir | Widget::CursorFlags::HarmonicHelper);
 				}
 			}
 			for(int i=2; i<32; i++) {
 				int x0 = m_view.from_freq(cfg, r, fc/(i+0));
 				int x1 = m_view.from_freq(cfg, r, fc/(i+1));
-				if(x0 - x1 < 5) break;
+				if(abs(x0 - x1) < 5) break;
 				cursor(rend, r, x0, 
-						Widget::CursorFlags::Vertical |
-						Widget::CursorFlags::HarmonicHelper);
+						dir | Widget::CursorFlags::HarmonicHelper);
 			}
 		}
 	}
 
-	if(cfg.frequency == View::Axis::Y) {
-		cursor(rend, r, m_view.from_freq(cfg, r, m_view.freq.cursor),
-				Widget::CursorFlags::Horizontal |
-				Widget::CursorFlags::Shadow);
+	if(cfg.time != View::Axis::None) {
 
-		if(m_view.freq.cursor > 0.0 && m_view.freq.cursor < 1.0) {
-			Frequency fc = m_view.freq.cursor;
-			int dy = m_view.from_freq(cfg, r, fc * 2) - m_view.from_freq(cfg, r, fc);
-			if(abs(dy) > 10) {
-				for(Frequency f=fc*2; f<m_view.freq.to; f+=fc) {
-					cursor(rend, r, m_view.from_freq(cfg, r, f),
-							Widget::CursorFlags::Horizontal |
-							Widget::CursorFlags::HarmonicHelper);
-				}
-			}
-			for(int i=2; i<32; i++) {
-				int y0 = m_view.from_freq(cfg, r, fc/(i+0));
-				int y1 = m_view.from_freq(cfg, r, fc/(i+1));
-				if(abs(y0 - y1) < 5) break;
-				cursor(rend, r, y0, 
-						Widget::CursorFlags::Horizontal |
-						Widget::CursorFlags::HarmonicHelper);
-			}
-		}
-	}
+		CursorFlags dir = (cfg.time == View::Axis::X) ? 
+			Widget::CursorFlags::Vertical : Widget::CursorFlags::Horizontal;
 
-	if(cfg.time == View::Axis::X) {
+		// time cursor
 		cursor(rend, r, m_view.from_t(m_view_config, r, m_view.time.cursor),
-				Widget::CursorFlags::Vertical | 
+				dir | 
 				Widget::CursorFlags::Shadow);
 
+		// play position cursor
 		cursor(rend, r, m_view.from_t(m_view_config, r, m_view.time.playpos),
-				Widget::CursorFlags::Vertical | 
+				dir | 
 				Widget::CursorFlags::Arrows |
 				Widget::CursorFlags::Shadow |
 				Widget::CursorFlags::PlayPosition);
 	}
-
-	if(cfg.time == View::Axis::Y) {
-		cursor(rend, r, m_view.from_t(m_view_config, r, m_view.time.cursor),
-				Widget::CursorFlags::Horizontal | 
-				Widget::CursorFlags::Shadow);
-
-		cursor(rend, r, m_view.from_t(m_view_config, r, m_view.time.playpos),
-				Widget::CursorFlags::Horizontal | 
-				Widget::CursorFlags::Arrows |
-				Widget::CursorFlags::Shadow |
-				Widget::CursorFlags::PlayPosition);
-	}
-
-
 }
 
