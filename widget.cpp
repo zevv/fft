@@ -466,7 +466,6 @@ void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &
 {
 
 	if(cfg.x == View::Axis::Frequency) {
-		printf("x: freq ");
 		cursor(rend, r, m_view.from_freq(cfg, r, m_view.freq.cursor),
 				Widget::CursorFlags::Vertical |
 				Widget::CursorFlags::Shadow);
@@ -477,7 +476,7 @@ void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &
 			int dx = m_view.from_freq(cfg, r, fc * 2) - m_view.from_freq(cfg, r, fc);
 			if(dx > 10) {
 				for(Frequency f=fc*2; f<m_view.freq.to; f+=fc) {
-					cursor(rend, r, m_view.freq_to_x(f, r),
+					cursor(rend, r, m_view.from_freq(cfg, r, f),
 							Widget::CursorFlags::Vertical |
 							Widget::CursorFlags::HarmonicHelper);
 				}
@@ -494,8 +493,7 @@ void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &
 	}
 
 	if(cfg.y == View::Axis::Frequency) {
-		printf("y: freq ");
-		cursor(rend, r, m_view.freq_to_y(m_view.freq.cursor, r),
+		cursor(rend, r, m_view.from_freq(cfg, r, m_view.freq.cursor),
 				Widget::CursorFlags::Horizontal |
 				Widget::CursorFlags::Shadow);
 
@@ -504,7 +502,7 @@ void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &
 			int dy = m_view.from_freq(cfg, r, fc * 2) - m_view.from_freq(cfg, r, fc);
 			if(abs(dy) > 10) {
 				for(Frequency f=fc*2; f<m_view.freq.to; f+=fc) {
-					cursor(rend, r, m_view.freq_to_y(f, r),
+					cursor(rend, r, m_view.from_freq(cfg, r, f),
 							Widget::CursorFlags::Horizontal |
 							Widget::CursorFlags::HarmonicHelper);
 				}
@@ -521,12 +519,11 @@ void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &
 	}
 
 	if(cfg.x == View::Axis::Time) {
-		printf("x: time ");
-		cursor(rend, r, m_view.t_to_x(m_view.time.cursor, r),
+		cursor(rend, r, m_view.from_t(m_view_config, r, m_view.time.cursor),
 				Widget::CursorFlags::Vertical | 
 				Widget::CursorFlags::Shadow);
 
-		cursor(rend, r, m_view.t_to_x(m_view.time.playpos, r), 
+		cursor(rend, r, m_view.from_t(m_view_config, r, m_view.time.playpos),
 				Widget::CursorFlags::Vertical | 
 				Widget::CursorFlags::Arrows |
 				Widget::CursorFlags::Shadow |
@@ -534,19 +531,17 @@ void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &
 	}
 
 	if(cfg.y == View::Axis::Time) {
-		printf("y: time ");
-		cursor(rend, r, m_view.t_to_y(m_view.time.cursor, r),
+		cursor(rend, r, m_view.from_t(m_view_config, r, m_view.time.cursor),
 				Widget::CursorFlags::Horizontal | 
 				Widget::CursorFlags::Shadow);
 
-		cursor(rend, r, m_view.t_to_y(m_view.time.playpos, r), 
+		cursor(rend, r, m_view.from_t(m_view_config, r, m_view.time.playpos),
 				Widget::CursorFlags::Horizontal | 
 				Widget::CursorFlags::Arrows |
 				Widget::CursorFlags::Shadow |
 				Widget::CursorFlags::PlayPosition);
 	}
 
-	printf("\n");
 
 }
 

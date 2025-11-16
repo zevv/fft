@@ -66,15 +66,6 @@ public:
 		cfg.write("lock", lock);
 	}
 
-	Time to_t(Config &cfg, SDL_Rect &r, ImVec2 pos)
-	{
-		if(cfg.x == Axis::Time) {
-			return time.from + (time.to - time.from) * (pos.x - r.x) / r.w;
-		} else {
-			return time.from + (time.to - time.from) * (pos.y - r.y) / r.h;
-		}
-	}
-
 	void set_cursor(Config &cfg, SDL_Rect &r, ImVec2 pos)
 	{
 		if(cfg.x == Axis::Time) {
@@ -93,36 +84,27 @@ public:
 	void move_cursor(Config &cfg, SDL_Rect &r, ImVec2 delta)
 	{
 		if(cfg.x == Axis::Time) {
-			time.cursor += dx_to_dt(delta.x, r) * 0.1;
+			time.cursor += delta.x / r.w * (time.to - time.from) * 0.1;
 		} else if(cfg.y == Axis::Time) {
-			time.cursor += dy_to_dt(delta.y, r) * 0.1;
+			time.cursor += delta.y / r.h * (time.to - time.from) * 0.1;
+
 		}
 		if(cfg.x == Axis::Frequency) {
-			freq.cursor += dx_to_dfreq(delta.x, r) * 0.1;
+			freq.cursor += delta.x / r.w * (freq.to - freq.from) * 0.1;
 		} else if(cfg.y == Axis::Frequency) {
-			freq.cursor -= dx_to_dfreq(delta.y, r) * 0.1;
+			freq.cursor -= delta.y / r.h * (freq.to - freq.from) * 0.1;
+		}
+	}
+	
+	Time to_t(Config &cfg, SDL_Rect &r, ImVec2 pos)
+	{
+		if(cfg.x == Axis::Time) {
+			return time.from + (time.to - time.from) * (pos.x - r.x) / r.w;
+		} else {
+			return time.from + (time.to - time.from) * (pos.y - r.y) / r.h;
 		}
 	}
 
-	Time x_to_t(float x, SDL_Rect &r) {
-		return time.from + (time.to - time.from) * (x - r.x) / r.w;
-	}
-
-	float t_to_x(Time t, SDL_Rect &r) {
-		return r.x + r.w * (t - time.from) / (time.to - time.from);
-	}
-
-	Time dx_to_dt(float dx, SDL_Rect &r) {
-		return dx * (time.to - time.from) / r.w;
-	}
-
-	Frequency x_to_freq(float x, SDL_Rect &r) {
-		return freq.from + (freq.to - freq.from) * (x - r.x) / r.w;
-	}
-
-	float freq_to_x(Frequency f, SDL_Rect &r) {
-		return r.x + r.w * (f- freq.from) / (freq.to - freq.from);
-	}
 
 	float from_freq(Config &cfg, SDL_Rect &r, Frequency f) {
 		if(cfg.x == Axis::Frequency) {
@@ -131,7 +113,7 @@ public:
 			return r.y + r.h * (1.0 - (f - freq.from) / (freq.to - freq.from));
 		}
 	}
-
+	
 	float from_t(Config &cfg, SDL_Rect &r, Time t) {
 		if(cfg.x == Axis::Time) {
 			return r.x + r.w * (t - time.from) / (time.to - time.from);
@@ -169,26 +151,6 @@ public:
 			zoom_freq(delta.y);
 		}
 
-	}
-
-	float freq_to_y( Frequency f, SDL_Rect &r) {
-		return r.y + r.h * (1.0 - (f - freq.from) / (freq.to - freq.from));
-	}
-	
-	Frequency dx_to_dfreq(float dx, SDL_Rect &r) {
-		return dx * (freq.to - freq.from) / r.w;
-	}
-
-	Time y_to_t(float y, SDL_Rect &r) {
-		return time.from + (time.to - time.from) * (y - r.y) / r.h;
-	}
-
-	float t_to_y(Time t, SDL_Rect &r) {
-		return r.y + r.h * (t - time.from) / (time.to - time.from);
-	}
-
-	Time dy_to_dt(float dy, SDL_Rect &r) {
-		return dy * (time.to - time.from) / r.h;
 	}
 
 	void pan_t(float f) {

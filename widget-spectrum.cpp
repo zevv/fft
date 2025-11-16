@@ -49,18 +49,21 @@ void WidgetSpectrum::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		ImGui::Text("f=%.6gHz amp=%.2fdB", m_view.freq.cursor * stream.sample_rate() * 0.5, m_amp_cursor);
 
 		auto pos = ImGui::GetIO().MousePos;
-		if(pos.x >= 0) {
-			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				m_view.freq.cursor += m_view.dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
-			} else {
-				m_view.freq.cursor = m_view.x_to_freq(pos.x, r);
-			}
-			m_amp_cursor = (r.y - pos.y) * 100.0f / r.h;
+		auto delta = ImGui::GetIO().MouseDelta;
+
+		if(ImGui::IsKeyDown(ImGuiKey_LeftShift) && !ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
+			m_view.move_cursor(m_view_config, r, delta);
+		} else {
+			m_view.set_cursor(m_view_config, r, pos);
 		}
+
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			m_view.pan_freq(-ImGui::GetIO().MouseDelta.x / r.w);
-			m_view.zoom_freq(ImGui::GetIO().MouseDelta.y);
+			m_view.pan(m_view_config, r, delta);
+			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+				m_view.zoom(m_view_config, r, delta);
+			}
 		}
+
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
 			m_view.freq.from = 0.0f;
 			m_view.freq.to = 1.0;

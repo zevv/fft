@@ -87,8 +87,10 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		ImGui::Text("t=%.4gs", m_view.time.cursor);
 
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			m_view.pan_t(ImGui::GetIO().MouseDelta.x / r.w);
-			m_view.zoom_t(ImGui::GetIO().MouseDelta.y);
+			m_view.pan(m_view_config, r, delta);
+			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+				m_view.zoom(m_view_config, r, delta);
+			}
 		}
 
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
@@ -117,8 +119,8 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	}
 	m_peak *= 0.9f;
 
-	double idx_from = m_view.x_to_t(r.x,       r) * stream.sample_rate();
-	double idx_to   = m_view.x_to_t(r.x + r.w, r) * stream.sample_rate();
+	double idx_from = m_view.time.from * stream.sample_rate();
+	double idx_to   = m_view.time.to   * stream.sample_rate();
 	double step = (idx_to - idx_from) / r.w;
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
@@ -147,16 +149,16 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	}
 	
 	// selection
-	if(m_view.time.sel_from != m_view.time.sel_to) {
-		float sx_from = m_view.t_to_x(m_view.time.sel_from, r);
-		float sx_to   = m_view.t_to_x(m_view.time.sel_to,   r);
-		SDL_SetRenderDrawColor(rend, 128, 128, 255, 64);
-		SDL_FRect sr = { sx_from, (float)r.y, sx_to - sx_from, (float)r.h };
-		SDL_RenderFillRect(rend, &sr);
-	}
+	//if(m_view.time.sel_from != m_view.time.sel_to) {
+	//	float sx_from = m_view.t_to_x(m_view.time.sel_from, r);
+	//	float sx_to   = m_view.t_to_x(m_view.time.sel_to,   r);
+	//	SDL_SetRenderDrawColor(rend, 128, 128, 255, 64);
+	//	SDL_FRect sr = { sx_from, (float)r.y, sx_to - sx_from, (float)r.h };
+	//	SDL_RenderFillRect(rend, &sr);
+	//}
 
 	// grids
-	grid_time(rend, r, m_view.x_to_t(r.x, r), m_view.x_to_t(r.x + r.w, r));
+	grid_time(rend, r, m_view.time.from, m_view.time.to);
 	grid_vertical(rend, r, -scale / k_sample_max, +scale / k_sample_max);
 
 	// window
