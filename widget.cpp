@@ -461,3 +461,92 @@ void Widget::cursor(SDL_Renderer *rend, SDL_Rect &r, int v, int flags)
         draw_cursor(r.y, v, r.y + r.h, v + 1, arrow_size, false, col);
     }
 }	
+	
+void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &cfg)
+{
+
+	if(cfg.x == View::Axis::Frequency) {
+		printf("x: freq ");
+		cursor(rend, r, m_view.from_freq(cfg, r, m_view.freq.cursor),
+				Widget::CursorFlags::Vertical |
+				Widget::CursorFlags::Shadow);
+
+		// harmonic helper bars
+		if(m_view.freq.cursor > 0.0 && m_view.freq.cursor < 1.0) {
+			Frequency fc = m_view.freq.cursor;
+			int dx = m_view.from_freq(cfg, r, fc * 2) - m_view.from_freq(cfg, r, fc);
+			if(dx > 10) {
+				for(Frequency f=fc*2; f<m_view.freq.to; f+=fc) {
+					cursor(rend, r, m_view.freq_to_x(f, r),
+							Widget::CursorFlags::Vertical |
+							Widget::CursorFlags::HarmonicHelper);
+				}
+			}
+			for(int i=2; i<32; i++) {
+				int x0 = m_view.from_freq(cfg, r, fc/(i+0));
+				int x1 = m_view.from_freq(cfg, r, fc/(i+1));
+				if(x0 - x1 < 5) break;
+				cursor(rend, r, x0, 
+						Widget::CursorFlags::Vertical |
+						Widget::CursorFlags::HarmonicHelper);
+			}
+		}
+	}
+
+	if(cfg.y == View::Axis::Frequency) {
+		printf("y: freq ");
+		cursor(rend, r, m_view.freq_to_y(m_view.freq.cursor, r),
+				Widget::CursorFlags::Horizontal |
+				Widget::CursorFlags::Shadow);
+
+		if(m_view.freq.cursor > 0.0 && m_view.freq.cursor < 1.0) {
+			Frequency fc = m_view.freq.cursor;
+			int dy = m_view.from_freq(cfg, r, fc * 2) - m_view.from_freq(cfg, r, fc);
+			if(abs(dy) > 10) {
+				for(Frequency f=fc*2; f<m_view.freq.to; f+=fc) {
+					cursor(rend, r, m_view.freq_to_y(f, r),
+							Widget::CursorFlags::Horizontal |
+							Widget::CursorFlags::HarmonicHelper);
+				}
+			}
+			for(int i=2; i<32; i++) {
+				int y0 = m_view.from_freq(cfg, r, fc/(i+0));
+				int y1 = m_view.from_freq(cfg, r, fc/(i+1));
+				if(abs(y0 - y1) < 5) break;
+				cursor(rend, r, y0, 
+						Widget::CursorFlags::Horizontal |
+						Widget::CursorFlags::HarmonicHelper);
+			}
+		}
+	}
+
+	if(cfg.x == View::Axis::Time) {
+		printf("x: time ");
+		cursor(rend, r, m_view.t_to_x(m_view.time.cursor, r),
+				Widget::CursorFlags::Vertical | 
+				Widget::CursorFlags::Shadow);
+
+		cursor(rend, r, m_view.t_to_x(m_view.time.playpos, r), 
+				Widget::CursorFlags::Vertical | 
+				Widget::CursorFlags::Arrows |
+				Widget::CursorFlags::Shadow |
+				Widget::CursorFlags::PlayPosition);
+	}
+
+	if(cfg.y == View::Axis::Time) {
+		printf("y: time ");
+		cursor(rend, r, m_view.t_to_y(m_view.time.cursor, r),
+				Widget::CursorFlags::Horizontal | 
+				Widget::CursorFlags::Shadow);
+
+		cursor(rend, r, m_view.t_to_y(m_view.time.playpos, r), 
+				Widget::CursorFlags::Horizontal | 
+				Widget::CursorFlags::Arrows |
+				Widget::CursorFlags::Shadow |
+				Widget::CursorFlags::PlayPosition);
+	}
+
+	printf("\n");
+
+}
+

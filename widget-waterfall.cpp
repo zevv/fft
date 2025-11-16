@@ -84,6 +84,7 @@ WidgetWaterfall::WidgetWaterfall(Widget::Info &info)
 		});
 		m_workers.push_back(w);
 	}
+
 }
 
 
@@ -274,6 +275,14 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 
 void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 {
+	if(m_rotate) {
+		m_view_config.x = View::Axis::Time;
+		m_view_config.y = View::Axis::Frequency;
+	} else {
+		m_view_config.x = View::Axis::Frequency;
+		m_view_config.y = View::Axis::Time;
+	}
+
 	
 	size_t stride = 0;
 	size_t frames_avail = 0;
@@ -296,6 +305,7 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	if(ImGui::IsWindowFocused()) {
 			
 		auto pos = ImGui::GetIO().MousePos;
+		auto delta = ImGui::GetIO().MouseDelta;
 
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
 		char fbuf[64];
@@ -304,26 +314,6 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		char note[32];
 		freq_to_note(f, note, sizeof(note));
 		ImGui::TextShadow("%sHz / %s / %+d..%+d dB", fbuf, note, m_aperture.min, m_aperture.max);
-
-		static int x_drag_start = -1;
-		static int y_drag_start = -1;
-
-		if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-			x_drag_start = pos.x;
-			y_drag_start = pos.y;
-		}
-
-		if(ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
-			x_drag_start = -1;
-			y_drag_start = -1;
-		}
-
-		if(x_drag_start != -1) {
-			int dx = pos.x - x_drag_start;
-			int dy = pos.y - y_drag_start;
-			m_view.pan_freq(-dx / r.w);
-			m_view.pan_t(dy / r.h);
-		}
 
 		if(ImGui::IsKeyPressed(ImGuiKey_R)) {
 			m_rotate = !m_rotate;
@@ -337,38 +327,22 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		}
 			
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			ImVec2 delta = ImGui::GetIO().MouseDelta;
-			if(1) {
-				double delta_t = m_rotate ? delta.x/r.w : delta.y/r.h;
-				double delta_f = m_rotate ? -delta.y/r.h : delta.x/r.w;
-				m_view.pan_freq(-delta_f);
-				m_view.pan_t(delta_t);
-			}
+			m_view.pan(m_view_config, r, delta);
 			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				double delta_t = m_rotate ? delta.x : delta.y;
-				double delta_f = m_rotate ? delta.y : delta.x;
-				m_view.zoom_t(delta_t);
-				m_view.zoom_freq(delta_f);
+				m_view.zoom(m_view_config, r, delta);
 			}
 		}
 
 		if(ImGui::IsMouseInRect(r)) {
 			
 			if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-				stream.player.seek(m_view.y_to_t(pos.y, r));
+				stream.player.seek(m_view.to_t(m_view_config, r, pos));
 			}
 		
 			if(ImGui::IsKeyDown(ImGuiKey_LeftShift) && !ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
-				m_view.freq.cursor += m_view.dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
-				m_view.time.cursor += m_view.dy_to_dt(ImGui::GetIO().MouseDelta.y, r) * 0.1;
+				m_view.move_cursor(m_view_config, r, delta);
 			} else {
-				if(m_rotate) {
-					m_view.freq.cursor = m_view.x_to_freq(pos.y, r);
-					m_view.time.cursor = m_view.y_to_t(pos.x, r);
-				} else {
-					m_view.freq.cursor = m_view.x_to_freq(pos.x, r);
-					m_view.time.cursor = m_view.y_to_t(pos.y, r);
-				}
+				m_view.set_cursor(m_view_config, r, pos);
 			}
 		}
 	}
@@ -379,53 +353,19 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	stream.player.filter_get(f_lp, f_hp);
 
 	// selection
-	if(m_view.time.sel_from != m_view.time.sel_to) {
-		float sx_from = m_view.t_to_y(m_view.time.sel_from, r);
-		float sx_to   = m_view.t_to_y(m_view.time.sel_to,   r);
-		SDL_SetRenderDrawColor(rend, 128, 128, 255, 64);
-		SDL_FRect sr = { (float)r.x, sx_from, (float)r.w, sx_to - sx_from };
-		SDL_RenderFillRect(rend, &sr);
-	}
+	// if(m_view.time.sel_from != m_view.time.sel_to) {
+	// 	float sx_from = m_view.t_to_y(m_view.time.sel_from, r);
+	// 	float sx_to   = m_view.t_to_y(m_view.time.sel_to,   r);
+	// 	SDL_SetRenderDrawColor(rend, 128, 128, 255, 64);
+	// 	SDL_FRect sr = { (float)r.x, sx_from, (float)r.w, sx_to - sx_from };
+	// 	SDL_RenderFillRect(rend, &sr);
+	// }
 
 	// grids
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 	grid_time_v(rend, r, m_view.time.from, m_view.time.to);
-	
-	// cursors
-	cursor(rend, r, m_view.freq_to_y(m_view.freq.cursor, r),
-			Widget::CursorFlags::Vertical |
-			Widget::CursorFlags::Shadow);
 
-	cursor(rend, r, m_view.t_to_y(m_view.time.cursor, r),
-			Widget::CursorFlags::Horizontal | 
-			Widget::CursorFlags::Shadow);
-
-	cursor(rend, r, m_view.t_to_y(m_view.time.playpos, r), 
-			Widget::CursorFlags::Horizontal | 
-			Widget::CursorFlags::Arrows |
-			Widget::CursorFlags::Shadow |
-			Widget::CursorFlags::PlayPosition);
-
-	// harmonic helper bars
-	if(m_view.freq.cursor > 0.0 && m_view.freq.cursor < 1.0) {
-		Frequency fc = m_view.freq.cursor;
-		int dx = m_view.freq_to_x(fc * 2, r) - m_view.freq_to_x(fc, r);
-		if(dx > 10) {
-			for(Frequency f=fc*2; f<m_view.freq.to; f+=fc) {
-				cursor(rend, r, m_view.freq_to_x(f, r),
-						Widget::CursorFlags::Vertical |
-						Widget::CursorFlags::HarmonicHelper);
-			}
-		}
-		for(int i=2; i<32; i++) {
-			int x0 = m_view.freq_to_x(fc/(i+0), r);
-			int x1 = m_view.freq_to_x(fc/(i+1), r);
-			if(x0 - x1 < 5) break;
-			cursor(rend, r, x0, 
-					Widget::CursorFlags::Vertical |
-					Widget::CursorFlags::HarmonicHelper);
-		}
-	}
+	cursors(rend, r, m_view, m_view_config);
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 

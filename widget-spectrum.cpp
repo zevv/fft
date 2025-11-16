@@ -31,6 +31,8 @@ private:
 WidgetSpectrum::WidgetSpectrum(Widget::Info &info)
 	: Widget(info)
 {
+	m_view_config.x = View::Axis::Frequency;
+	m_view_config.y = View::Axis::Amplitude;
 }
 
 
@@ -93,32 +95,8 @@ void WidgetSpectrum::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 				db_range, (int8_t)0);
 	}
 	
-	// cursor
-	cursor(rend, r, m_view.freq_to_x(m_view.freq.cursor, r),
-			Widget::CursorFlags::Vertical |
-			Widget::CursorFlags::Shadow);
-
-	// harmonic helper bars
-	if(m_view.freq.cursor > 0.0 && m_view.freq.cursor < 1.0) {
-		Frequency fc = m_view.freq.cursor;
-		int dx = m_view.freq_to_x(fc * 2, r) - m_view.freq_to_x(fc, r);
-		if(dx > 10) {
-			for(Frequency f=fc*2; f<m_view.freq.to; f+=fc) {
-				cursor(rend, r, m_view.freq_to_x(f, r),
-						Widget::CursorFlags::Vertical |
-						Widget::CursorFlags::HarmonicHelper);
-			}
-		}
-		for(int i=2; i<32; i++) {
-			int x0 = m_view.freq_to_x(fc/(i+0), r);
-			int x1 = m_view.freq_to_x(fc/(i+1), r);
-			if(x0 - x1 < 5) break;
-			cursor(rend, r, x0, 
-					Widget::CursorFlags::Vertical |
-					Widget::CursorFlags::HarmonicHelper);
-		}
-	}
-
+	cursors(rend, r, m_view, m_view_config);
+	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
 }

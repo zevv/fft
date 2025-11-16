@@ -80,9 +80,12 @@ protected:
 
 	void cursor(SDL_Renderer *rend, SDL_Rect &r, int v, int flags);
 
+	void cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &cfg);
+
 	Info &m_info;
 	View m_view{};
 	ChannelMap m_channel_map{};
 	double m_pan_speed{};
+	View::Config m_view_config{};
 };
 

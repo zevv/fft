@@ -12,6 +12,16 @@
 class View {
 
 public:
+
+	enum class Axis {
+		None, Time, Frequency, Amplitude
+	};
+
+	struct Config {
+		Axis x{Axis::None};
+		Axis y{Axis::None};
+	};
+
 	View()
 	{
 	}
@@ -27,6 +37,8 @@ public:
 		n->read("freq_from", freq.from);
 		n->read("freq_to", freq.to);
 		n->read("freq_cursor", freq.cursor);
+		n->read("amplitude_min", amplitude.min);
+		n->read("amplitude_max", amplitude.max);
 		n->read("window_size", window.size);
 		if(const char *tmp = n->read_str("window_type")) {
 			window.window_type = Window::str_to_type(tmp);
@@ -46,10 +58,50 @@ public:
 		cfg.write("freq_from", freq.from);
 		cfg.write("freq_to", freq.to);
 		cfg.write("freq_cursor", freq.cursor);
+		cfg.write("amplitude_min", amplitude.min);
+		cfg.write("amplitude_max", amplitude.max);
 		cfg.write("window_size", window.size);
 		cfg.write("window_type", Window::type_to_str(window.window_type));
 		cfg.write("window_beta", window.window_beta);
 		cfg.write("lock", lock);
+	}
+
+	Time to_t(Config &cfg, SDL_Rect &r, ImVec2 pos)
+	{
+		if(cfg.x == Axis::Time) {
+			return time.from + (time.to - time.from) * (pos.x - r.x) / r.w;
+		} else {
+			return time.from + (time.to - time.from) * (pos.y - r.y) / r.h;
+		}
+	}
+
+	void set_cursor(Config &cfg, SDL_Rect &r, ImVec2 pos)
+	{
+		if(cfg.x == Axis::Time) {
+			time.cursor = time.from + (time.to - time.from) * (pos.x - r.x) / r.w;
+		} else if(cfg.y == Axis::Time) {
+			time.cursor = time.from + (time.to - time.from) * (pos.y - r.y) / r.h;
+		}
+
+		if(cfg.x == Axis::Frequency) {
+			freq.cursor = freq.from + (freq.to - freq.from) * (pos.x - r.x) / r.w;
+		} else if(cfg.y == Axis::Frequency) {
+			freq.cursor = freq.from + (freq.to - freq.from) * (1.0 - (pos.y - r.y) / r.h);
+		}
+	}
+
+	void move_cursor(Config &cfg, SDL_Rect &r, ImVec2 delta)
+	{
+		if(cfg.x == Axis::Time) {
+			time.cursor += dx_to_dt(delta.x, r) * 0.1;
+		} else if(cfg.y == Axis::Time) {
+			time.cursor += dy_to_dt(delta.y, r) * 0.1;
+		}
+		if(cfg.x == Axis::Frequency) {
+			freq.cursor += dx_to_dfreq(delta.x, r) * 0.1;
+		} else if(cfg.y == Axis::Frequency) {
+			freq.cursor -= dx_to_dfreq(delta.y, r) * 0.1;
+		}
 	}
 
 	Time x_to_t(float x, SDL_Rect &r) {
@@ -70,6 +122,53 @@ public:
 
 	float freq_to_x(Frequency f, SDL_Rect &r) {
 		return r.x + r.w * (f- freq.from) / (freq.to - freq.from);
+	}
+
+	float from_freq(Config &cfg, SDL_Rect &r, Frequency f) {
+		if(cfg.x == Axis::Frequency) {
+			return r.x + r.w * (f- freq.from) / (freq.to - freq.from);
+		} else {
+			return r.y + r.h * (1.0 - (f - freq.from) / (freq.to - freq.from));
+		}
+	}
+
+	float from_t(Config &cfg, SDL_Rect &r, Time t) {
+		if(cfg.x == Axis::Time) {
+			return r.x + r.w * (t - time.from) / (time.to - time.from);
+		} else {
+			return r.y + r.h * (t - time.from) / (time.to - time.from);
+		}
+	}
+
+	void pan(Config &cfg, SDL_Rect &r, ImVec2 delta) {
+		if(cfg.x == Axis::Time) {
+			double delta_t = delta.x/r.w;
+			pan_t(delta_t);
+		} else if(cfg.y == Axis::Time) {
+			double delta_t = delta.y/r.h;
+			pan_t(delta_t);
+		}
+		if(cfg.x == Axis::Frequency) {
+			double delta_f = -delta.x/r.w;
+			pan_freq(delta_f);
+		} else if(cfg.y == Axis::Frequency) {
+			double delta_f = delta.y/r.h;
+			pan_freq(delta_f);
+		}
+	}
+
+	void zoom(Config &cfg, SDL_Rect &r, ImVec2 delta) {
+		if(cfg.x == Axis::Time) {
+			zoom_t(delta.x, ZoomAnchor::Cursor);
+		} else if(cfg.y == Axis::Time) {
+			zoom_t(delta.y, ZoomAnchor::Cursor);
+		}
+		if(cfg.x == Axis::Frequency) {
+			zoom_freq(delta.x);
+		} else if(cfg.y == Axis::Frequency) {
+			zoom_freq(delta.y);
+		}
+
 	}
 
 	float freq_to_y( Frequency f, SDL_Rect &r) {
@@ -165,6 +264,11 @@ public:
 		double window_beta{0.5}; // analysis window beta (gaussian, kaiser)
 	};
 
+	struct VAmplitude {
+		float min{-1.0f}; // amplitude view min
+		float max{+1.0f}; // amplitude view max
+	};
+
 	struct VAperture {
 		float center{-40.0f}; // waterfall aperture dB center
 		float range{80.0f}; // waterfall aperture dB range
@@ -174,5 +278,6 @@ public:
 	VTime time{};
 	VFreq freq{};
 	VWindow window{};
+	VAmplitude amplitude{};
 	VAperture aperture{};
 };

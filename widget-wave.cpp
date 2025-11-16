@@ -32,6 +32,8 @@ private:
 WidgetWaveform::WidgetWaveform(Widget::Info &info)
 	: Widget(info)
 {
+	m_view_config.x = View::Axis::Time;
+	m_view_config.y = View::Axis::Amplitude;
 }
 
 
@@ -79,6 +81,7 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	if(ImGui::IsWindowFocused()) {
 	
 		auto pos = ImGui::GetIO().MousePos;
+		auto delta = ImGui::GetIO().MouseDelta;
 
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
 		ImGui::Text("t=%.4gs", m_view.time.cursor);
@@ -96,33 +99,14 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	   if(ImGui::IsMouseInRect(r)) {
 
 		   if(ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-			   stream.player.seek(m_view.x_to_t(pos.x, r));
+			   stream.player.seek(m_view.to_t(m_view_config, r, pos));
 		   }
 
-		   if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-			   m_view.time.cursor += m_view.dx_to_dt(ImGui::GetIO().MouseDelta.x, r) * 0.1;
-		   } else {
-			   m_view.time.cursor = m_view.x_to_t(pos.x, r);
-		   }
-
-		   // if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-		   //     m_view.time.sel_from = m_view.x_to_t(pos.x, r);
-		   //     m_view.time.sel_to   = m_view.x_to_t(pos.x, r);
-		   // }
-
-		   // if(ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-		   //     if(ImGui::GetIO().MouseDelta.x < 10) {
-		   //  	   m_view.time.sel_to = m_view.x_to_t(pos.x, r);
-		   //     }
-		   // }
-
-		   // if(m_view.time.sel_from != m_view.time.sel_to) {
-		   //     if(m_view.time.playpos < m_view.time.sel_from || m_view.time.playpos > m_view.time.sel_to) {
-		   //  	   stream.player.seek(m_view.time.sel_from);
-		   //  	   printf("Seek to sel_from %.4f\n", m_view.time.sel_from);
-		   //  	   m_view.time.playpos = m_view.time.sel_from + 0.1; // bah
-		   //     }
-		   // }
+			if(ImGui::IsKeyDown(ImGuiKey_LeftShift) && !ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
+				m_view.move_cursor(m_view_config, r, delta);
+			} else {
+				m_view.set_cursor(m_view_config, r, pos);
+			}
 	   }
 	}
 
@@ -182,15 +166,7 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	double w_idx_to   = (m_view.time.to   - m_view.time.analysis) * stream.sample_rate() + m_view.window.size * 0.5;
 	graph(rend, r, w.data().data(), w.size(), 1, w_idx_from, w_idx_to, 0.0f, +1.0f);
 
-	// cursors
-	cursor(rend, r, m_view.t_to_x(m_view.time.cursor, r),
-			CursorFlags::Vertical |
-			CursorFlags::Shadow);
-	cursor(rend, r, m_view.t_to_x(m_view.time.playpos, r),
-			CursorFlags::Vertical |
-			CursorFlags::PlayPosition |
-			Widget::CursorFlags::Arrows |
-			Widget::CursorFlags::Shadow);
+	cursors(rend, r, m_view, m_view_config);
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
