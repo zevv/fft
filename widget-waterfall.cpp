@@ -293,7 +293,7 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		humanize(f, fbuf, sizeof(fbuf));
 		char note[32];
 		freq_to_note(f, note, sizeof(note));
-		ImGui::Text("%sHz / %s / %+d..%+d dB", fbuf, note, m_aperture.min, m_aperture.max);
+		ImGui::TextShadow("%sHz / %s / %+d..%+d dB", fbuf, note, m_aperture.min, m_aperture.max);
 
 		static int x_drag_start = -1;
 		static int y_drag_start = -1;
@@ -347,7 +347,6 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 			}
 		}
 	}
-
 	gen_waterfall(stream, rend, r);
 
 	// filter pos
@@ -362,6 +361,9 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		SDL_FRect sr = { (float)r.x, sx_from, (float)r.w, sx_to - sx_from };
 		SDL_RenderFillRect(rend, &sr);
 	}
+
+	// grids
+	grid_time_v(rend, r, m_view.time.from, m_view.time.to);
 	
 	// cursors
 	cursor(rend, r, m_view.freq_to_x(m_view.freq.cursor, r),

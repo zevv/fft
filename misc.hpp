@@ -25,6 +25,7 @@ void humanize(double val, char *buf, size_t buf_len);
 namespace ImGui {
 	bool ToggleButton(const char* str_id, bool* v);
 	bool IsMouseInRect(const SDL_Rect& r);
+    void TextShadow(const char* fmt, ...);
 }
 
 

@@ -198,6 +198,25 @@ bool IsMouseInRect(SDL_Rect const &rect)
 	return (mp.x >= rect.x) && (mp.x < rect.x + rect.w) &&
 	       (mp.y >= rect.y) && (mp.y < rect.y + rect.h);
 }
+    
+void TextShadow(const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	char buf[256];
+	vsnprintf(buf, sizeof(buf), fmt, args);
+	va_end(args);
+
+	ImVec2 text_size = ImGui::CalcTextSize(buf);
+	auto draw_list = ImGui::GetWindowDrawList();
+	draw_list->AddRectFilled(ImGui::GetCursorScreenPos(),
+			ImVec2(ImGui::GetCursorScreenPos().x + text_size.x,
+			ImGui::GetCursorScreenPos().y + text_size.y),
+			IM_COL32(0, 0, 0, 128), 0.0f);
+	ImGui::TextUnformatted(buf);
+
+}
+
 
 }
 
