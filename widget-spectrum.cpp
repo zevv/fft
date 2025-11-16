@@ -69,7 +69,7 @@ void WidgetSpectrum::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
-	int8_t db_range = -120.0;
+	int8_t db_range = -127.0;
 	grid_vertical(rend, r, db_range, 0);
 
 	for(int ch : m_channel_map.enabled_channels()) {

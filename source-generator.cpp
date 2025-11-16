@@ -50,13 +50,22 @@ void SourceGenerator::open()
 }
 
 
+static Sample float_to_s16(double v)
+{
+	double dither = (double)rand() / RAND_MAX - 0.5;
+	return (int16_t)floor(v * 32767 + dither);
+}
+
+
 void SourceGenerator::gen_sine(std::vector<Sample> &buf)
 {
-	Time dp = 440.0 * 2.0 * M_PI / m_srate;
+	static size_t n = 0.0;
+
 	for(size_t i=0; i<buf.size(); i++) {
-		buf[i] = sin(m_phase) * k_sample_max;
-		m_phase += dp;
-		if(m_phase > 2.0 * M_PI) m_phase -= 2.0 * M_PI;
+		double phase = 440.0 *n / m_srate;
+		phase = fmod(phase, 1.0);
+		buf[i] = float_to_s16(sin(2 * M_PI * phase));
+		n++;
 	}
 }
 
@@ -66,7 +75,7 @@ void SourceGenerator::gen_saw(std::vector<Sample> &buf)
 	Sample v = 0;
 
 	if(m_type == 0) {
-		v = sin(m_phase) * k_sample_max;
+		v = float_to_s16(sin(m_phase));
 		m_phase += 4000.0 * 2.0 * M_PI / m_srate;
 	}
 }
@@ -75,7 +84,7 @@ void SourceGenerator::gen_saw(std::vector<Sample> &buf)
 void SourceGenerator::gen_sweep(std::vector<Sample> &buf)
 {
 	for(size_t i=0; i<buf.size(); i++) {
-		buf[i] = sin(m_phase) * k_sample_max;
+		buf[i] = float_to_s16(sin(m_phase));
 		m_phase += m_aux1 * 2.0 * M_PI / m_srate;
 		m_aux1 += 0.1;
 		if(m_phase > 2.0 * M_PI) m_phase -= 2.0 * M_PI;
