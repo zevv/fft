@@ -71,6 +71,10 @@ public:
 	float freq_to_x(Frequency f, SDL_Rect &r) {
 		return r.x + r.w * (f- freq.from) / (freq.to - freq.from);
 	}
+
+	float freq_to_y( Frequency f, SDL_Rect &r) {
+		return r.y + r.h * (1.0 - (f - freq.from) / (freq.to - freq.from));
+	}
 	
 	Frequency dx_to_dfreq(float dx, SDL_Rect &r) {
 		return dx * (freq.to - freq.from) / r.w;

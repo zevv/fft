@@ -35,11 +35,12 @@ private:
 		Sample *data;
 		size_t data_stride;
 		int id;
-		int w;
-		Range<int> y;
+		int cols;
+		Range<int> row;
 		Range<Frequency> f;
 		uint32_t *pixels;
-		size_t pitch;
+		size_t dp_col;
+		size_t dp_row;
 		uint32_t v;
 		ssize_t idx;
 		ssize_t didx;
@@ -65,6 +66,7 @@ private:
 	Queue<Result> m_result_queue{32};
 	size_t m_jobs_in_flight{0};
 	Aperture m_aperture{-127, -0};
+	bool m_rotate{false};
 };
 
 
@@ -152,25 +154,22 @@ void WidgetWaterfall::job_run_gen(Worker &worker, Job &job)
 	
 	Result res;
 
-	for(int y=job.y.min; y<job.y.max; y++) {
-
-		idx += job.didx;
-		if(idx < 0) continue;
-		if(idx >= job.idx_max) break;
-
-		auto fft_out = worker.fft.run(&job.data[idx], job.data_stride);
-		uint32_t *p = job.pixels + y * job.pitch;
-
-		for(int x=0; x<job.w; x++) {
-			Frequency f = job.f.min + (job.f.max - job.f.min) * x / job.w;
-			if(f >=0 && f <= 1.0) {
-				int db = tabread2(fft_out, f, (int8_t)-127);
-				res.hist.add(db);
-				uint32_t alpha = std::clamp(255 * (db - job.aperture.min) / (job.aperture.max - job.aperture.min), 0, 255);
-				*p = v | (alpha << 24);
+	for(int row=job.row.min; row<job.row.max; row++) {
+		if(idx >=0 && idx < job.idx_max) {
+			auto fft_out = worker.fft.run(&job.data[idx], job.data_stride);
+			uint32_t *p = job.pixels + row * job.dp_row;
+			for(int col=0; col<job.cols; col++) {
+				Frequency f = job.f.min + (job.f.max - job.f.min) * col / job.cols;
+				if(f >=0 && f <= 1.0) {
+					int db = tabread2(fft_out, f, (int8_t)-127);
+					res.hist.add(db);
+					uint32_t alpha = std::clamp(255 * (db - job.aperture.min) / (job.aperture.max - job.aperture.min), 0, 255);
+					*p = v | (alpha << 24);
+				}
+				p += job.dp_col;
 			}
-			p++;
 		}
+		idx += job.didx;
 	}
 
 	m_result_queue.push(res);
@@ -191,8 +190,8 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 	}
 			
 	if(m_agc) {
-		m_aperture.min = hist.find_percentile(0.01);
-		m_aperture.max = hist.find_percentile(0.99) + 10;
+		m_aperture.min = hist.find_percentile(0.05);
+		m_aperture.max = hist.find_percentile(1.00) + 10.0;
 	}
 
 	// render previous results
@@ -228,29 +227,40 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 
 		if(m_channel_map.is_channel_enabled(ch)) {
 
+			int row_count = m_rotate ? r.w : r.h;
+			int col_count = m_rotate ? r.h : r.w;
+
 			Time t = m_view.time.from;
-			Time dt = (m_view.time.to - m_view.time.from) / r.h;
+			Time dt = (m_view.time.to - m_view.time.from) / row_count;
 			ssize_t idx = ceil(stream.sample_rate() * t - m_view.window.size / 2) * stride + ch;
 			ssize_t didx = floor(stream.sample_rate() * dt) * stride;
 
-			for(int y=0; y<r.h; y+=128) {
+
+			for(int row=0; row<row_count; row+=128) {
 
 				Job job;
 				job.cmd = JobCmd::Gen;
 				job.data = data;
 				job.data_stride = stride;
-				job.w = r.w;
-				job.y.min = y;
-				job.y.max = std::min(y + 128, r.h);
+				job.cols = col_count;
+				job.row.min = row;
+				job.row.max = std::min(row + 128, row_count);
 				job.f.min = m_view.freq.from;
 				job.f.max = m_view.freq.to;
 				job.pixels = pixels;
-				job.pitch = pitch / 4;
+				job.dp_col = 1;
+				job.dp_row = pitch / 4;
 				job.idx = idx;
 				job.didx = didx;
 				job.idx_max = frames_avail * stride;
 				job.v = *(uint32_t *)&col & 0x00FFFFFF;
 				job.aperture = m_aperture;
+
+				if(m_rotate) {
+					job.pixels = pixels + (r.h - 1) * (pitch / 4);
+					job.dp_col = -pitch / 4;
+					job.dp_row = 1;
+				}
 
 				m_job_queue.push(job);
 				m_jobs_in_flight++;
@@ -315,6 +325,10 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 			m_view.pan_t(dy / r.h);
 		}
 
+		if(ImGui::IsKeyPressed(ImGuiKey_R)) {
+			m_rotate = !m_rotate;
+		}
+
 		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
 			m_view.freq.from = 0.0f;
 			m_view.freq.to = 1.0;
@@ -323,17 +337,23 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		}
 			
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			m_view.pan_freq(-ImGui::GetIO().MouseDelta.x / r.w);
-			m_view.pan_t(ImGui::GetIO().MouseDelta.y / r.h);
+			ImVec2 delta = ImGui::GetIO().MouseDelta;
+			if(1) {
+				double delta_t = m_rotate ? delta.x/r.w : delta.y/r.h;
+				double delta_f = m_rotate ? -delta.y/r.h : delta.x/r.w;
+				m_view.pan_freq(-delta_f);
+				m_view.pan_t(delta_t);
+			}
 			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				m_view.zoom_t(ImGui::GetIO().MouseDelta.y);
-				m_view.zoom_freq(ImGui::GetIO().MouseDelta.x);
+				double delta_t = m_rotate ? delta.x : delta.y;
+				double delta_f = m_rotate ? delta.y : delta.x;
+				m_view.zoom_t(delta_t);
+				m_view.zoom_freq(delta_f);
 			}
 		}
 
 		if(ImGui::IsMouseInRect(r)) {
 			
-
 			if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
 				stream.player.seek(m_view.y_to_t(pos.y, r));
 			}
@@ -342,8 +362,13 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 				m_view.freq.cursor += m_view.dx_to_dfreq(ImGui::GetIO().MouseDelta.x, r) * 0.1f;
 				m_view.time.cursor += m_view.dy_to_dt(ImGui::GetIO().MouseDelta.y, r) * 0.1;
 			} else {
-				m_view.freq.cursor = m_view.x_to_freq(pos.x, r);
-				m_view.time.cursor = m_view.y_to_t(pos.y, r);
+				if(m_rotate) {
+					m_view.freq.cursor = m_view.x_to_freq(pos.y, r);
+					m_view.time.cursor = m_view.y_to_t(pos.x, r);
+				} else {
+					m_view.freq.cursor = m_view.x_to_freq(pos.x, r);
+					m_view.time.cursor = m_view.y_to_t(pos.y, r);
+				}
 			}
 		}
 	}
@@ -367,7 +392,7 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	grid_time_v(rend, r, m_view.time.from, m_view.time.to);
 	
 	// cursors
-	cursor(rend, r, m_view.freq_to_x(m_view.freq.cursor, r),
+	cursor(rend, r, m_view.freq_to_y(m_view.freq.cursor, r),
 			Widget::CursorFlags::Vertical |
 			Widget::CursorFlags::Shadow);
 
