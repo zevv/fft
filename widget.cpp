@@ -465,7 +465,8 @@ void Widget::cursor(SDL_Renderer *rend, SDL_Rect &r, int v, int flags)
 void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &cfg)
 {
 
-	if(cfg.x == View::Axis::Frequency) {
+	if(cfg.frequency == View::Axis::X) {
+		printf("freq x\n");
 		cursor(rend, r, m_view.from_freq(cfg, r, m_view.freq.cursor),
 				Widget::CursorFlags::Vertical |
 				Widget::CursorFlags::Shadow);
@@ -473,8 +474,10 @@ void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &
 		// harmonic helper bars
 		if(m_view.freq.cursor > 0.0 && m_view.freq.cursor < 1.0) {
 			Frequency fc = m_view.freq.cursor;
-			int dx = m_view.from_freq(cfg, r, fc * 2) - m_view.from_freq(cfg, r, fc);
-			if(dx > 10) {
+			int p0 = m_view.from_freq(cfg, r, fc * 2);
+			int p1 = m_view.from_freq(cfg, r, fc);
+			printf("%d %d\n", p0, p1);
+			if(abs(p0 - p1) > 10) {
 				for(Frequency f=fc*2; f<m_view.freq.to; f+=fc) {
 					cursor(rend, r, m_view.from_freq(cfg, r, f),
 							Widget::CursorFlags::Vertical |
@@ -492,7 +495,7 @@ void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &
 		}
 	}
 
-	if(cfg.y == View::Axis::Frequency) {
+	if(cfg.frequency == View::Axis::Y) {
 		cursor(rend, r, m_view.from_freq(cfg, r, m_view.freq.cursor),
 				Widget::CursorFlags::Horizontal |
 				Widget::CursorFlags::Shadow);
@@ -518,7 +521,7 @@ void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &
 		}
 	}
 
-	if(cfg.x == View::Axis::Time) {
+	if(cfg.time == View::Axis::X) {
 		cursor(rend, r, m_view.from_t(m_view_config, r, m_view.time.cursor),
 				Widget::CursorFlags::Vertical | 
 				Widget::CursorFlags::Shadow);
@@ -530,7 +533,7 @@ void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &
 				Widget::CursorFlags::PlayPosition);
 	}
 
-	if(cfg.y == View::Axis::Time) {
+	if(cfg.time == View::Axis::Y) {
 		cursor(rend, r, m_view.from_t(m_view_config, r, m_view.time.cursor),
 				Widget::CursorFlags::Horizontal | 
 				Widget::CursorFlags::Shadow);
