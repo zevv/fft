@@ -386,11 +386,6 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	// 	SDL_RenderFillRect(rend, &sr);
 	// }
 
-	// grids
-	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
-
-	cursors(rend, r, m_view, m_view_config);
-
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
 }

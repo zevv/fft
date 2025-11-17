@@ -98,7 +98,6 @@ void WidgetSpectrum::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 				db_range, (int8_t)0);
 	}
 	
-	cursors(rend, r, m_view, m_view_config);
 	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 

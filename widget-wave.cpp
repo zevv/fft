@@ -157,7 +157,6 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	//	SDL_RenderFillRect(rend, &sr);
 	//}
 
-	// grids
 	// window
 	Window w = Window(m_view.window.window_type, m_view.window.size, m_view.window.window_beta);
 	SDL_SetRenderDrawColor(rend, 128, 128, 128, 255);
@@ -165,9 +164,6 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	double w_idx_to   = (m_view.time.to   - m_view.time.analysis) * stream.sample_rate() + m_view.window.size * 0.5;
 	graph(rend, r, w.data().data(), w.size(), 1, w_idx_from, w_idx_to, 0.0f, +1.0f);
 
-	cursors(rend, r, m_view, m_view_config);
-	grids(rend, r, m_view, m_view_config);
-	
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
 }

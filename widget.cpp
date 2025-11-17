@@ -157,6 +157,9 @@ void Widget::draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	double t1 = hirestime();
 	do_draw(stream, rend, r);
 	double t2 = hirestime();
+	
+	cursors(rend, r, m_view, m_view_config);
+	grids(rend, r, m_view, m_view_config);
 
 	// draw render time
 	if(1) {
@@ -432,7 +435,6 @@ void Widget::cursor(SDL_Renderer *rend, SDL_Rect &r, int v, int flags)
         int indices[] = { 0, 1, 2, 1, 2, 3, 2, 3, 4, 3, 4, 5, 4, 5, 6, 5, 6, 7 };
         
         SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, col.a);
-        SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
         SDL_RenderGeometry(rend, nullptr, vtx, 8, indices, 18);
     };
 
@@ -465,6 +467,7 @@ void Widget::cursor(SDL_Renderer *rend, SDL_Rect &r, int v, int flags)
 
 void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &cfg)
 {
+	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
 	if(cfg.x == View::Axis::Frequency || cfg.y == View::Axis::Frequency) {
 
@@ -518,6 +521,8 @@ void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &
 
 void Widget::grids(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &cfg)
 {
+	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
+
 	if(cfg.y == View::Axis::Time) {
 		grid_time_v(rend, r, m_view.time.from, m_view.time.to);
 	}
