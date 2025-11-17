@@ -329,9 +329,6 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 
 	if(ImGui::IsWindowFocused()) {
 			
-		auto pos = ImGui::GetIO().MousePos;
-		auto delta = ImGui::GetIO().MouseDelta;
-
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
 		char fbuf[64];
 		float f = m_view.freq.cursor * stream.sample_rate() * 0.5f;
@@ -343,39 +340,13 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		if(ImGui::IsKeyPressed(ImGuiKey_R)) {
 			m_rotate = !m_rotate;
 		}
-
-		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
-			m_view.freq.from = 0.0f;
-			m_view.freq.to = 1.0;
-			m_view.time.from = 0;
-			m_view.time.to   = frames_avail / stream.sample_rate();
-		}
-			
-		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			m_view.pan(m_view_config, r, delta);
-			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				m_view.zoom(m_view_config, r, delta);
-			}
-		}
-
-		if(ImGui::IsMouseInRect(r)) {
-			
-			if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-				stream.player.seek(m_view.time.cursor);
-			}
-		
-			if(ImGui::IsKeyDown(ImGuiKey_LeftShift) && !ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
-				m_view.move_cursor(m_view_config, r, delta);
-			} else {
-				m_view.set_cursor(m_view_config, r, pos);
-			}
-		}
 	}
+
 	gen_waterfall(stream, rend, r);
 
 	// filter pos
-	float f_lp, f_hp;
-	stream.player.filter_get(f_lp, f_hp);
+	//float f_lp, f_hp;
+	//stream.player.filter_get(f_lp, f_hp);
 
 	// selection
 	// if(m_view.time.sel_from != m_view.time.sel_to) {

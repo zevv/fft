@@ -79,37 +79,8 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	Wavecache::Range *wdata = stream.peek_wavecache(&wdata_stride, &wframes_avail);
 
 	if(ImGui::IsWindowFocused()) {
-	
-		auto pos = ImGui::GetIO().MousePos;
-		auto delta = ImGui::GetIO().MouseDelta;
-
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
 		ImGui::Text("t=%.4gs", m_view.time.cursor);
-
-		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			m_view.pan(m_view_config, r, delta);
-			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				m_view.zoom(m_view_config, r, delta);
-			}
-		}
-
-		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
-			m_view.time.from = 0;
-			m_view.time.to   = frames_avail / stream.sample_rate();
-		}
-
-	   if(ImGui::IsMouseInRect(r)) {
-
-		   if(ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-			   stream.player.seek(m_view.time.cursor);
-		   }
-
-			if(ImGui::IsKeyDown(ImGuiKey_LeftShift) && !ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
-				m_view.move_cursor(m_view_config, r, delta);
-			} else {
-				m_view.set_cursor(m_view_config, r, pos);
-			}
-	   }
 	}
 
 

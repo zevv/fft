@@ -102,6 +102,10 @@ void Widget::draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	ImGui::SameLine();
 	
 	if(ImGui::IsWindowFocused()) {
+		
+		ImGuiIO& io = ImGui::GetIO();
+		auto pos = ImGui::GetIO().MousePos;
+		auto delta = ImGui::GetIO().MouseDelta;
 
 		// key '[': decrease window size
 		if(ImGui::IsKeyPressed(ImGuiKey_LeftBracket)) {
@@ -147,10 +151,49 @@ void Widget::draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 			panning = true;
 		}
 		m_pan_speed = panning ? m_pan_speed + 0.002 : 0.0;
+	
+		// key 'A': reset view
+		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
+			if(m_view_config.x == View::Axis::Time || m_view_config.y == View::Axis::Time) {
+				size_t stride = 0;
+				size_t frames_avail = 0;
+				Sample *data = stream.peek(&stride, &frames_avail);
+				m_view.time.from = 0.0;
+				m_view.time.to   = frames_avail / stream.sample_rate();
+			}
+			if(m_view_config.x == View::Axis::Frequency || m_view_config.y == View::Axis::Frequency) {
+				m_view.freq.from = 0.0f;
+				m_view.freq.to = 1.0;
+			}
+		}
 
-		// mouse wheel scrolls time
-		ImGuiIO& io = ImGui::GetIO();
-		m_view.pan_t(io.MouseWheel * 0.1f);
+		// mouse RMB: pan/zoom
+		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
+			m_view.pan(m_view_config, r, delta);
+			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+				m_view.zoom(m_view_config, r, delta);
+			}
+		}
+
+		// mouse wheel: pan/zoom time
+		if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+			m_view.zoom_t(-io.MouseWheel * 40.0f);
+		} else {
+			m_view.pan_t(io.MouseWheel * 0.1f);
+		}
+	   
+		if(ImGui::IsMouseInRect(r)) {
+			if(ImGui::IsKeyDown(ImGuiKey_LeftShift) && !ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
+				m_view.move_cursor(m_view_config, r, delta);
+			} else {
+				m_view.set_cursor(m_view_config, r, pos);
+			}
+		  
+			// mouse LMB: seek to cursor
+			if(ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+				stream.player.seek(m_view.time.cursor);
+			}
+		}
 	}
 
 	// draw widget
@@ -479,22 +522,24 @@ void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &
 				dir | Widget::CursorFlags::Shadow);
 
 		// harmonic helper bars
-		if(m_view.freq.cursor > 0.0 && m_view.freq.cursor < 1.0) {
-			Frequency fc = m_view.freq.cursor;
-			int p0 = m_view.from_freq(cfg, r, fc * 2);
-			int p1 = m_view.from_freq(cfg, r, fc);
-			if(abs(p0 - p1) > 10) {
-				for(Frequency f=fc*2; f<m_view.freq.to; f+=fc) {
-					cursor(rend, r, m_view.from_freq(cfg, r, f),
+		if(ImGui::IsMouseInRect(r)) {
+			if(m_view.freq.cursor > 0.0 && m_view.freq.cursor < 1.0) {
+				Frequency fc = m_view.freq.cursor;
+				int p0 = m_view.from_freq(cfg, r, fc * 2);
+				int p1 = m_view.from_freq(cfg, r, fc);
+				if(abs(p0 - p1) > 10) {
+					for(Frequency f=fc*2; f<m_view.freq.to; f+=fc) {
+						cursor(rend, r, m_view.from_freq(cfg, r, f),
+								dir | Widget::CursorFlags::HarmonicHelper);
+					}
+				}
+				for(int i=2; i<32; i++) {
+					int x0 = m_view.from_freq(cfg, r, fc/(i+0));
+					int x1 = m_view.from_freq(cfg, r, fc/(i+1));
+					if(abs(x0 - x1) < 5) break;
+					cursor(rend, r, x0, 
 							dir | Widget::CursorFlags::HarmonicHelper);
 				}
-			}
-			for(int i=2; i<32; i++) {
-				int x0 = m_view.from_freq(cfg, r, fc/(i+0));
-				int x1 = m_view.from_freq(cfg, r, fc/(i+1));
-				if(abs(x0 - x1) < 5) break;
-				cursor(rend, r, x0, 
-						dir | Widget::CursorFlags::HarmonicHelper);
 			}
 		}
 	}
