@@ -361,7 +361,7 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		if(ImGui::IsMouseInRect(r)) {
 			
 			if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-				stream.player.seek(m_view.to_t(m_view_config, r, pos));
+				stream.player.seek(m_view.time.cursor);
 			}
 		
 			if(ImGui::IsKeyDown(ImGuiKey_LeftShift) && !ImGui::IsMouseDown(ImGuiMouseButton_Right)) {

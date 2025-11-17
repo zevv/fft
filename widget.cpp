@@ -138,12 +138,12 @@ void Widget::draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 
 		// key 'up': zoom in time
 		if(ImGui::IsKeyDown(ImGuiKey_UpArrow)) {
-			m_view.zoom_t(-m_pan_speed * 100, View::ZoomAnchor::Middle);
+			m_view.zoom_t(-m_pan_speed * 100);
 			panning = true;
 		}
 		// key 'down': zoom out time
 		if(ImGui::IsKeyDown(ImGuiKey_DownArrow)) {
-			m_view.zoom_t(+m_pan_speed * 100, View::ZoomAnchor::Middle);
+			m_view.zoom_t(+m_pan_speed * 100);
 			panning = true;
 		}
 		m_pan_speed = panning ? m_pan_speed + 0.002 : 0.0;
