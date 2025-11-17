@@ -81,6 +81,7 @@ protected:
 	void cursor(SDL_Renderer *rend, SDL_Rect &r, int v, int flags);
 
 	void cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &cfg);
+	void grids(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &cfg);
 
 	Info &m_info;
 	View m_view{};

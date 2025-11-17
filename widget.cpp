@@ -515,3 +515,21 @@ void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &
 	}
 }
 
+
+void Widget::grids(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &cfg)
+{
+	if(cfg.time == View::Axis::Y) {
+		grid_time_v(rend, r, m_view.time.from, m_view.time.to);
+	}
+
+	if(cfg.time == View::Axis::X) {
+		grid_time(rend, r, m_view.time.from, m_view.time.to);
+	}
+
+	if(cfg.amplitude == View::Axis::Y) {
+		double scale = 1.0;
+		grid_vertical(rend, r, -scale / k_sample_max, +scale / k_sample_max);
+	}
+
+}
+

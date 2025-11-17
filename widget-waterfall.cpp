@@ -388,7 +388,6 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 
 	// grids
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
-	grid_time_v(rend, r, m_view.time.from, m_view.time.to);
 
 	cursors(rend, r, m_view, m_view_config);
 

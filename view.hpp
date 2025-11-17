@@ -29,42 +29,58 @@ public:
 
 	void load(ConfigReader::Node *n)
 	{
-		n->read("t_cursor", time.cursor);
-		n->read("t_playpos", time.playpos);
-		n->read("t_from", time.from);
-		n->read("t_to", time.to);
-		n->read("t_sel_from", time.sel_from);
-		n->read("t_sel_to", time.sel_to);
-		n->read("freq_from", freq.from);
-		n->read("freq_to", freq.to);
-		n->read("freq_cursor", freq.cursor);
-		n->read("amplitude_min", amplitude.min);
-		n->read("amplitude_max", amplitude.max);
-		n->read("window_size", window.size);
-		if(const char *tmp = n->read_str("window_type")) {
-			window.window_type = Window::str_to_type(tmp);
-		}
-		n->read("window_beta", window.window_beta);
 		n->read("lock", lock);
+		if(auto *nc = n->find("time")) {
+			nc->read("cursor", time.cursor);
+			nc->read("playpos", time.playpos);
+			nc->read("from", time.from);
+			nc->read("to", time.to);
+			nc->read("sel_from", time.sel_from);
+			nc->read("sel_to", time.sel_to);
+		}
+		if(auto *nc = n->find("frequency")) {
+			nc->read("cursor", freq.cursor);
+			nc->read("from", freq.from);
+			nc->read("to", freq.to);
+		}
+		if(auto *nc = n->find("amplitude")) {
+			nc->read("min", amplitude.min);
+			nc->read("max", amplitude.max);
+		}
+		if(auto *nc = n->find("window")) {
+			nc->read("size", window.size);
+			if(const char *tmp = nc->read_str("type")) {
+				window.window_type = Window::str_to_type(tmp);
+			}
+			nc->read("beta", window.window_beta);
+		}
 	}
 
 	void save(ConfigWriter &cfg)
 	{
-		cfg.write("t_cursor", time.cursor);
-		cfg.write("t_playpos", time.playpos);
-		cfg.write("t_from", time.from);
-		cfg.write("t_to", time.to);
-		cfg.write("t_sel_from", time.sel_from);
-		cfg.write("t_sel_to", time.sel_to);
-		cfg.write("freq_from", freq.from);
-		cfg.write("freq_to", freq.to);
-		cfg.write("freq_cursor", freq.cursor);
-		cfg.write("amplitude_min", amplitude.min);
-		cfg.write("amplitude_max", amplitude.max);
-		cfg.write("window_size", window.size);
-		cfg.write("window_type", Window::type_to_str(window.window_type));
-		cfg.write("window_beta", window.window_beta);
 		cfg.write("lock", lock);
+		cfg.push("time");
+		cfg.write("cursor", time.cursor);
+		cfg.write("playpos", time.playpos);
+		cfg.write("from", time.from);
+		cfg.write("to", time.to);
+		cfg.write("sel_from", time.sel_from);
+		cfg.write("sel_to", time.sel_to);
+		cfg.pop();
+		cfg.push("frequency");
+		cfg.write("from", freq.from);
+		cfg.write("to", freq.to);
+		cfg.write("cursor", freq.cursor);
+		cfg.pop();
+		cfg.push("amplitude");
+		cfg.write("min", amplitude.min);
+		cfg.write("max", amplitude.max);
+		cfg.pop();
+		cfg.push("window");
+		cfg.write("size", window.size);
+		cfg.write("type", Window::type_to_str(window.window_type));
+		cfg.write("beta", window.window_beta);
+		cfg.pop();
 	}
 
 	void set_cursor(Config &cfg, SDL_Rect &r, ImVec2 pos)
