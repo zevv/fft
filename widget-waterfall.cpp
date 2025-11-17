@@ -301,11 +301,11 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 {
 	if(m_rotate) {
-		m_view_config.time = View::Axis::X;
-		m_view_config.frequency = View::Axis::Y;
+		m_view_config.x = View::Axis::Time;
+		m_view_config.y = View::Axis::Frequency;
 	} else {
-		m_view_config.time = View::Axis::Y;
-		m_view_config.frequency = View::Axis::X;
+		m_view_config.x = View::Axis::Frequency;
+		m_view_config.y = View::Axis::Time;
 	}
 
 	

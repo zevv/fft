@@ -32,8 +32,8 @@ private:
 WidgetWaveform::WidgetWaveform(Widget::Info &info)
 	: Widget(info)
 {
-	m_view_config.time = View::Axis::X;
-	m_view_config.amplitude = View::Axis::Y;
+	m_view_config.x = View::Axis::Time;
+	m_view_config.y = View::Axis::Amplitude;
 }
 
 

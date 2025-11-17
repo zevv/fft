@@ -466,9 +466,9 @@ void Widget::cursor(SDL_Renderer *rend, SDL_Rect &r, int v, int flags)
 void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &cfg)
 {
 
-	if(cfg.frequency != View::Axis::None) {
+	if(cfg.x == View::Axis::Frequency || cfg.y == View::Axis::Frequency) {
 
-		CursorFlags dir = (cfg.frequency == View::Axis::X) ? 
+		CursorFlags dir = (cfg.x == View::Axis::Frequency) ?
 			Widget::CursorFlags::Vertical : Widget::CursorFlags::Horizontal;
 	
 		// frequqncy cursor
@@ -496,9 +496,9 @@ void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &
 		}
 	}
 
-	if(cfg.time != View::Axis::None) {
+	if(cfg.x == View::Axis::Time || cfg.y == View::Axis::Time) {
 
-		CursorFlags dir = (cfg.time == View::Axis::X) ? 
+		CursorFlags dir = (cfg.x == View::Axis::Time) ?
 			Widget::CursorFlags::Vertical : Widget::CursorFlags::Horizontal;
 
 		// time cursor
@@ -518,15 +518,15 @@ void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &
 
 void Widget::grids(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &cfg)
 {
-	if(cfg.time == View::Axis::Y) {
+	if(cfg.y == View::Axis::Time) {
 		grid_time_v(rend, r, m_view.time.from, m_view.time.to);
 	}
 
-	if(cfg.time == View::Axis::X) {
+	if(cfg.x == View::Axis::Time) {
 		grid_time(rend, r, m_view.time.from, m_view.time.to);
 	}
 
-	if(cfg.amplitude == View::Axis::Y) {
+	if(cfg.y == View::Axis::Amplitude) {
 		double scale = 1.0;
 		grid_vertical(rend, r, -scale / k_sample_max, +scale / k_sample_max);
 	}

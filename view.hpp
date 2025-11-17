@@ -14,13 +14,12 @@ class View {
 public:
 
 	enum class Axis {
-		None, X, Y,
+		None, Time, Frequency, Amplitude,
 	};
 
 	struct Config {
-		Axis time{Axis::None};
-		Axis frequency{Axis::None};
-		Axis amplitude{Axis::None};
+		Axis x{Axis::None};
+		Axis y{Axis::None};
 	};
 
 	View()
@@ -85,86 +84,100 @@ public:
 
 	void set_cursor(Config &cfg, SDL_Rect &r, ImVec2 pos)
 	{
-		if(cfg.time == Axis::X) {
+		if(cfg.x == Axis::Time) {
 			time.cursor = time.from + (time.to - time.from) * (pos.x - r.x) / r.w;
-		} else if(cfg.time == Axis::Y) {
+		} 
+		if(cfg.y == Axis::Time) {
 			time.cursor = time.from + (time.to - time.from) * (pos.y - r.y) / r.h;
 		}
 
-		if(cfg.frequency == Axis::X) {
+		if(cfg.x == Axis::Frequency) {
 			freq.cursor = freq.from + (freq.to - freq.from) * (pos.x - r.x) / r.w;
-		} else if(cfg.frequency == Axis::Y) {
+		} 
+		if(cfg.y == Axis::Frequency) {
 			freq.cursor = freq.from + (freq.to - freq.from) * (1.0 - (pos.y - r.y) / r.h);
 		}
 	}
 
 	void move_cursor(Config &cfg, SDL_Rect &r, ImVec2 delta)
 	{
-		if(cfg.time == Axis::X) {
+		if(cfg.x == Axis::Time) {
 			time.cursor += delta.x / r.w * (time.to - time.from) * 0.1;
-		} else if(cfg.time == Axis::Y) {
+		}
+		if(cfg.y == Axis::Time) {
 			time.cursor += delta.y / r.h * (time.to - time.from) * 0.1;
 
 		}
-		if(cfg.frequency == Axis::X) {
+		if(cfg.x == Axis::Frequency) {
 			freq.cursor += delta.x / r.w * (freq.to - freq.from) * 0.1;
-		} else if(cfg.frequency == Axis::Y) {
+		} 
+		if(cfg.y == Axis::Frequency) {
 			freq.cursor -= delta.y / r.h * (freq.to - freq.from) * 0.1;
 		}
 	}
 	
 	Time to_t(Config &cfg, SDL_Rect &r, ImVec2 pos)
 	{
-		if(cfg.time == Axis::X) {
+		if(cfg.x == Axis::Time) {
 			return time.from + (time.to - time.from) * (pos.x - r.x) / r.w;
-		} else {
+		} 
+		if(cfg.y == Axis::Time) {
 			return time.from + (time.to - time.from) * (pos.y - r.y) / r.h;
 		}
+		return 0.0;
 	}
 
 
 	float from_freq(Config &cfg, SDL_Rect &r, Frequency f) {
-		if(cfg.frequency == Axis::X) {
+		if(cfg.x == Axis::Frequency) {
 			return r.x + r.w * (f- freq.from) / (freq.to - freq.from);
-		} else {
+		}
+		if(cfg.y == Axis::Frequency) {
 			return r.y + r.h * (1.0 - (f - freq.from) / (freq.to - freq.from));
 		}
+		return 0.0;
 	}
 	
 	float from_t(Config &cfg, SDL_Rect &r, Time t) {
-		if(cfg.time == Axis::X) {
+		if(cfg.x == Axis::Time) {
 			return r.x + r.w * (t - time.from) / (time.to - time.from);
-		} else {
+		} 
+		if(cfg.y == Axis::Time) {
 			return r.y + r.h * (t - time.from) / (time.to - time.from);
 		}
+		return 0.0;
 	}
 
 	void pan(Config &cfg, SDL_Rect &r, ImVec2 delta) {
-		if(cfg.time == Axis::X) {
+		if(cfg.x == Axis::Time) {
 			double delta_t = delta.x/r.w;
 			pan_t(delta_t);
-		} else if(cfg.time == Axis::Y) {
+		} 
+		if(cfg.y == Axis::Time) {
 			double delta_t = delta.y/r.h;
 			pan_t(delta_t);
 		}
-		if(cfg.frequency == Axis::X) {
+		if(cfg.x == Axis::Frequency) {
 			double delta_f = -delta.x/r.w;
 			pan_freq(delta_f);
-		} else if(cfg.frequency == Axis::Y) {
+		} 
+		if(cfg.y == Axis::Frequency) {
 			double delta_f = delta.y/r.h;
 			pan_freq(delta_f);
 		}
 	}
 
 	void zoom(Config &cfg, SDL_Rect &r, ImVec2 delta) {
-		if(cfg.time == Axis::X) {
+		if(cfg.x == Axis::Time) {
 			zoom_t(delta.x, ZoomAnchor::Cursor);
-		} else if(cfg.time == Axis::Y) {
+		} 
+		if(cfg.y == Axis::Time) {
 			zoom_t(delta.y, ZoomAnchor::Cursor);
 		}
-		if(cfg.frequency == Axis::X) {
+		if(cfg.x == Axis::Frequency) {
 			zoom_freq(delta.x);
-		} else if(cfg.frequency == Axis::Y) {
+		} 
+		if(cfg.y == Axis::Frequency) {
 			zoom_freq(delta.y);
 		}
 
