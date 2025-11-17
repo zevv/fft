@@ -1,4 +1,7 @@
 
+#include <math.h>
+#include <algorithm>
+
 #include "view.hpp"
 
 
@@ -153,6 +156,7 @@ void View::clamp()
 		freq.from = mid - 0.001;
 		freq.to   = mid + 0.001;
 	}
-	window.size = std::clamp(window.size, 16, 32768);
+
+	window.size = std::clamp(powf(2.0, floor(log2(window.size) + 0.5)), 8.0f, 32768.0f);
 }
 
