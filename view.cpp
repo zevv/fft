@@ -119,25 +119,34 @@ void View::pan(Config &cfg, SDL_Rect &r, ImVec2 delta)
 	clamp();
 }
 
+
+void View::zoom_start()
+{
+	time.zoom_start = time.cursor;
+	freq.zoom_start = freq.cursor;
+	amplitude.zoom_start = amplitude.cursor;
+}
+
+
 void View::zoom(Config &cfg, SDL_Rect &r, ImVec2 delta)
 {
 	double ft = 0.0;
 	if(cfg.x == Axis::Time) ft = delta.x;
 	if(cfg.y == Axis::Time) ft = delta.y;
-	time.from += (time.cursor - time.from) * ft * 0.01;
-	time.to   -= (time.to - time.cursor) * ft * 0.01;
+	time.from += (time.zoom_start - time.from) * ft * 0.01;
+	time.to   -= (time.to - time.zoom_start) * ft * 0.01;
 
 	double ff = 0.0;
 	if(cfg.x == Axis::Frequency) ff = delta.x;
 	if(cfg.y == Axis::Frequency) ff = delta.y;
-	freq.from += (freq.cursor - freq.from) * ff * 0.01;
-	freq.to   -= (freq.to - freq.cursor) * ff * 0.01;
+	freq.from += (freq.zoom_start - freq.from) * ff * 0.01;
+	freq.to   -= (freq.to - freq.zoom_start) * ff * 0.01;
 
 	double fa = 0.0;
 	if(cfg.x == Axis::Amplitude) fa = delta.x;
 	if(cfg.y == Axis::Amplitude) fa = delta.y;
-	amplitude.from += (amplitude.cursor - amplitude.from) * fa * 0.01;
-	amplitude.to   -= (amplitude.to - amplitude.cursor) * fa * 0.01;
+	amplitude.from += (amplitude.zoom_start - amplitude.from) * fa * 0.01;
+	amplitude.to   -= (amplitude.to - amplitude.zoom_start) * fa * 0.01;
 
 	clamp();
 }

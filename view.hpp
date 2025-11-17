@@ -33,6 +33,7 @@ public:
 	float from_freq(Config &cfg, SDL_Rect &r, Frequency f);
 	
 	void pan(Config &cfg, SDL_Rect &r, ImVec2 delta);
+	void zoom_start();
 	void zoom(Config &cfg, SDL_Rect &r, ImVec2 delta);
 
 	void pan_t(float f);
@@ -44,6 +45,7 @@ public:
 		Time from{0.0}; // time view range start
 		Time to{1.0}; // time view range end
 		Time cursor{0.5}; // user time cursor position
+		Time zoom_start{};
 		Time playpos{0.0}; // current playback position
 		Time analysis{0.0}; // current analysis position, synced with capture/playback state
 		Time sel_from{0.0}; // selection range start
@@ -54,6 +56,7 @@ public:
 		Frequency from{0.0}; // frequency view range start
 		Frequency to{22000.0}; // frequency view range end
 		Frequency cursor{11000.0}; // user frequency cursor position
+		Frequency zoom_start{};
 	};
 
 	struct VWindow {
@@ -66,6 +69,7 @@ public:
 		double from{-1.0f}; // amplitude view min
 		double to{+1.0f}; // amplitude view max
 		double cursor{0.0f}; // user amplitude cursor position
+		double zoom_start{};
 	};
 
 	struct VAperture {

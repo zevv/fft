@@ -168,10 +168,14 @@ void Widget::draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		}
 
 		// mouse RMB: pan/zoom
+		if(ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+			m_view.zoom_start();
+		}
 		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			m_view.pan(m_view_config, r, delta);
 			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
 				m_view.zoom(m_view_config, r, delta);
+			} else {
+				m_view.pan(m_view_config, r, delta);
 			}
 		}
 
