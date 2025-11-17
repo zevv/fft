@@ -22,8 +22,9 @@ void View::load(ConfigReader::Node *n)
 		nc->read("to", freq.to);
 	}
 	if(auto *nc = n->find("amplitude")) {
-		nc->read("min", amplitude.min);
-		nc->read("max", amplitude.max);
+		nc->read("cursor", amplitude.cursor);
+		nc->read("from", amplitude.from);
+		nc->read("to", amplitude.to);
 	}
 	if(auto *nc = n->find("window")) {
 		nc->read("size", window.size);
@@ -51,8 +52,9 @@ void View::save(ConfigWriter &cfg)
 	cfg.write("cursor", freq.cursor);
 	cfg.pop();
 	cfg.push("amplitude");
-	cfg.write("min", amplitude.min);
-	cfg.write("max", amplitude.max);
+	cfg.write("from", amplitude.from);
+	cfg.write("to", amplitude.to);
+	cfg.write("cursor", amplitude.cursor);
 	cfg.pop();
 	cfg.push("window");
 	cfg.write("size", window.size);
@@ -93,16 +95,27 @@ float View::from_freq(Config &cfg, SDL_Rect &r, Frequency f)
 
 void View::pan(Config &cfg, SDL_Rect &r, ImVec2 delta)
 {
+	double dx = delta.x / r.w;
+	double dy = delta.y / r.h;
+
 	double ft = 0.0;
-	if(cfg.x == Axis::Time) ft = delta.x / r.w;
-	if(cfg.y == Axis::Time) ft = delta.y / r.h;
+	if(cfg.x == Axis::Time) ft = dx;
+	if(cfg.y == Axis::Time) ft = dy;
 	time.from += -ft * (time.to - time.from);
 	time.to   += -ft * (time.to - time.from);
+
 	double ff = 0.0;
-	if(cfg.x == Axis::Frequency) ff = -delta.x / r.w;
-	if(cfg.y == Axis::Frequency) ff = delta.y / r.h;
+	if(cfg.x == Axis::Frequency) ff = -dx;
+	if(cfg.y == Axis::Frequency) ff =  dy;
 	freq.from += ff * (freq.to - freq.from);
 	freq.to   += ff * (freq.to - freq.from);
+
+	double fa = 0.0;
+	if(cfg.x == Axis::Amplitude) fa = -dx;
+	if(cfg.y == Axis::Amplitude) fa = dy;
+	amplitude.from += fa * (amplitude.to - amplitude.from);
+	amplitude.to   += fa * (amplitude.to - amplitude.from);
+
 	clamp();
 }
 
@@ -113,11 +126,19 @@ void View::zoom(Config &cfg, SDL_Rect &r, ImVec2 delta)
 	if(cfg.y == Axis::Time) ft = delta.y;
 	time.from += (time.cursor - time.from) * ft * 0.01;
 	time.to   -= (time.to - time.cursor) * ft * 0.01;
+
 	double ff = 0.0;
 	if(cfg.x == Axis::Frequency) ff = delta.x;
 	if(cfg.y == Axis::Frequency) ff = delta.y;
 	freq.from += (freq.cursor - freq.from) * ff * 0.01;
 	freq.to   -= (freq.to - freq.cursor) * ff * 0.01;
+
+	double fa = 0.0;
+	if(cfg.x == Axis::Amplitude) fa = delta.x;
+	if(cfg.y == Axis::Amplitude) fa = delta.y;
+	amplitude.from += (amplitude.cursor - amplitude.from) * fa * 0.01;
+	amplitude.to   -= (amplitude.to - amplitude.cursor) * fa * 0.01;
+
 	clamp();
 }
 

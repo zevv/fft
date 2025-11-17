@@ -63,8 +63,9 @@ public:
 	};
 
 	struct VAmplitude {
-		float min{-1.0f}; // amplitude view min
-		float max{+1.0f}; // amplitude view max
+		double from{-1.0f}; // amplitude view min
+		double to{+1.0f}; // amplitude view max
+		double cursor{0.0f}; // user amplitude cursor position
 	};
 
 	struct VAperture {

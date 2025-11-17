@@ -86,7 +86,8 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 
 	Sample scale = k_sample_max;
 	if(m_agc && m_peak > 0.0f) {
-		scale = m_peak / 1.0;
+		m_view.amplitude.from = -m_peak * 1.1f;
+		m_view.amplitude.to   = +m_peak * 1.1f;
 	}
 	m_peak *= 0.9f;
 
@@ -107,13 +108,13 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 			peak = graph(rend, r,
 					data + ch, frames_avail, data_stride,
 					idx_from, idx_to,
-					(Sample)-scale, (Sample)+scale);
+					(Sample)m_view.amplitude.from, (Sample)m_view.amplitude.to);
 		} else {
 			peak = graph(rend, r,
 					&wdata[ch].min, &wdata[ch].max, 
 					frames_avail / 256, wdata_stride * 2,
 					idx_from / 256, idx_to / 256,
-					(Sample)-scale, (Sample)+scale);
+					(Sample)m_view.amplitude.from, (Sample)m_view.amplitude.to);
 		}
 
 		m_peak = std::max(m_peak, peak);
