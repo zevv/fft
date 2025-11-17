@@ -216,16 +216,8 @@ void Widget::draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 }
 
 
-#ifndef SAMPLE_FLOAT
-template float  Widget::graph<float >(SDL_Renderer*, SDL_Rect&, float [],           size_t, size_t, double , double , float , float );
-template float  Widget::graph<float >(SDL_Renderer*, SDL_Rect&, float [], float [], size_t, size_t, double , double , float , float );
-#endif
-
 template Sample Widget::graph<Sample>(SDL_Renderer*, SDL_Rect&, Sample[],           size_t, size_t, double, double, Sample, Sample);
 template Sample Widget::graph<Sample>(SDL_Renderer*, SDL_Rect&, Sample[], Sample[], size_t, size_t, double, double, Sample, Sample);
-
-template int    Widget::graph<int   >(SDL_Renderer*, SDL_Rect&, int   [],           size_t, size_t, double, double, int   , int   );
-template int    Widget::graph<int   >(SDL_Renderer*, SDL_Rect&, int   [], int   [], size_t, size_t, double, double, int   , int   );
 
 template int8_t Widget::graph<int8_t>(SDL_Renderer*, SDL_Rect&, int8_t[],           size_t, size_t, double, double, int8_t, int8_t);
 template int8_t Widget::graph<int8_t>(SDL_Renderer*, SDL_Rect&, int8_t[], int8_t[], size_t, size_t, double, double, int8_t, int8_t);
@@ -233,8 +225,8 @@ template int8_t Widget::graph<int8_t>(SDL_Renderer*, SDL_Rect&, int8_t[], int8_t
 template size_t Widget::graph<size_t>(SDL_Renderer*, SDL_Rect&, size_t[],           size_t, size_t, double, double, size_t, size_t);
 template size_t Widget::graph<size_t>(SDL_Renderer*, SDL_Rect&, size_t[], size_t[], size_t, size_t, double, double, size_t, size_t);
 
-template double Widget::graph<double>(SDL_Renderer*, SDL_Rect&, double[],           size_t, size_t, double, double, double, double);
-template double Widget::graph<double>(SDL_Renderer*, SDL_Rect&, double[], double[], size_t, size_t, double, double, double, double);
+template float  Widget::graph<float >(SDL_Renderer*, SDL_Rect&, float [],           size_t, size_t, double, double, float , float );
+template float  Widget::graph<float >(SDL_Renderer*, SDL_Rect&, float [], float [], size_t, size_t, double, double, float , float );
 
 
 
