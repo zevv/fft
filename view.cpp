@@ -74,19 +74,22 @@ void View::move_cursor(Config &cfg, SDL_Rect &r, ImVec2 delta)
 	if(cfg.y == Axis::Frequency) freq.cursor -= delta.y / r.h * (freq.to - freq.from) * 0.1;
 }
 
-float View::from_t(Config &cfg, SDL_Rect &r, Time t) {
+float View::from_t(Config &cfg, SDL_Rect &r, Time t)
+{
 	if(cfg.x == Axis::Time) return r.x + r.w * (t - time.from) / (time.to - time.from);
 	if(cfg.y == Axis::Time) return r.y + r.h * (t - time.from) / (time.to - time.from);
 	return 0.0;
 }
 
-float View::from_freq(Config &cfg, SDL_Rect &r, Frequency f) {
+float View::from_freq(Config &cfg, SDL_Rect &r, Frequency f)
+{
 	if(cfg.x == Axis::Frequency) return r.x + r.w * (f- freq.from) / (freq.to - freq.from);
 	if(cfg.y == Axis::Frequency) return r.y + r.h * (1.0 - (f - freq.from) / (freq.to - freq.from));
 	return 0.0;
 }
 
-void View::pan(Config &cfg, SDL_Rect &r, ImVec2 delta) {
+void View::pan(Config &cfg, SDL_Rect &r, ImVec2 delta)
+{
 	double ft = 0.0;
 	if(cfg.x == Axis::Time) ft = delta.x / r.w;
 	if(cfg.y == Axis::Time) ft = delta.y / r.h;
@@ -100,7 +103,8 @@ void View::pan(Config &cfg, SDL_Rect &r, ImVec2 delta) {
 	clamp();
 }
 
-void View::zoom(Config &cfg, SDL_Rect &r, ImVec2 delta) {
+void View::zoom(Config &cfg, SDL_Rect &r, ImVec2 delta)
+{
 	double ft = 0.0;
 	if(cfg.x == Axis::Time) ft = delta.x;
 	if(cfg.y == Axis::Time) ft = delta.y;
@@ -114,27 +118,31 @@ void View::zoom(Config &cfg, SDL_Rect &r, ImVec2 delta) {
 	clamp();
 }
 
-void View::pan_t(float f) {
+void View::pan_t(float f)
+{
 	Time dt = -f * (time.to - time.from);
 	time.from += dt;
 	time.to += dt;
 	clamp();
 }
 
-void View::zoom_t(float f) {
+void View::zoom_t(float f)
+{
 	Time t_mid = (time.from + time.to) * 0.5;
 	time.from += (t_mid - time.from) * f * 0.01;
 	time.to   -= (time.to - t_mid) * f * 0.01;
 	clamp();
 }
 
-void View::pan_freq(float f) {
+void View::pan_freq(float f)
+{
 	freq.from += f * (freq.to - freq.from);
 	freq.to   += f * (freq.to - freq.from);
 	clamp();
 }
 
-void View::clamp() {
+void View::clamp()
+{
 	if(time.from >= time.to) {
 		Time mid = 0.5 * (time.from + time.to);
 		time.from = mid - 0.001;
