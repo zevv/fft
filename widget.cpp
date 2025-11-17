@@ -523,7 +523,7 @@ void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &
 
 		// harmonic helper bars
 		if(ImGui::IsMouseInRect(r)) {
-			if(m_view.freq.cursor > 0.0 && m_view.freq.cursor < 1.0) {
+			if(m_view.freq.cursor > 0.0) {
 				Frequency fc = m_view.freq.cursor;
 				int p0 = m_view.from_freq(cfg, r, fc * 2);
 				int p1 = m_view.from_freq(cfg, r, fc);
