@@ -112,7 +112,8 @@ void WidgetChannels::do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SD
 	ssize_t idx_from = std::max({m_vu_idx_prev, idx_to - 10000, (ssize_t)0 });
 	m_vu_idx_prev = idx_to;
 
-	float decay = powf(0.97f, (float)(idx_to - idx_from) / 100.0f);
+	double fps = ImGui::GetIO().Framerate;
+	double decay = exp2(-1.0 / (fps * 0.150)); 
 	
 	for(size_t ch=0; ch<stream.channel_count(); ch++) {
 		m_vu_peak[ch] *= decay;
