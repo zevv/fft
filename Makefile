@@ -76,6 +76,11 @@ CXXFLAGS += -fsanitize=address
 LDFLAGS += -fsanitize=address 
 endif
 
+ifdef lto
+CXXFLAGS += -flto
+LDFLAGS += -flto
+endif
+
 ifdef smem
 CXX=clang++-19
 LD=clang++-19

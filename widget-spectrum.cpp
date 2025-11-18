@@ -74,7 +74,7 @@ void WidgetSpectrum::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		graph(rend, r,
 				out_graph.data(), out_graph.size(), 1,
 				m_view.freq.from * npoints, m_view.freq.to * npoints,
-				m_view.amplitude.from, m_view.amplitude.to);
+				m_view.aperture.from, m_view.aperture.to);
 	}
 	
 	

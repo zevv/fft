@@ -70,7 +70,6 @@ private:
 	Queue<Job> m_job_queue{32};
 	Queue<Result> m_result_queue{32};
 	size_t m_jobs_in_flight{0};
-	Aperture m_aperture{-127, -0};
 	bool m_rotate{false};
 };
 
@@ -219,8 +218,8 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 	}
 			
 	if(m_agc) {
-		m_aperture.min = hist.find_percentile(0.05);
-		m_aperture.max = hist.find_percentile(1.00) + 10.0;
+		m_view.aperture.from = hist.find_percentile(0.01);
+		m_view.aperture.to = hist.find_percentile(1.00);
 	}
 
 	// render previous results
@@ -281,7 +280,8 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 				job.ch = ch;
 				job.idx_max = frames_avail * stride;
 				job.v = *(uint32_t *)&col & 0x00FFFFFF;
-				job.aperture = m_aperture;
+				job.aperture.min = m_view.aperture.from;
+				job.aperture.max = m_view.aperture.to;
 
 				if(m_rotate) {
 					job.pixels = pixels + (r.h - 1) * (pitch / 4);
@@ -317,14 +317,16 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	ImGui::ToggleButton("AGC", &m_agc);
 
 	if(!m_agc) {
+		float aperture_center = (m_view.aperture.from + m_view.aperture.to) * 0.5;
+		float aperture_range = m_view.aperture.to - m_view.aperture.from;
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(100);
-		ImGui::SliderFloat("##db center", &m_view.aperture.center, 0.0f, -100.0f, "%.1f");
+		ImGui::SliderFloat("##db center", &aperture_center, 0.0f, -100.0f, "%.1f");
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(100);
-		ImGui::SliderFloat("##db range", &m_view.aperture.range, 100.0f, 0.0f, "%.1f");
-		m_aperture.min = std::clamp((int)(m_view.aperture.center - m_view.aperture.range), -127, 0);
-		m_aperture.max = std::clamp((int)(m_view.aperture.center + m_view.aperture.range), -127, 0);
+		ImGui::SliderFloat("##db range", &aperture_range, 100.0f, 0.0f, "%.1f");
+		m_view.aperture.from = aperture_center - aperture_range * 0.5f;
+		m_view.aperture.to = aperture_center + aperture_range * 0.5f;
 	}
 
 	if(ImGui::IsWindowFocused()) {
@@ -335,7 +337,7 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		humanize(f, fbuf, sizeof(fbuf));
 		char note[32];
 		freq_to_note(f, note, sizeof(note));
-		ImGui::TextShadow("%sHz / %s / %+d..%+d dB", fbuf, note, m_aperture.min, m_aperture.max);
+		ImGui::TextShadow("%sHz / %s / %+d..%+d dB", fbuf, note, m_view.aperture.from, m_view.aperture.to);
 
 		if(ImGui::IsKeyPressed(ImGuiKey_R)) {
 			m_rotate = !m_rotate;

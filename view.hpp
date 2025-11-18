@@ -73,8 +73,10 @@ public:
 	};
 
 	struct VAperture {
-		float center{-40.0f}; // waterfall aperture dB center
-		float range{80.0f}; // waterfall aperture dB range
+		double from{-40.0f}; // aperture dB range start
+		double to{80.0f}; // aperture dB range end
+		double cursor{20.0f}; // user aperture cursor position
+		double zoom_start{};
 	};
 	
 	bool lock{true}; // view is locked to global view
