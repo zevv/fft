@@ -42,8 +42,10 @@ private:
 		size_t dp_col;
 		size_t dp_row;
 		uint32_t v;
-		ssize_t idx;
-		ssize_t didx;
+		Samplerate srate;
+		Time t_start;
+		Time dt_row;
+		size_t ch;
 		ssize_t idx_max;
 		Aperture aperture;
 	};
@@ -170,7 +172,6 @@ void WidgetWaterfall::allocate_channels(SDL_Renderer *rend, size_t channels, int
 
 void WidgetWaterfall::job_run_gen(Worker &worker, Job &job)
 {
-	ssize_t idx = job.idx;
 	uint32_t v = job.v;
 	int fft_w = worker.fft.out_size();
 
@@ -180,7 +181,9 @@ void WidgetWaterfall::job_run_gen(Worker &worker, Job &job)
 	
 	Result res;
 
+	Time t = job.t_start;
 	for(int row=job.row.min; row<job.row.max; row++) {
+		ssize_t idx = ceil(job.srate * t - m_view.window.size / 2) * job.data_stride + job.ch;
 		if(idx >=0 && idx < job.idx_max) {
 			auto fft_out = worker.fft.run(&job.data[idx], job.data_stride);
 			uint32_t *p = job.pixels + row * job.dp_row;
@@ -195,7 +198,7 @@ void WidgetWaterfall::job_run_gen(Worker &worker, Job &job)
 				p += job.dp_col;
 			}
 		}
-		idx += job.didx;
+		t += job.dt_row;
 	}
 
 	m_result_queue.push(res);
@@ -256,11 +259,7 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 			int row_count = m_rotate ? r.w : r.h;
 			int col_count = m_rotate ? r.h : r.w;
 
-			Time t = m_view.time.from;
-			Time dt = (m_view.time.to - m_view.time.from) / row_count;
-			ssize_t idx = ceil(stream.sample_rate() * t - m_view.window.size / 2) * stride + ch;
-			ssize_t didx = floor(stream.sample_rate() * dt) * stride;
-
+			Time dt_row = (m_view.time.to - m_view.time.from) / row_count;
 
 			for(int row=0; row<row_count; row+=128) {
 
@@ -276,8 +275,10 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 				job.pixels = pixels;
 				job.dp_col = 1;
 				job.dp_row = pitch / 4;
-				job.idx = idx;
-				job.didx = didx;
+				job.srate = stream.sample_rate();
+				job.t_start = m_view.time.from + dt_row * row;
+				job.dt_row = dt_row;
+				job.ch = ch;
 				job.idx_max = frames_avail * stride;
 				job.v = *(uint32_t *)&col & 0x00FFFFFF;
 				job.aperture = m_aperture;
@@ -290,7 +291,6 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 
 				m_job_queue.push(job);
 				m_jobs_in_flight++;
-				idx += 128 * didx;
 			}
 		}
 
