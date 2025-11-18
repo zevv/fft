@@ -27,8 +27,8 @@ public:
 	std::vector<float> &data() { return m_data; };
 
 private:
-	Type m_type;
-	double m_beta;
-	double m_gain;
+	Type m_type{Type::Square};
+	double m_beta{1.0};
+	double m_gain{1.0};
 	std::vector<float> m_data;
 };
