@@ -195,6 +195,7 @@ void Widget::draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		  
 			// mouse LMB: seek to cursor
 			if(ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+				m_view.time.analysis = m_view.time.cursor;
 				stream.player.seek(m_view.time.cursor);
 			}
 		}

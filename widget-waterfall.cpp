@@ -337,7 +337,7 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		humanize(f, fbuf, sizeof(fbuf));
 		char note[32];
 		freq_to_note(f, note, sizeof(note));
-		ImGui::TextShadow("%sHz / %s / %+d..%+d dB", fbuf, note, m_view.aperture.from, m_view.aperture.to);
+		ImGui::TextShadow("%sHz / %s / %+.0f..%+.0f dB", fbuf, note, m_view.aperture.from, m_view.aperture.to);
 
 		if(ImGui::IsKeyPressed(ImGuiKey_R)) {
 			m_rotate = !m_rotate;
