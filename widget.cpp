@@ -161,6 +161,14 @@ void Widget::draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 				m_view.time.from = 0.0;
 				m_view.time.to   = frames_avail / stream.sample_rate();
 			}
+			if(m_view_config.x == View::Axis::Amplitude || m_view_config.y == View::Axis::Amplitude) {
+				m_view.amplitude.from = -1.0;
+				m_view.amplitude.to   = +1.0f;
+			}
+			if(m_view_config.x == View::Axis::Aperture || m_view_config.y == View::Axis::Aperture) {
+				m_view.aperture.from = -120.0f;
+				m_view.aperture.to   = 0.0f;
+			}
 			if(m_view_config.x == View::Axis::Frequency || m_view_config.y == View::Axis::Frequency) {
 				m_view.freq.from = 0.0f;
 				m_view.freq.to = 1.0;
@@ -397,6 +405,8 @@ void draw_float(int x, int y, float v)
 
 static void grid_aux(SDL_Renderer *rend, SDL_Rect &r, float v_min, float v_max, bool hor)
 {
+	if(v_min == v_max) return;
+
 	int p_min = hor ? r.x : r.y;
 	int p_max = hor ? r.x + r.w : r.y + r.h;
 
@@ -406,7 +416,7 @@ static void grid_aux(SDL_Renderer *rend, SDL_Rect &r, float v_min, float v_max, 
 		for(int s=0; s<2; s++) {
 			float base = subs[s] * pow(10.0f, n);
 			float dpx = fabs((base / (v_max - v_min)) * (p_max - p_min));
-			if(dpx >= 20) {
+			if(dpx >= 16) {
 				float v1 = ceilf(v_min / base) * base;
 				float v2   = floorf(v_max / base) * base;
 				float v_start = fmin(v1, v2);
@@ -574,9 +584,11 @@ void Widget::grids(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &cf
 	}
 
 	if(cfg.y == View::Axis::Amplitude) {
-		double scale = 1.0;
-		grid_vertical(rend, r, -scale / k_sample_max, +scale / k_sample_max);
+		grid_vertical(rend, r, m_view.amplitude.from / k_sample_max, m_view.amplitude.to / k_sample_max);
 	}
 
+	if(cfg.y == View::Axis::Aperture) {
+		grid_vertical(rend, r, m_view.aperture.from, m_view.aperture.to);
+	}
 }
 
