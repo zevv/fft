@@ -152,6 +152,10 @@ void freq_to_note(double freq, char *note, size_t note_len)
 		return;
 	}
 	int midi_number = static_cast<int>(round(12.0 * log2(freq / 440.0) + 69.0));
+	if(midi_number < 0 || midi_number > 127) {
+		snprintf(note, note_len, "---");
+		return;
+	}
 	int nr = midi_number % 12;
 	int oct = (midi_number / 12) - 1;
 	int cents = static_cast<int>(round(1200.0 * log2(freq / (440.0 * pow(2.0, (midi_number - 69) / 12.0)))));
