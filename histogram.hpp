@@ -17,8 +17,8 @@ public:
 
 	void add(T value)
 	{
-		if(value >= m_min && value <= m_max) {
-			size_t bin = ((double)(value - m_min) / (double)(m_max - m_min) * m_bins);
+		size_t bin = ((double)(value - m_min) / (double)(m_max - m_min) * m_bins);
+		if(bin >= 0 && bin < m_data.size()) {
 			m_data[bin]++;
 		}
 	}
