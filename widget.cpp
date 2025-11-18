@@ -220,17 +220,17 @@ void Widget::draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 }
 
 
-template Sample Widget::graph<Sample>(SDL_Renderer*, SDL_Rect&, Sample[],           size_t, size_t, double, double, Sample, Sample);
-template Sample Widget::graph<Sample>(SDL_Renderer*, SDL_Rect&, Sample[], Sample[], size_t, size_t, double, double, Sample, Sample);
+template Sample Widget::graph<Sample>(SDL_Renderer*, SDL_Rect&, Sample[],           size_t, size_t, double, double, double, double);
+template Sample Widget::graph<Sample>(SDL_Renderer*, SDL_Rect&, Sample[], Sample[], size_t, size_t, double, double, double, double);
 
-template int8_t Widget::graph<int8_t>(SDL_Renderer*, SDL_Rect&, int8_t[],           size_t, size_t, double, double, int8_t, int8_t);
-template int8_t Widget::graph<int8_t>(SDL_Renderer*, SDL_Rect&, int8_t[], int8_t[], size_t, size_t, double, double, int8_t, int8_t);
+template int8_t Widget::graph<int8_t>(SDL_Renderer*, SDL_Rect&, int8_t[],           size_t, size_t, double, double, double, double);
+template int8_t Widget::graph<int8_t>(SDL_Renderer*, SDL_Rect&, int8_t[], int8_t[], size_t, size_t, double, double, double, double);
 
-template size_t Widget::graph<size_t>(SDL_Renderer*, SDL_Rect&, size_t[],           size_t, size_t, double, double, size_t, size_t);
-template size_t Widget::graph<size_t>(SDL_Renderer*, SDL_Rect&, size_t[], size_t[], size_t, size_t, double, double, size_t, size_t);
+template size_t Widget::graph<size_t>(SDL_Renderer*, SDL_Rect&, size_t[],           size_t, size_t, double, double, double, double);
+template size_t Widget::graph<size_t>(SDL_Renderer*, SDL_Rect&, size_t[], size_t[], size_t, size_t, double, double, double, double);
 
-template float  Widget::graph<float >(SDL_Renderer*, SDL_Rect&, float [],           size_t, size_t, double, double, float , float );
-template float  Widget::graph<float >(SDL_Renderer*, SDL_Rect&, float [], float [], size_t, size_t, double, double, float , float );
+template float  Widget::graph<float >(SDL_Renderer*, SDL_Rect&, float [],           size_t, size_t, double, double, double, double);
+template float  Widget::graph<float >(SDL_Renderer*, SDL_Rect&, float [], float [], size_t, size_t, double, double, double, double);
 
 
 
@@ -238,7 +238,7 @@ template<typename T>
 T Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
 					 T data[], size_t data_count, size_t stride,
 					 double idx_from, double idx_to,
-					 T y_min, T y_max)
+					 double y_min, double y_max)
 {
 	return graph(rend, r, data, data, data_count, stride,
 		  idx_from, idx_to,
@@ -249,7 +249,7 @@ template<typename T>
 T Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
 					 T data_min[], T data_max[], size_t data_count, size_t stride,
 					 double idx_from, double idx_to,
-					 T y_min, T y_max)
+					 double y_min, double y_max)
 {
 	float y_scale = (r.h - 2) / ((double)y_min - (float)y_max);
 	float y_off = r.y - (float)y_max * (float)y_scale;

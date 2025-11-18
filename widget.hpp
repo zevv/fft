@@ -56,13 +56,13 @@ protected:
 	T graph(SDL_Renderer *rend, SDL_Rect &r,
 						 T data[], size_t data_count, size_t stride,
 						 double idx_from, double idx_to,
-						 T y_min, T y_max);
+						 double y_min, double y_max);
 	
 	template<typename T>
 	T graph(SDL_Renderer *rend, SDL_Rect &r,
 						 T data_min[], T data_max[], size_t data_count, size_t stride,
 						 double idx_from, double idx_to,
-						 T y_min, T y_max);
+						 double y_min, double y_max);
 
 	void grid_vertical(SDL_Renderer *rend, SDL_Rect &r, float v_from, float v_to);
 	void grid_horizontal(SDL_Renderer *rend, SDL_Rect &r, float v_from, float v_to);

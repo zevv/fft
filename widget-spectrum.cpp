@@ -50,10 +50,12 @@ void WidgetSpectrum::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 
 	m_fft.configure(m_view.window.size, m_view.window.window_type, m_view.window.window_beta);
 
-	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
+	if(ImGui::IsKeyPressed(ImGuiKey_A)) {
+		m_view.amplitude.from = -100.0;
+		m_view.amplitude.to = 0.0;
+	}
 
-	int8_t db_range = -127.0;
-	grid_vertical(rend, r, db_range, 0);
+	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
 	for(int ch : m_channel_map.enabled_channels()) {
 		size_t stride = 0;
@@ -64,7 +66,6 @@ void WidgetSpectrum::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		if(idx < 0) continue;
 		if(idx >= (int)(avail * stride)) continue;
 
-
 		auto out_graph = m_fft.run(&data[idx], stride);
 
 		size_t npoints = m_view.window.size / 2 + 1;
@@ -73,7 +74,7 @@ void WidgetSpectrum::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		graph(rend, r,
 				out_graph.data(), out_graph.size(), 1,
 				m_view.freq.from * npoints, m_view.freq.to * npoints,
-				db_range, (int8_t)0);
+				m_view.amplitude.from, m_view.amplitude.to);
 	}
 	
 	

@@ -69,6 +69,8 @@ void View::set_cursor(Config &cfg, SDL_Rect &r, ImVec2 pos)
 	if(cfg.y == Axis::Time) time.cursor = time.from + (time.to - time.from) * (pos.y - r.y) / r.h;
 	if(cfg.x == Axis::Frequency) freq.cursor = freq.from + (freq.to - freq.from) * (pos.x - r.x) / r.w;
 	if(cfg.y == Axis::Frequency) freq.cursor = freq.from + (freq.to - freq.from) * (1.0 - (pos.y - r.y) / r.h);
+	if(cfg.x == Axis::Amplitude) amplitude.cursor = amplitude.from + (amplitude.to - amplitude.from) * (pos.x - r.x) / r.w;
+	if(cfg.y == Axis::Amplitude) amplitude.cursor = amplitude.from + (amplitude.to - amplitude.from) * (1.0 - (pos.y - r.y) / r.h);
 }
 
 void View::move_cursor(Config &cfg, SDL_Rect &r, ImVec2 delta)

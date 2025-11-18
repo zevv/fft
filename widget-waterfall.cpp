@@ -341,24 +341,7 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 			m_rotate = !m_rotate;
 		}
 	}
-
 	gen_waterfall(stream, rend, r);
-
-	// filter pos
-	//float f_lp, f_hp;
-	//stream.player.filter_get(f_lp, f_hp);
-
-	// selection
-	// if(m_view.time.sel_from != m_view.time.sel_to) {
-	// 	float sx_from = m_view.t_to_y(m_view.time.sel_from, r);
-	// 	float sx_to   = m_view.t_to_y(m_view.time.sel_to,   r);
-	// 	SDL_SetRenderDrawColor(rend, 128, 128, 255, 64);
-	// 	SDL_FRect sr = { (float)r.x, sx_from, (float)r.w, sx_to - sx_from };
-	// 	SDL_RenderFillRect(rend, &sr);
-	// }
-
-	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
-
 }
 
 
