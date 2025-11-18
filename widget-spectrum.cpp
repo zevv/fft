@@ -32,7 +32,7 @@ WidgetSpectrum::WidgetSpectrum(Widget::Info &info)
 	: Widget(info)
 {
 	m_view_config.x = View::Axis::Frequency;
-	m_view_config.y = View::Axis::Amplitude;
+	m_view_config.y = View::Axis::Aperture;
 }
 
 

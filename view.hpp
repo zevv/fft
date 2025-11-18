@@ -15,7 +15,7 @@ class View {
 public:
 
 	enum class Axis {
-		None, Time, Frequency, Amplitude,
+		None, Time, Frequency, Amplitude, Aperture,
 	};
 
 	struct Config {

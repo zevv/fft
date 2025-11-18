@@ -113,6 +113,7 @@ void WidgetWaterfall::do_load(ConfigReader::Node *node)
 {
 	auto *wnode = node->find("waterfall");
 	wnode->read("rotate", m_rotate);
+	wnode->read("agc", m_agc);
 }
 
 
@@ -120,6 +121,7 @@ void WidgetWaterfall::do_save(ConfigWriter &cw)
 {
 	cw.push("waterfall");
 	cw.write("rotate", m_rotate);
+	cw.write("agc", m_agc);
 	cw.pop();
 }
 

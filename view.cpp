@@ -69,6 +69,8 @@ void View::set_cursor(Config &cfg, SDL_Rect &r, ImVec2 pos)
 	if(cfg.y == Axis::Time) time.cursor = time.from + (time.to - time.from) * (pos.y - r.y) / r.h;
 	if(cfg.x == Axis::Frequency) freq.cursor = freq.from + (freq.to - freq.from) * (pos.x - r.x) / r.w;
 	if(cfg.y == Axis::Frequency) freq.cursor = freq.from + (freq.to - freq.from) * (1.0 - (pos.y - r.y) / r.h);
+	if(cfg.x == Axis::Aperture) aperture.cursor = aperture.from + (aperture.to - aperture.from) * (pos.x - r.x) / r.w;
+	if(cfg.y == Axis::Aperture) aperture.cursor = aperture.from + (aperture.to - aperture.from) * (1.0 - (pos.y - r.y) / r.h);
 	if(cfg.x == Axis::Amplitude) amplitude.cursor = amplitude.from + (amplitude.to - amplitude.from) * (pos.x - r.x) / r.w;
 	if(cfg.y == Axis::Amplitude) amplitude.cursor = amplitude.from + (amplitude.to - amplitude.from) * (1.0 - (pos.y - r.y) / r.h);
 }
@@ -112,6 +114,12 @@ void View::pan(Config &cfg, SDL_Rect &r, ImVec2 delta)
 	freq.from += ff * (freq.to - freq.from);
 	freq.to   += ff * (freq.to - freq.from);
 
+	double fd = 0.0;
+	if(cfg.x == Axis::Aperture) fd = -dx;
+	if(cfg.y == Axis::Aperture) fd =  dy;
+	aperture.from += fd * (aperture.to - aperture.from);
+	aperture.to   += fd * (aperture.to - aperture.from);
+
 	double fa = 0.0;
 	if(cfg.x == Axis::Amplitude) fa = -dx;
 	if(cfg.y == Axis::Amplitude) fa = dy;
@@ -126,6 +134,7 @@ void View::zoom_start()
 {
 	time.zoom_start = time.cursor;
 	freq.zoom_start = freq.cursor;
+	aperture.zoom_start = aperture.cursor;
 	amplitude.zoom_start = amplitude.cursor;
 }
 
@@ -143,6 +152,12 @@ void View::zoom(Config &cfg, SDL_Rect &r, ImVec2 delta)
 	if(cfg.y == Axis::Frequency) ff = delta.y;
 	freq.from += (freq.zoom_start - freq.from) * ff * 0.01;
 	freq.to   -= (freq.to - freq.zoom_start) * ff * 0.01;
+
+	double fd = 0.0;
+	if(cfg.x == Axis::Aperture) fd = delta.x;
+	if(cfg.y == Axis::Aperture) fd = delta.y;
+	aperture.from += (aperture.zoom_start - aperture.from) * fd * 0.01;
+	aperture.to   -= (aperture.to - aperture.zoom_start) * fd * 0.01;
 
 	double fa = 0.0;
 	if(cfg.x == Axis::Amplitude) fa = delta.x;
