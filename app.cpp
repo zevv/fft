@@ -365,6 +365,7 @@ void App::run()
 		if(ImGui::IsKeyPressed(ImGuiKey_Period)) {
 			player.set_pitch(1.0);
 			player.set_stretch(1.0);
+			player.set_shift(0.0);
 		}
 
 

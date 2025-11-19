@@ -95,6 +95,10 @@ void Player::load(ConfigReader::Node *n)
 	nc->read("pitch", pitch);
 	m_pitch = pitch;
 
+	float shift = 0.0f;
+	nc->read("shift", shift);
+	m_shift.freq = shift;
+
 	float master_gain = 1.0f;
 	nc->read("master_gain", master_gain);
 	m_master_gain = master_gain;
@@ -122,6 +126,7 @@ void Player::save(ConfigWriter &cw)
 	cw.push("player");
 	cw.write("stretch", m_stretch);
 	cw.write("pitch", m_pitch);
+	cw.write("shift", m_shift.freq);
 	cw.write("master_gain", m_master_gain);
 	cw.write("filter_lp", m_filter.f_lp);
 	cw.write("filter_hp", m_filter.f_hp);
@@ -212,6 +217,20 @@ void Player::audio_callback(SDL_AudioStream *stream, int additional_amount, int 
 				if(m_filter.f_hp > 0.0f) v[lr] = m_filter.bq_hp[0][j].run(v[lr]);
 				if(m_filter.f_lp < 1.0f) v[lr] = m_filter.bq_lp[0][j].run(v[lr]);
 			}
+		}
+		
+		if(m_shift.freq != 0.0) {
+			double sI = sin(2.0 * M_PI * m_shift.phase);
+			double sQ = cos(2.0 * M_PI * m_shift.phase);
+			auto vc0 = m_shift.h[0].run(v[0]);
+			v[0] = sI * vc0.real() - sQ * vc0.imag();
+			auto vc1 = m_shift.h[1].run(v[1]);
+			v[1] = sI * vc1.real() - sQ * vc1.imag();
+			m_shift.phase = fmod(m_shift.phase + m_shift.freq / m_srate, 1.0);
+		}
+
+		
+		for(size_t lr=0; lr<2; lr++) {
 			m_buf[i*2 + lr] = v[lr];
 		}
 

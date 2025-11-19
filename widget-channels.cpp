@@ -179,6 +179,14 @@ void WidgetChannels::do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SD
 	float semitones = 12.0f * log2f(pitch);
 	ImGui::Text("%+.2f semitones", semitones);
 
+	float shift = player.get_shift();
+	ImGui::SetNextItemWidth(150);
+	if(ImGui::DragFloat("##shift", &shift, stream.sample_rate() / 1000.0, -stream.sample_rate(), +stream.sample_rate(), "Shift %.2fHz")) {
+		player.set_shift(shift);
+	}
+	ImGui::SameLine();
+	if(ImGui::Button("0##shift")) player.set_shift(0.0f);
+
 	ImGui::NewLine();
 	size_t ch = 0;
 	for(auto &source : stream.capture.sources()) {
