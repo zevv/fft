@@ -13,7 +13,7 @@ public:
 
 	size_t bytes_used();
 
-	void *get_write_ptr(size_t *bytes_max = nullptr);
+	void *write_ptr(size_t *bytes_max = nullptr);
 	void write_done(size_t len);
 
 	void *peek(size_t *used = nullptr);

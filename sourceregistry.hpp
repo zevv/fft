@@ -9,7 +9,7 @@ class SourceRegistry {
 public:
 	SourceRegistry(Source::Info info);
 	static Source *create(const char *name, SDL_AudioSpec &dst_spec, char *args);
-	static std::vector<Source::Info> &get_registry();
+	static std::vector<Source::Info> &registry();
 };
 
 

@@ -29,7 +29,7 @@ Wavecache::Range *Wavecache::peek(size_t *frames_avail, size_t *stride)
 
 void Wavecache::feed_frames(Sample *buf, size_t frame_count, size_t channel_count)
 {
-	Range *pout = (Range *)m_rb.get_write_ptr();
+	Range *pout = (Range *)m_rb.write_ptr();
 	size_t frames_out = 0;
 	for(size_t i=0; i<frame_count; i++) {
 		for(size_t ch=0; ch<channel_count; ch++) {

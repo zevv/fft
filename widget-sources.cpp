@@ -50,7 +50,7 @@ void WidgetSources::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	for(auto &source : sources) {
 			
 		char specstr[32];
-		SDL_AudioSpec aspec = source->get_src_spec();
+		SDL_AudioSpec aspec = source->src_spec();
 		sdl_audiospec_to_str(aspec, specstr, sizeof(specstr));
 		char label[64];
 		snprintf(label, sizeof(label), "%s / %s", source->info().description, specstr);
@@ -58,7 +58,7 @@ void WidgetSources::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		if(ImGui::CollapsingHeader(label, ImGuiTreeNodeFlags_DefaultOpen)) {
 				
 			ImGui::SetNextItemWidth(150);
-			float gain_db = gain_to_db(source->get_gain());
+			float gain_db = gain_to_db(source->gain());
 			ImGui::PushID(ch);
 			ImGui::SliderFloat("##gain", &gain_db, -60.0f, 30.0f, "%+.1f dB");
 			source->set_gain(db_to_gain(gain_db));

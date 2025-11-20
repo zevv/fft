@@ -113,7 +113,7 @@ void Capture::capture_thread()
 
 		// poll all sources
 		for(auto source : m_sources) {
-			SDL_AudioStream *sas = source->get_sdl_audio_stream();
+			SDL_AudioStream *sas = source->sdl_audio_stream();
 			int bytes_queued = SDL_GetAudioStreamQueued(sas);
 			if(bytes_queued < 64000) {
 				source->poll();
@@ -123,7 +123,7 @@ void Capture::capture_thread()
 		// calculate common lowest number of available frames
 		size_t frame_count = m_buf.size() / m_stream.channel_count();
 		for(auto source : m_sources) {
-			SDL_AudioStream *sas = source->get_sdl_audio_stream();
+			SDL_AudioStream *sas = source->sdl_audio_stream();
 			int bytes_avail = SDL_GetAudioStreamAvailable(sas);
 			if(bytes_avail < 0) {
 				printf("SDL_GetAudioStreamAvailable(): %s\n", SDL_GetError());
@@ -137,12 +137,12 @@ void Capture::capture_thread()
 		if(frame_count > 0) {
 
 			size_t bytes_max = 0;
-			Sample *buf = (Sample *)m_stream.get_rb().get_write_ptr(&bytes_max);
+			Sample *buf = (Sample *)m_stream.rb().write_ptr(&bytes_max);
 
 			for(auto &source : m_sources) {
 				// read data from source SDL audio stream
 				size_t source_channel_count = source->channel_count();
-				SDL_AudioStream *sas = source->get_sdl_audio_stream();
+				SDL_AudioStream *sas = source->sdl_audio_stream();
 				int bytes_want = frame_count * source_channel_count * sizeof(Sample);
 				int bytes_read = SDL_GetAudioStreamData(sas, m_buf.data(), bytes_want);
 				//assert(bytes_read >= 0);
@@ -162,8 +162,8 @@ void Capture::capture_thread()
 			}
 
 			// update ring buffer write pointer and wavecache
-			m_stream.get_rb().write_done(frame_count * m_stream.channel_count() * sizeof(Sample));
-			m_stream.get_wavecache().feed_frames(buf, frame_count, m_stream.channel_count());
+			m_stream.rb().write_done(frame_count * m_stream.channel_count() * sizeof(Sample));
+			m_stream.wavecache().feed_frames(buf, frame_count, m_stream.channel_count());
 
 			// signal main thread new audio is available
 			uint64_t t_now = SDL_GetTicks();
@@ -173,7 +173,7 @@ void Capture::capture_thread()
 				SDL_zero(event);
 				event.type = SDL_EVENT_USER;
 				event.user.code = k_user_event_audio_capture;
-				event.user.data1 = (void *)(m_stream.get_rb().bytes_used() / (m_stream.channel_count() * sizeof(Sample)));
+				event.user.data1 = (void *)(m_stream.rb().bytes_used() / (m_stream.channel_count() * sizeof(Sample)));
 				SDL_PushEvent(&event);
 			}
 		} else {

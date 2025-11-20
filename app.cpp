@@ -352,8 +352,8 @@ void App::run()
 		}
 
 		float factor = ImGui::IsKeyDown(ImGuiKey_LeftShift) ? 2.0 : 1.059463;
-		float stretch = player.get_stretch();
-		float pitch = player.get_pitch();
+		float stretch = player.stretch();
+		float pitch = player.pitch();
 		if(ImGui::IsKeyPressed(ImGuiKey_Comma)) {
 			player.set_stretch(stretch / factor);
 			player.set_pitch(pitch / factor);
@@ -434,5 +434,3 @@ void App::exit()
 	SDL_DestroyRenderer(m_rend);
 	SDL_DestroyWindow(m_win);
 }
-
-

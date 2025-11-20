@@ -42,7 +42,7 @@ public:
 	Widget *copy();
 	void copy_to(Widget *w);
 
-	const char *get_name() { return m_info.name; }
+	const char *name() { return m_info.name; }
 	void draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r);
 
 protected:
@@ -89,4 +89,3 @@ protected:
 	double m_pan_speed{};
 	View::Config m_view_config{};
 };
-

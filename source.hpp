@@ -35,12 +35,12 @@ public:
 
 	const char *name() { return m_info.name; }
 
-	SDL_AudioStream *get_sdl_audio_stream() { return m_sdl_stream; }
+	SDL_AudioStream *sdl_audio_stream() { return m_sdl_stream; }
 	const Info &info() { return m_info; }
 	const char *args() { return m_args; }
-	SDL_AudioSpec &get_src_spec() { return m_dst_spec; }
+	SDL_AudioSpec &src_spec() { return m_dst_spec; }
 
-	Gain get_gain() { return SDL_GetAudioStreamGain(m_sdl_stream); };
+	Gain gain() { return SDL_GetAudioStreamGain(m_sdl_stream); };
 	void set_gain(Gain gain) { SDL_SetAudioStreamGain(m_sdl_stream, gain); }
 
 	void dump(FILE *f) {
@@ -70,4 +70,3 @@ protected:
 
 	std::vector<SourceChannel> m_source_channels;
 };
-

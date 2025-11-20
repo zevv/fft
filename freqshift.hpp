@@ -35,7 +35,6 @@ private:
 	Hilbert m_hilbert_out[2];
 
 	ComplexOscillator m_osc_shift{};
-	double phase{0.0};
 
 public:
 

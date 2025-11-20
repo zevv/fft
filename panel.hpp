@@ -32,7 +32,7 @@ public:
 	void dump(int depth = 0);
 	int nkids() { return (int)m_kids.size(); }
 
-	Type get_type() { return m_type; }
+	Type type() { return m_type; }
 
 private:
 

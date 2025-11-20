@@ -81,7 +81,7 @@ size_t Rb::bytes_used()
 
 
 
-void *Rb::get_write_ptr(size_t *bytes_max)
+void *Rb::write_ptr(size_t *bytes_max)
 {
 	assert(m_head >= m_tail && "rb underflow");
 	if(bytes_max) *bytes_max = m_size - bytes_used();

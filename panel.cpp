@@ -258,7 +258,7 @@ void Panel::draw(View &view, Stream &stream, SDL_Renderer *rend, int x, int y, i
 			ImGui::SetWindowFocus();
 		}
 
-		Widget *widget_new = Widgets::draw(m_widget->get_name());
+		Widget *widget_new = Widgets::draw(m_widget->name());
 		if(widget_new) {
 			m_widget->copy_to(widget_new);
 			delete m_widget;
@@ -269,7 +269,7 @@ void Panel::draw(View &view, Stream &stream, SDL_Renderer *rend, int x, int y, i
 		// Handle keyboard shortcuts
 		if(ImGui::IsWindowFocused()) {
 			if(ImGui::IsKeyPressed(ImGuiKey_V)) {
-				if(m_parent->get_type() == Type::SplitV) {
+				if(m_parent->type() == Type::SplitV) {
 					Panel *pn = new Panel(m_widget->copy());
 					m_parent->add(pn, this);
 				} else {
@@ -280,7 +280,7 @@ void Panel::draw(View &view, Stream &stream, SDL_Renderer *rend, int x, int y, i
 				}
 			}
 			if(ImGui::IsKeyPressed(ImGuiKey_H)) {
-				if(m_parent->get_type() == Type::SplitH) {
+				if(m_parent->type() == Type::SplitH) {
 					Panel *pn = new Panel(m_widget->copy());
 					m_parent->add(pn, this);
 				} else {
@@ -291,7 +291,7 @@ void Panel::draw(View &view, Stream &stream, SDL_Renderer *rend, int x, int y, i
 				}
 			}
 			if(ImGui::IsKeyPressed(ImGuiKey_X)) {
-				if(m_parent && m_parent->get_type() != Type::Root) {
+				if(m_parent && m_parent->type() != Type::Root) {
 					m_parent->remove(this);
 				}
 			}

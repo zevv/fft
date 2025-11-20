@@ -127,10 +127,10 @@ void WidgetChannels::do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SD
 
 
 
-	auto &channels = stream.player.get_channels();
+	auto &channels = stream.player.channel_count();
 	auto &player = stream.player;
-	float stretch = player.get_stretch();
-	float pitch = player.get_pitch();
+	float stretch = player.stretch();
+	float pitch = player.pitch();
 
 	ImGui::NewLine();
 
@@ -179,7 +179,7 @@ void WidgetChannels::do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SD
 	float semitones = 12.0f * log2f(pitch);
 	ImGui::Text("%+.2f semitones", semitones);
 
-	float shift = player.get_shift();
+	float shift = player.shift();
 	ImGui::SetNextItemWidth(150);
 	if(ImGui::DragFloat("##shift", &shift, stream.sample_rate() / 1000.0, -stream.sample_rate(), +stream.sample_rate(), "Shift %.2fHz")) {
 		player.set_shift(shift);

@@ -32,8 +32,8 @@ public:
 	Samplerate sample_rate() { return m_srate; }
 	Sample *peek(size_t *stride, size_t *frames_avail = nullptr);
 	Wavecache::Range *peek_wavecache(size_t *stride, size_t *used = nullptr);
-	Rb &get_rb() { return m_rb; }
-	Wavecache &get_wavecache() { return m_wavecache; }
+	Rb &rb() { return m_rb; }
+	Wavecache &wavecache() { return m_wavecache; }
 	
 	Player player;
 	Capture capture;

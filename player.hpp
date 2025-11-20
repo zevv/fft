@@ -41,17 +41,17 @@ public:
 	void filter_get(float &f_lp, float &f_hp);
 	void filter_set(float f_lp, float f_hp);
 	
-	float get_pitch() const { return m_pitch; }
+	float pitch() const { return m_pitch; }
 	void set_pitch(float pitch) { m_pitch = std::clamp(pitch, 0.01f, 100.0f); }
 
-	Frequency get_shift() const { return m_shiftfreq; }
+	Frequency shift() const { return m_shiftfreq; }
 	void set_shift(Frequency shift) { m_shiftfreq = shift; }
 
-	float get_stretch() const { return m_stretch; }
+	float stretch() const { return m_stretch; }
 	void set_stretch(float stretch) { m_stretch = std::clamp(stretch, 0.01f, 100.0f); }
 
 
-	std::vector<Channel>& get_channels() { return m_channels; }
+	std::vector<Channel>& channel_count() { return m_channels; }
 
 private:
 	Stream &m_stream;	

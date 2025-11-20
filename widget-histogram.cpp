@@ -116,7 +116,7 @@ void WidgetHistogram::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		graph(rend, r,
 				b.data(), b.size(), 1,
 				0, m_nbins-1,
-				(size_t)0, (size_t)m_hists[ch].get_peak());
+				(size_t)0, (size_t)m_hists[ch].peak());
 	}
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
@@ -131,4 +131,3 @@ REGISTER_WIDGET(WidgetHistogram,
 	         Widget::Info::Flags::ShowLock |
 	         Widget::Info::Flags::ShowWindowSize,
 );
-

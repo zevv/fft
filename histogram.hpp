@@ -61,7 +61,7 @@ public:
 		return m_max;
 	}
 
-	T get_peak() const
+	T peak() const
 	{
 		size_t peak = 0;
 		for(auto &b : m_data) {
@@ -83,6 +83,4 @@ private:
 	T m_max;
 	std::vector<size_t> m_data;
 };
-
-
 
