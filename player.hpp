@@ -23,7 +23,6 @@ public:
 		Factor stretch{1.0};
 		Frequency freq_hp{0.0};
 		Frequency freq_lp{1.0};
-
 		bool operator==(const Config &other) const = default;
 	};
 	
@@ -31,6 +30,7 @@ public:
 		bool enabled{true};
 		Db level{0.3f};
 		double pan{0.0f};
+		bool operator==(const ChannelConfig &other) const = default;
 	};
 
 	Player(Stream &stream);
@@ -42,7 +42,7 @@ public:
 	Config config();
 	void set_config(Config &cfg);
 
-	ChannelConfig& channel_config(size_t ch);
+	ChannelConfig channel_config(size_t ch);
 	void set_channel_config(size_t ch, ChannelConfig &channel);
 
 	void set_channel_count(size_t count);

@@ -143,7 +143,7 @@ void Player::set_config(Config &cfg)
 }
 
 
-Player::ChannelConfig& Player::channel_config(size_t ch)
+Player::ChannelConfig Player::channel_config(size_t ch)
 {
 	if(ch >= m_channel_config.size()) {
 		m_channel_config.resize(ch+1);
@@ -191,14 +191,17 @@ void Player::audio_callback(SDL_AudioStream *stream, int additional_amount, int 
 	// TODO: precalculate
 
 	std::vector<float> gain[2];
+	std::vector<bool> enabled;
 	gain[0].resize(m_stream.channel_count());
 	gain[1].resize(m_stream.channel_count());
+	enabled.resize(m_stream.channel_count());
 
 	for(size_t ch=0; ch<m_stream.channel_count(); ch++) {
 		ChannelConfig ccfg = channel_config(ch);
 		Gain channel_gain = db_to_gain(ccfg.level);
 		gain[0][ch] = channel_gain * (ccfg.pan <= 0.0f ? 1.0f : (1.0f - ccfg.pan));
 		gain[1][ch] = channel_gain * (ccfg.pan >= 0.0f ? 1.0f : (1.0f + ccfg.pan));
+		enabled[ch] = ccfg.enabled;
 	}
 
 	size_t xfade_samples = m_srate * 0.030 * cfg.pitch;
@@ -224,7 +227,7 @@ void Player::audio_callback(SDL_AudioStream *stream, int additional_amount, int 
 		// mix source channels into L/R playback channels
 
 		for(size_t ch=0; ch<m_stream.channel_count(); ch++) {
-			if(m_channel_config[ch].enabled && m_idx >= 0 && m_idx < avail) {
+			if(enabled[ch] && m_idx >= 0 && m_idx < avail) {
 				float v_ch = data[m_idx * stride + ch] / (float)k_sample_max;
 				if(m_xfade > 0) {
 					if(m_idx_prev >= 0 && m_idx_prev < avail) {
