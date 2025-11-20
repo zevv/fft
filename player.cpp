@@ -211,13 +211,6 @@ void Player::audio_callback(SDL_AudioStream *stream, int additional_amount, int 
 		if(m_xfade > 0) {
 			m_xfade --;
 		}
-
-		for(size_t lr=0; lr<2; lr++) {
-			for(size_t j=0; j<2; j++) {
-				if(m_filter.f_hp > 0.0f) v[lr] = m_filter.bq_hp[0][j].run(v[lr]);
-				if(m_filter.f_lp < 1.0f) v[lr] = m_filter.bq_lp[0][j].run(v[lr]);
-			}
-		}
 		
 		if(m_shift.freq != 0.0) {
 			double sI = sin(2.0 * M_PI * m_shift.phase);
@@ -229,6 +222,12 @@ void Player::audio_callback(SDL_AudioStream *stream, int additional_amount, int 
 			m_shift.phase = fmod(m_shift.phase + m_shift.freq / m_srate, 1.0);
 		}
 
+		for(size_t lr=0; lr<2; lr++) {
+			for(size_t j=0; j<2; j++) {
+				if(m_filter.f_hp > 0.0f) v[lr] = m_filter.bq_hp[0][j].run(v[lr]);
+				if(m_filter.f_lp < 1.0f) v[lr] = m_filter.bq_lp[0][j].run(v[lr]);
+			}
+		}
 		
 		for(size_t lr=0; lr<2; lr++) {
 			m_buf[i*2 + lr] = v[lr];
