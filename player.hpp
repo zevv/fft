@@ -9,6 +9,7 @@
 #include "config.hpp"
 #include "biquad.hpp"
 #include "hilbert.hpp"
+#include "freqshift.hpp"
 
 class Stream;
 
@@ -43,8 +44,8 @@ public:
 	float get_pitch() const { return m_pitch; }
 	void set_pitch(float pitch) { m_pitch = std::clamp(pitch, 0.01f, 100.0f); }
 
-	Frequency get_shift() const { return m_shift.freq; }
-	void set_shift(Frequency shift) { m_shift.freq = shift; }
+	Frequency get_shift() const { return m_shiftfreq; }
+	void set_shift(Frequency shift) { m_shiftfreq = shift; }
 
 	float get_stretch() const { return m_stretch; }
 	void set_stretch(float stretch) { m_stretch = std::clamp(stretch, 0.01f, 100.0f); }
@@ -75,9 +76,6 @@ private:
 		Biquad bq_hp[2][2];
 		Biquad bq_lp[2][2];
 	} m_filter;
-	struct {
-		Hilbert h[2];
-		std::atomic<Frequency> freq{0.0};
-		double phase{0.0};
-	} m_shift{};
+	FreqShift m_freqshift[2];
+	std::atomic<Frequency> m_shiftfreq{0.0};
 };
