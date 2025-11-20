@@ -21,6 +21,11 @@ void View::load(ConfigReader::Node *n)
 		nc->read("from", freq.from);
 		nc->read("to", freq.to);
 	}
+	if(auto *nc = n->find("aperture")) {
+		nc->read("cursor", aperture.cursor);
+		nc->read("from", aperture.from);
+		nc->read("to", aperture.to);
+	}
 	if(auto *nc = n->find("amplitude")) {
 		nc->read("cursor", amplitude.cursor);
 		nc->read("from", amplitude.from);
@@ -50,6 +55,11 @@ void View::save(ConfigWriter &cfg)
 	cfg.write("from", freq.from);
 	cfg.write("to", freq.to);
 	cfg.write("cursor", freq.cursor);
+	cfg.pop();
+	cfg.push("aperture");
+	cfg.write("from", aperture.from);
+	cfg.write("to", aperture.to);
+	cfg.write("cursor", aperture.cursor);
 	cfg.pop();
 	cfg.push("amplitude");
 	cfg.write("from", amplitude.from);
@@ -94,6 +104,13 @@ float View::from_freq(Config &cfg, SDL_Rect &r, Frequency f)
 {
 	if(cfg.x == Axis::Frequency) return r.x + r.w * (f- freq.from) / (freq.to - freq.from);
 	if(cfg.y == Axis::Frequency) return r.y + r.h * (1.0 - (f - freq.from) / (freq.to - freq.from));
+	return 0.0;
+}
+
+float View::from_aperture(Config &cfg, SDL_Rect &r, double db)
+{
+	if(cfg.x == Axis::Aperture) return r.x + r.w * (db - aperture.from) / (aperture.to - aperture.from);
+	if(cfg.y == Axis::Aperture) return r.y + r.h * (1.0 - (db - aperture.from) / (aperture.to - aperture.from));
 	return 0.0;
 }
 

@@ -20,7 +20,6 @@ public:
 private:
 	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
 
-	float m_amp_cursor{0.0};
 	Fft m_fft{};
 
 	std::vector<Sample> m_out_graph;
@@ -45,7 +44,7 @@ void WidgetSpectrum::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 {
 	if(ImGui::IsWindowFocused()) {
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
-		ImGui::Text("f=%.6gHz amp=%.2fdB", m_view.freq.cursor * stream.sample_rate() * 0.5, m_amp_cursor);
+		ImGui::Text("f=%.6gHz amp=%.2fdB", m_view.freq.cursor * stream.sample_rate() * 0.5, m_view.aperture.cursor);
 	}
 
 	m_fft.configure(m_view.window.size, m_view.window.window_type, m_view.window.window_beta);

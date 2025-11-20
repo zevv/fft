@@ -570,6 +570,15 @@ void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &
 				Widget::CursorFlags::Shadow |
 				Widget::CursorFlags::PlayPosition);
 	}
+
+	if(cfg.x == View::Axis::Aperture || cfg.y == View::Axis::Aperture) {
+
+		CursorFlags dir = (cfg.x == View::Axis::Aperture) ?
+			Widget::CursorFlags::Vertical : Widget::CursorFlags::Horizontal;
+	
+		cursor(rend, r, m_view.from_aperture(cfg, r, m_view.aperture.cursor),
+				dir | Widget::CursorFlags::Shadow);
+	}
 }
 
 

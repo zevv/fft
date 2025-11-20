@@ -31,6 +31,7 @@ public:
 	
 	float from_t(Config &cfg, SDL_Rect &r, Time t);
 	float from_freq(Config &cfg, SDL_Rect &r, Frequency f);
+	float from_aperture(Config &cfg, SDL_Rect &r, double db);
 	
 	void pan(Config &cfg, SDL_Rect &r, ImVec2 delta);
 	void zoom_start();

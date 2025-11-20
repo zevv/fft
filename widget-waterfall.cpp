@@ -18,7 +18,7 @@ public:
 
 private:
 
-	typedef Range<int8_t> Aperture;
+	typedef Range<double> Aperture;
 
 	struct Worker {
 		int id;
@@ -191,9 +191,9 @@ void WidgetWaterfall::job_run_gen(Worker &worker, Job &job)
 			for(int col=0; col<job.cols; col++) {
 				Frequency f = job.f.min + (job.f.max - job.f.min) * col / job.cols;
 				if(f >=0 && f <= 1.0) {
-					int db = tabread2(fft_out, f, (int8_t)-127);
+					double db = tabread2(fft_out, f, (int8_t)-127);
 					res.hist.add(db);
-					uint32_t alpha = std::clamp(255 * (db - job.aperture.min) / (job.aperture.max - job.aperture.min), 0, 255);
+					uint32_t alpha = std::clamp(255 * (db - job.aperture.min) / (job.aperture.max - job.aperture.min), 0.0, 255.0);
 					*p = v | (alpha << 24);
 				}
 				p += job.dp_col;
@@ -222,6 +222,7 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 	if(m_agc) {
 		m_view.aperture.from = hist.find_percentile(0.01);
 		m_view.aperture.to = hist.find_percentile(1.00);
+		m_view.aperture.to = std::max(m_view.aperture.to, m_view.aperture.from + 10.0f);
 	}
 
 	// render previous results
