@@ -78,16 +78,14 @@ CXXFLAGS += -fsanitize=address
 LDFLAGS += -fsanitize=address 
 endif
 
+ifdef smem
+CXXFLAGS += -fsanitize=memory -fsanitize-memory-track-origins=2
+LDFLAGS += -fsanitize=memory -fsanitize-memory-track-origins=2
+endif
+
 ifdef lto
 CXXFLAGS += -flto
 LDFLAGS += -flto
-endif
-
-ifdef smem
-CXX=clang++-19
-LD=clang++-19
-CXXFLAGS += -fsanitize=memory -fsanitize-memory-track-origins=2
-LDFLAGS += -fsanitize=memory -fsanitize-memory-track-origins=2
 endif
 
 CCACHE := $(shell which ccache)
