@@ -62,7 +62,7 @@ CXXFLAGS += -MMD
 CXXFLAGS += -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 CXXFLAGS += $(PKG_CFLAGS)
 
-LIBS += -ldl $(PKG_LIBS)
+LIBS += -ldl -latomic $(PKG_LIBS)
 
 ifdef bitline
 CXXFLAGS += -DBITLINE

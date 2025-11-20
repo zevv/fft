@@ -59,55 +59,20 @@ void Player::set_channel_count(size_t count)
 }
 
 
-void Player::filter_get(float &f_lp, float &f_hp)
-{
-	f_lp = m_filter.f_lp;
-	f_hp = m_filter.f_hp;
-}
-
-
-void Player::filter_set(float f_lp, float f_hp)
-{
-	if(f_lp != m_filter.f_lp || f_hp != m_filter.f_hp) {
-
-		m_filter.f_lp = f_lp;
-		m_filter.f_hp = f_hp;
-
-		for(size_t i=0; i<2; i++) {
-			for(size_t j=0; j<2; j++) {
-				m_filter.bq_hp[i][j].configure(Biquad::Type::HP, f_hp);
-				m_filter.bq_lp[i][j].configure(Biquad::Type::LP, f_lp);
-			}
-		}
-	}
-
-}
-
-
 void Player::load(ConfigReader::Node *n)
 {
 	auto nc = n->find("player");
-	float stretch = 1.0f;
-	nc->read("stretch", stretch);
-	m_stretch = stretch;
 
-	float pitch = 1.0f;
-	nc->read("pitch", pitch);
-	m_pitch = pitch;
+	Config cfg;
 
-	float shift = 0.0f;
-	nc->read("shift", shift);
-	m_shiftfreq = shift;
+	nc->read("master_gain", cfg.master);
+	nc->read("shift", cfg.shift);
+	nc->read("pitch", cfg.pitch);
+	nc->read("stretch", cfg.stretch);
+	nc->read("filter_hp", cfg.freq_hp);
+	nc->read("filter_lp", cfg.freq_lp);
 
-	float master_gain = 1.0f;
-	nc->read("master_gain", master_gain);
-	m_master_gain = master_gain;
-
-	float filter_lp = 1.0f;
-	float filter_hp = 0.0f;
-	nc->read("filter_lp", filter_lp);
-	nc->read("filter_hp", filter_hp);
-	filter_set(filter_lp, filter_hp);
+	set_config(cfg);
 
 	for(auto &k : nc->find("channel")->kids) {
 		if(isdigit(k.first[0])) {
@@ -124,12 +89,17 @@ void Player::load(ConfigReader::Node *n)
 void Player::save(ConfigWriter &cw)
 {
 	cw.push("player");
-	cw.write("stretch", m_stretch);
-	cw.write("pitch", m_pitch);
-	cw.write("shift", m_shiftfreq);
-	cw.write("master_gain", m_master_gain);
-	cw.write("filter_lp", m_filter.f_lp);
-	cw.write("filter_hp", m_filter.f_hp);
+
+	Config cfg = config();
+
+	cw.write("master_gain", cfg.master);
+	cw.write("shift", cfg.shift);
+	cw.write("pitch", cfg.pitch);
+	cw.write("stretch", cfg.stretch);
+	cw.write("filter_hp", cfg.freq_hp);
+	cw.write("filter_lp", cfg.freq_lp);
+
+
 	cw.push("channel");
 	for(size_t ch=0; ch<m_channels.size(); ch++) {
 		cw.push(ch);
@@ -140,6 +110,34 @@ void Player::save(ConfigWriter &cw)
 	}
 	cw.pop();
 	cw.pop();
+}
+
+
+Player::Config Player::config()
+{
+	return m_config;
+}
+
+
+void Player::set_config(Config &cfg)
+{
+	cfg.pitch = std::clamp(cfg.pitch, 0.01, 100.0);
+	cfg.stretch = std::clamp(cfg.stretch, 0.01, 100.0);
+
+	Config cfg_old = config();
+	if(cfg_old != cfg) {
+
+		for(size_t lr=0; lr<2; lr++) {
+
+			m_freqshift[lr].set_frequency(cfg.shift / m_srate);
+
+			for(size_t j=0; j<2; j++) {
+				m_filter.bq_hp[lr][j].configure(Biquad::Type::HP, cfg.freq_hp / m_srate);
+				m_filter.bq_lp[lr][j].configure(Biquad::Type::LP, cfg.freq_lp / m_srate);
+			}
+		}
+		m_config = cfg;
+	}
 }
 
 
@@ -157,6 +155,10 @@ void Player::seek(Time t)
 
 void Player::audio_callback(SDL_AudioStream *stream, int additional_amount, int total_amount)
 {
+
+	Config cfg = config();
+
+	Gain master_gain = db_to_gain(cfg.master);
 	m_channels.resize(m_stream.channel_count());
 
 	size_t frame_count = total_amount / m_frame_size;
@@ -165,6 +167,8 @@ void Player::audio_callback(SDL_AudioStream *stream, int additional_amount, int 
 	size_t stride = 0;
 	size_t avail = 0;
 	Sample *data = m_stream.peek(&stride, &avail);
+
+	// TODO: precalculate
 
 	std::vector<float> gain[2];
 	gain[0].resize(m_stream.channel_count());
@@ -175,13 +179,15 @@ void Player::audio_callback(SDL_AudioStream *stream, int additional_amount, int 
 		gain[1][ch] = m_channels[ch].gain * (m_channels[ch].pan >= 0.0f ? 1.0f : (1.0f + m_channels[ch].pan));
 	}
 
-	size_t xfade_samples = m_srate * 0.030 * m_pitch;
-	float factor = m_stretch / m_pitch;
+	size_t xfade_samples = m_srate * 0.030 * cfg.pitch;
+	float factor = cfg.stretch / cfg.pitch;
 
 	for(size_t i=0; i<frame_count; i++) {
 
+		// handle seeking and crossfade
+
 		Time delta = fabs(m_play_pos - (Time(m_idx) / m_srate));
-		if(delta > 0.020 || m_stretch != 1.0f) {
+		if(delta > 0.020 || cfg.stretch != 1.0f) {
 			if(m_xfade == 0) {
 				m_idx_prev = m_idx;
 				m_idx = m_play_pos * m_srate;
@@ -193,6 +199,8 @@ void Player::audio_callback(SDL_AudioStream *stream, int additional_amount, int 
 		float g0 = (float)m_xfade / (float)xfade_samples;
 		float g1 = (1.0f - g0);
 
+		// mix source channels into L/R playback channels
+
 		for(size_t ch=0; ch<m_stream.channel_count(); ch++) {
 			if(m_channels[ch].enabled && m_idx >= 0 && m_idx < avail) {
 				float v_ch = data[m_idx * stride + ch] / (float)k_sample_max;
@@ -203,7 +211,7 @@ void Player::audio_callback(SDL_AudioStream *stream, int additional_amount, int 
 					}
 				}
 				for(size_t lr=0; lr<2; lr++) {
-					v[lr] += v_ch * gain[lr][ch] * m_master_gain;
+					v[lr] += v_ch * gain[lr][ch] * master_gain;
 				}
 			}
 		}
@@ -211,22 +219,20 @@ void Player::audio_callback(SDL_AudioStream *stream, int additional_amount, int 
 		if(m_xfade > 0) {
 			m_xfade --;
 		}
-		
+	
+		// post processing
+
 		for(size_t lr=0; lr<2; lr++) {
 		
-			if(m_shiftfreq != 0.0) {
-				m_freqshift[lr].set_frequency(m_shiftfreq / m_srate);
+			if(cfg.shift != 0.0f) {
 				v[lr] = m_freqshift[lr].run(v[lr]);
 			}
 
 			for(size_t j=0; j<2; j++) {
-				if(m_filter.f_hp > 0.0f) v[lr] = m_filter.bq_hp[0][j].run(v[lr]);
-				if(m_filter.f_lp < 1.0f) v[lr] = m_filter.bq_lp[0][j].run(v[lr]);
+				if(cfg.freq_hp >     0.0) v[lr] = m_filter.bq_hp[lr][j].run(v[lr]);
+				if(cfg.freq_lp < m_srate) v[lr] = m_filter.bq_lp[lr][j].run(v[lr]);
 			}
-		}
-
 		
-		for(size_t lr=0; lr<2; lr++) {
 			m_buf[i*2 + lr] = v[lr];
 		}
 
@@ -235,9 +241,11 @@ void Player::audio_callback(SDL_AudioStream *stream, int additional_amount, int 
 		m_play_pos += 1.0 / m_srate * factor; 
 	}
 
-	SDL_SetAudioStreamFrequencyRatio(m_sdl_audio_stream, m_pitch);
+	SDL_SetAudioStreamFrequencyRatio(m_sdl_audio_stream, cfg.pitch);
 	SDL_PutAudioStreamData(m_sdl_audio_stream, m_buf.data(), frame_count * m_frame_size);
 	m_frames_event += frame_count * factor;
+
+	// send playback position event to main thread
 	
 	uint64_t t_now = SDL_GetTicks();
 	if(t_now > m_t_event) {
@@ -265,4 +273,3 @@ void Player::pause()
 	SDL_PauseAudioDevice(SDL_GetAudioStreamDevice(m_sdl_audio_stream));
 	SDL_ClearAudioStream(m_sdl_audio_stream);
 }
-

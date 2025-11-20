@@ -127,65 +127,50 @@ void WidgetChannels::do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SD
 
 
 
-	auto &channels = stream.player.channel_count();
+	auto &channels = stream.player.channels();
 	auto &player = stream.player;
-	float stretch = player.stretch();
-	float pitch = player.pitch();
+	auto srate = stream.sample_rate();
 
 	ImGui::NewLine();
 
-	float gain = player.master_gain_get();
-	float db = 20.0f * log10f(std::max(gain, 0.0001f));
-	ImGui::SetNextItemWidth(150);
-	ImGui::SliderFloat("##Gain", &db, -30.0, +30.0, "master %+.0fdB");
-	player.master_gain_set(powf(10.0f, db / 20.0f));
-
-	float fs = stream.sample_rate() * 0.5;
-	float f_lp, f_hp;
-	player.filter_get(f_lp, f_hp);
-	f_lp *= fs;
-	f_hp *= fs;
-	ImGui::SetNextItemWidth(150);
-	ImGui::SliderFloat("##Highpass", &f_hp, 0.0f, fs, "Highpass %.0fHz");
-	ImGui::SameLine();
-	ImGui::SetNextItemWidth(150);
-	ImGui::SliderFloat("##Lowpass", &f_lp, 0.0f, fs, "Lowpass %.0fHz");
-	player.filter_set(f_lp / fs, f_hp / fs);
+	Player::Config cfg = player.config();
 
 	ImGui::SetNextItemWidth(150);
-	if(ImGui::SliderFloat("##stretch", &stretch, 0.25, 4.0, "Stretch %.2fx", ImGuiSliderFlags_Logarithmic)) {
-		player.set_stretch(stretch);
-	}
+	ImGui::SliderDouble("##Gain", &cfg.master, -30.0, +30.0, "master %+.0fdB");
+
+	Samplerate fs = stream.sample_rate() * 0.5;
+	ImGui::SetNextItemWidth(150);
+	ImGui::SliderDouble("##Highpass", &cfg.freq_hp, 0.0f, fs, "Highpass %.0fHz");
 	ImGui::SameLine();
-	if(ImGui::Button("-##stretch")) player.set_stretch(stretch / powf(2.0f, 1.0f / 12.0f));
-	ImGui::SameLine();
-	if(ImGui::Button("0##stretch")) player.set_stretch(1.0f);
-	ImGui::SameLine();
-	if(ImGui::Button("+##stretch")) player.set_stretch(stretch * powf(2.0f, 1.0f / 12.0f));
+	ImGui::SetNextItemWidth(150);
+	ImGui::SliderDouble("##Lowpass", &cfg.freq_lp, 0.0f, fs, "Lowpass %.0fHz");
 
 	ImGui::SetNextItemWidth(150);
-	if(ImGui::SliderFloat("##pitch", &pitch, 0.25, 4.0, "Pitch %.2fx", ImGuiSliderFlags_Logarithmic)) {
-		player.set_pitch(pitch);
-	}
+	ImGui::SliderDouble("##stretch", &cfg.stretch, 0.25, 4.0, "Stretch %.2fx", ImGuiSliderFlags_Logarithmic);
 	ImGui::SameLine();
-	if(ImGui::Button("-##pitch")) player.set_pitch(pitch / powf(2.0f, 1.0f / 12.0f));
+	if(ImGui::Button("-##stretch")) cfg.stretch = cfg.stretch / powf(2.0f, 1.0f / 12.0f);
 	ImGui::SameLine();
-	if(ImGui::Button("0##pitch")) player.set_pitch(1.0f);
+	if(ImGui::Button("0##stretch")) cfg.stretch = 1.0f;
 	ImGui::SameLine();
-	if(ImGui::Button("+##pitch")) {
-		player.set_pitch(pitch * powf(2.0f, 1.0f / 12.0f));
-	}
-	ImGui::SameLine();
-	float semitones = 12.0f * log2f(pitch);
-	ImGui::Text("%+.2f semitones", semitones);
+	if(ImGui::Button("+##stretch")) cfg.stretch = cfg.stretch * powf(2.0f, 1.0f / 12.0f);
 
-	float shift = player.shift();
 	ImGui::SetNextItemWidth(150);
-	if(ImGui::DragFloat("##shift", &shift, stream.sample_rate() / 1000.0, -stream.sample_rate(), +stream.sample_rate(), "Shift %.2fHz")) {
-		player.set_shift(shift);
-	}
+	ImGui::SliderDouble("##pitch", &cfg.pitch, 0.25, 4.0, "Pitch %.2fx", ImGuiSliderFlags_Logarithmic);
 	ImGui::SameLine();
-	if(ImGui::Button("0##shift")) player.set_shift(0.0f);
+	if(ImGui::Button("-##pitch")) cfg.pitch = cfg.pitch / powf(2.0f, 1.0f / 12.0f);
+	ImGui::SameLine();
+	if(ImGui::Button("0##pitch")) cfg.pitch = 1.0f;
+	ImGui::SameLine();
+	if(ImGui::Button("+##pitch")) cfg.pitch = cfg.pitch * powf(2.0f, 1.0f / 12.0f);
+	ImGui::SameLine();
+	ImGui::Text("%+.2f semitones", 12.0f * log2f(cfg.pitch));
+
+	ImGui::SetNextItemWidth(150);
+	ImGui::SliderDouble("##shift", &cfg.shift, -srate * 0.5, +srate * 0.5, "Shift %+.0fHz");
+	ImGui::SameLine();
+	if(ImGui::Button("0##shift")) cfg.shift = 0.0f;
+	
+	player.set_config(cfg);
 
 	ImGui::NewLine();
 	size_t ch = 0;

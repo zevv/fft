@@ -15,6 +15,17 @@ class Stream;
 
 class Player {
 public:
+
+	struct Config {
+		Db master{1.0};
+		Frequency shift{0.0};
+		Factor pitch{1.0};
+		Factor stretch{1.0};
+		Frequency freq_hp{0.0};
+		Frequency freq_lp{1.0};
+
+		bool operator==(const Config &other) const = default;
+	};
 	
 	struct Channel {
 		bool enabled{true};
@@ -28,6 +39,9 @@ public:
 	void load(ConfigReader::Node *n);
 	void save(ConfigWriter &cw);
 
+	Config config();
+	void set_config(Config &cfg);
+
 	void set_channel_count(size_t count);
 	void set_sample_rate(Samplerate srate);
 	void pause();
@@ -35,23 +49,8 @@ public:
 	void seek(Time tpos);
 	void audio_callback(SDL_AudioStream *stream, int additional_amount, int total_amount);
 
-	float master_gain_get() const { return m_master_gain; }
-	void master_gain_set(float gain) { m_master_gain = gain; }
 
-	void filter_get(float &f_lp, float &f_hp);
-	void filter_set(float f_lp, float f_hp);
-	
-	float pitch() const { return m_pitch; }
-	void set_pitch(float pitch) { m_pitch = std::clamp(pitch, 0.01f, 100.0f); }
-
-	Frequency shift() const { return m_shiftfreq; }
-	void set_shift(Frequency shift) { m_shiftfreq = shift; }
-
-	float stretch() const { return m_stretch; }
-	void set_stretch(float stretch) { m_stretch = std::clamp(stretch, 0.01f, 100.0f); }
-
-
-	std::vector<Channel>& channel_count() { return m_channels; }
+	std::vector<Channel>& channels() { return m_channels; }
 
 private:
 	Stream &m_stream;	
@@ -66,16 +65,11 @@ private:
 	size_t m_frames_event{};
 	size_t m_frame_size;
 	size_t m_buf_frames;
-	std::atomic<float> m_master_gain{1.0f};
-	std::atomic<float> m_pitch{1.0f};
-	std::atomic<float> m_stretch{1.0f};
 	std::vector<float> m_buf{};
+	std::atomic<Config> m_config{ Config{} };
 	struct {
-		std::atomic<float> f_hp{0.0f};
-		std::atomic<float> f_lp{1.0f};
 		Biquad bq_hp[2][2];
 		Biquad bq_lp[2][2];
 	} m_filter;
 	FreqShift m_freqshift[2];
-	std::atomic<Frequency> m_shiftfreq{0.0};
 };

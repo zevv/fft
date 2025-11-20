@@ -246,5 +246,37 @@ void TextShadow(const char* fmt, ...)
 }
 
 
+bool SliderDouble(const char* label, double* v, double v_min, double v_max, const char* format, int flags)
+{
+
+	float v_f = *v;
+	float min = v_min;
+    float max = v_max;
+	if (ImGui::GetIO().KeyShift)
+	{
+		float range = v_max - v_min;
+		float zoom_range = range * 0.1f;
+		min = v_f - (zoom_range * 0.5f);
+		max = v_f + (zoom_range * 0.5f);
+		if (min < v_min) { min = v_min; max = min + zoom_range; }
+		if (max > v_max) { max = v_max; min = max - zoom_range; }
+	}
+
+	flags |= ImGuiSliderFlags_NoRoundToFormat;
+
+	bool changed = ImGui::SliderFloat(label, &v_f, min, max, format, flags);
+	if(changed) *v = v_f;
+	return changed;
+}
+
+
+bool DragDouble(const char* label, double* v, double v_speed, double v_min, double v_max, const char* format, int flags)
+{
+	float v_f = static_cast<float>(*v);
+	bool changed = ImGui::DragFloat(label, &v_f, static_cast<float>(v_speed), static_cast<float>(v_min), static_cast<float>(v_max), format, flags);
+	if(changed) *v = static_cast<double>(v_f);
+	return changed;
+}
+
 }
 

@@ -7,6 +7,7 @@ typedef double Frequency;
 typedef double Samplerate;
 typedef double Gain;
 typedef double Db;
+typedef double Factor;
 
 template<typename T>
 struct Range {

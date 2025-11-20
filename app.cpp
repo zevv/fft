@@ -350,24 +350,25 @@ void App::run()
 		if(ImGui::IsKeyPressed(ImGuiKey_Space) || ImGui::IsKeyPressed(ImGuiKey_P)) {
 			play_toggle();
 		}
+			
+		auto cfg = player.config();
 
 		float factor = ImGui::IsKeyDown(ImGuiKey_LeftShift) ? 2.0 : 1.059463;
-		float stretch = player.stretch();
-		float pitch = player.pitch();
+		
 		if(ImGui::IsKeyPressed(ImGuiKey_Comma)) {
-			player.set_stretch(stretch / factor);
-			player.set_pitch(pitch / factor);
+			cfg.pitch /= factor;
+			cfg.stretch /= factor;
 		}
 		if(ImGui::IsKeyPressed(ImGuiKey_Slash)) {
-			player.set_stretch(stretch * factor);
-			player.set_pitch(pitch * factor);
+			cfg.pitch *= factor;
+			cfg.stretch *= factor;
 		}
 		if(ImGui::IsKeyPressed(ImGuiKey_Period)) {
-			player.set_pitch(1.0);
-			player.set_stretch(1.0);
-			player.set_shift(0.0);
+			cfg.shift = 0.0;
+			cfg.pitch = 1.0;
+			cfg.stretch = 1.0;
 		}
-
+		player.set_config(cfg);
 
 
 		SDL_Event event;
