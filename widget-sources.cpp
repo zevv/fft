@@ -22,7 +22,6 @@ private:
 
 	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
 
-	ssize_t m_vu_idx_prev{0};
 	std::vector<Sample> m_vu_peak{};
 };
 
