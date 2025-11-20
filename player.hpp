@@ -27,10 +27,10 @@ public:
 		bool operator==(const Config &other) const = default;
 	};
 	
-	struct Channel {
+	struct ChannelConfig {
 		bool enabled{true};
-		float gain{0.3f};
-		float pan{0.0f};
+		Db level{0.3f};
+		double pan{0.0f};
 	};
 
 	Player(Stream &stream);
@@ -42,6 +42,9 @@ public:
 	Config config();
 	void set_config(Config &cfg);
 
+	ChannelConfig& channel_config(size_t ch);
+	void set_channel_config(size_t ch, ChannelConfig &channel);
+
 	void set_channel_count(size_t count);
 	void set_sample_rate(Samplerate srate);
 	void pause();
@@ -49,13 +52,11 @@ public:
 	void seek(Time tpos);
 	void audio_callback(SDL_AudioStream *stream, int additional_amount, int total_amount);
 
-
-	std::vector<Channel>& channels() { return m_channels; }
-
 private:
 	Stream &m_stream;	
 	Samplerate m_srate;
-	std::vector<Channel> m_channels;
+	std::atomic<Config> m_config{ Config{} };
+	std::vector<ChannelConfig> m_channel_config{ ChannelConfig{} };
 	std::atomic<Time> m_play_pos{0};
 	SDL_AudioStream *m_sdl_audio_stream{nullptr};
 	size_t m_idx{};
@@ -66,7 +67,6 @@ private:
 	size_t m_frame_size;
 	size_t m_buf_frames;
 	std::vector<float> m_buf{};
-	std::atomic<Config> m_config{ Config{} };
 	struct {
 		Biquad bq_hp[2][2];
 		Biquad bq_lp[2][2];

@@ -55,7 +55,7 @@ void Player::set_sample_rate(Samplerate srate)
 
 void Player::set_channel_count(size_t count)
 {
-	m_channels.resize(std::max(count, m_channels.size()));
+	m_channel_config.resize(std::max(count, m_channel_config.size()));
 }
 
 
@@ -77,10 +77,11 @@ void Player::load(ConfigReader::Node *n)
 	for(auto &k : nc->find("channel")->kids) {
 		if(isdigit(k.first[0])) {
 			size_t ch = atoi(k.first);
-			m_channels.resize(ch+1);
-			k.second->read("enabled", m_channels[ch].enabled);
-			k.second->read("volume", m_channels[ch].gain);
-			k.second->read("pan", m_channels[ch].pan);
+			ChannelConfig ccfg;
+			k.second->read("enabled", ccfg.enabled);
+			k.second->read("level", ccfg.level);
+			k.second->read("pan", ccfg.pan);
+			set_channel_config(ch, ccfg);
 		}
 	}
 }
@@ -101,11 +102,12 @@ void Player::save(ConfigWriter &cw)
 
 
 	cw.push("channel");
-	for(size_t ch=0; ch<m_channels.size(); ch++) {
+	for(size_t ch=0; ch<m_channel_config.size(); ch++) {
+		ChannelConfig ccfg = channel_config(ch);
 		cw.push(ch);
-		cw.write("enabled", m_channels[ch].enabled);
-		cw.write("volume", m_channels[ch].gain);
-		cw.write("pan", m_channels[ch].pan);
+		cw.write("enabled", ccfg.enabled);
+		cw.write("level", ccfg.level);
+		cw.write("pan", ccfg.pan);
 		cw.pop();
 	}
 	cw.pop();
@@ -141,6 +143,24 @@ void Player::set_config(Config &cfg)
 }
 
 
+Player::ChannelConfig& Player::channel_config(size_t ch)
+{
+	if(ch >= m_channel_config.size()) {
+		m_channel_config.resize(ch+1);
+	}
+	return m_channel_config[ch];
+}
+
+
+void Player::set_channel_config(size_t ch, ChannelConfig &channel)
+{
+	if(ch >= m_channel_config.size()) {
+		m_channel_config.resize(ch+1);
+	}
+	m_channel_config[ch] = channel;
+}
+
+
 void Player::seek(Time t)
 {
 	m_play_pos = t;
@@ -159,7 +179,7 @@ void Player::audio_callback(SDL_AudioStream *stream, int additional_amount, int 
 	Config cfg = config();
 
 	Gain master_gain = db_to_gain(cfg.master);
-	m_channels.resize(m_stream.channel_count());
+	m_channel_config.resize(m_stream.channel_count());
 
 	size_t frame_count = total_amount / m_frame_size;
 	if(frame_count > m_buf_frames) frame_count = m_buf_frames;
@@ -175,8 +195,10 @@ void Player::audio_callback(SDL_AudioStream *stream, int additional_amount, int 
 	gain[1].resize(m_stream.channel_count());
 
 	for(size_t ch=0; ch<m_stream.channel_count(); ch++) {
-		gain[0][ch] = m_channels[ch].gain * (m_channels[ch].pan <= 0.0f ? 1.0f : (1.0f - m_channels[ch].pan));
-		gain[1][ch] = m_channels[ch].gain * (m_channels[ch].pan >= 0.0f ? 1.0f : (1.0f + m_channels[ch].pan));
+		ChannelConfig ccfg = channel_config(ch);
+		Gain channel_gain = db_to_gain(ccfg.level);
+		gain[0][ch] = channel_gain * (ccfg.pan <= 0.0f ? 1.0f : (1.0f - ccfg.pan));
+		gain[1][ch] = channel_gain * (ccfg.pan >= 0.0f ? 1.0f : (1.0f + ccfg.pan));
 	}
 
 	size_t xfade_samples = m_srate * 0.030 * cfg.pitch;
@@ -202,7 +224,7 @@ void Player::audio_callback(SDL_AudioStream *stream, int additional_amount, int 
 		// mix source channels into L/R playback channels
 
 		for(size_t ch=0; ch<m_stream.channel_count(); ch++) {
-			if(m_channels[ch].enabled && m_idx >= 0 && m_idx < avail) {
+			if(m_channel_config[ch].enabled && m_idx >= 0 && m_idx < avail) {
 				float v_ch = data[m_idx * stride + ch] / (float)k_sample_max;
 				if(m_xfade > 0) {
 					if(m_idx_prev >= 0 && m_idx_prev < avail) {

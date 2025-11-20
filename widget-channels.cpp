@@ -124,10 +124,6 @@ void WidgetChannels::do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SD
 	}
 
 
-
-
-
-	auto &channels = stream.player.channels();
 	auto &player = stream.player;
 	auto srate = stream.sample_rate();
 
@@ -182,6 +178,8 @@ void WidgetChannels::do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SD
 		if(ImGui::CollapsingHeader(label, ImGuiTreeNodeFlags_DefaultOpen)) {
 			for(size_t i=0; i<source->channel_count(); i++) {
 
+				Player::ChannelConfig ccfg = player.channel_config(ch);
+
 				SDL_Color col = m_channel_map.ch_color(ch);
 				ImVec4 imcol = {col.r / 255.0f, col.g / 255.0f, col.b / 255.0f, 1.0f};
 
@@ -193,19 +191,19 @@ void WidgetChannels::do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SD
 				ImGui::PushID(ch);
 
 				ImGui::SameLine();
-				ImGui::Checkbox("##Enable", &channels[ch].enabled);
+				ImGui::Checkbox("##Enable", &ccfg.enabled);
 
 				ImGui::SameLine();
 				ImGui::SetNextItemWidth(150);
-				float db = 20.0f * log10f(std::max(channels[ch].gain, 0.0001f));
-				ImGui::SliderFloat("##Volume", &db, -60.0, +0.0, "%.0fdB");
-				channels[ch].gain = db > -60 ? powf(10.0f, db / 20.0f) : 0.0f;
+				ImGui::SliderDouble("##Volume", &ccfg.level, -60.0, +0.0, "%.0fdB");
 
 				ImGui::SameLine();
 				ImGui::SetNextItemWidth(150);
 				ImGui::SameLine();
-				ImGui::SliderFloat("##Pan", &channels[ch].pan, -1.0f, 1.0f, "Pan %.2f");
+				ImGui::SliderDouble("##Pan", &ccfg.pan, -1.0f, 1.0f, "Pan %.2f");
 				ImGui::PopID();
+
+				player.set_channel_config(ch, ccfg);
 
 				ch ++;
 			}
