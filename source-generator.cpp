@@ -32,7 +32,7 @@ private:
 SourceGenerator::SourceGenerator(Source::Info &info, SDL_AudioSpec &dst_spec, char *args)
 	: Source(info, dst_spec, args)
 	, m_srate(dst_spec.freq)
-	, m_type(0)
+	, m_type(atoi(args))
 {
 	m_buf.resize(1024);
 }
@@ -59,13 +59,10 @@ static Sample float_to_s16(double v)
 
 void SourceGenerator::gen_sine(std::vector<Sample> &buf)
 {
-	static size_t n = 0.0;
-
 	for(size_t i=0; i<buf.size(); i++) {
-		double phase = 440.0 *n / m_srate;
-		phase = fmod(phase, 1.0);
-		buf[i] = float_to_s16(sin(2 * M_PI * phase));
-		n++;
+		buf[i] = float_to_s16(sin(m_phase * 2 * M_PI));
+		m_phase += 440.0 / m_srate;
+		m_phase = fmod(m_phase, 1.0);
 	}
 }
 
@@ -75,8 +72,9 @@ void SourceGenerator::gen_saw(std::vector<Sample> &buf)
 	Sample v = 0;
 
 	if(m_type == 0) {
-		v = float_to_s16(sin(m_phase));
-		m_phase += 4000.0 * 2.0 * M_PI / m_srate;
+		v = float_to_s16(sin(m_phase * 2 * M_PI));
+		m_phase += 440.0 / m_srate;
+		m_phase = fmod(m_phase, 1.0);
 	}
 }
 
@@ -84,10 +82,11 @@ void SourceGenerator::gen_saw(std::vector<Sample> &buf)
 void SourceGenerator::gen_sweep(std::vector<Sample> &buf)
 {
 	for(size_t i=0; i<buf.size(); i++) {
-		buf[i] = float_to_s16(sin(m_phase));
-		m_phase += m_aux1 * 2.0 * M_PI / m_srate;
+		buf[i] = float_to_s16(sin(m_phase * 2 * M_PI));
 		m_aux1 += 0.1;
-		if(m_phase > 2.0 * M_PI) m_phase -= 2.0 * M_PI;
+		m_phase += m_aux1 / m_srate;
+		m_phase = fmod(m_phase, 1.0);
+		
 	}
 }
 
