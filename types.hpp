@@ -5,6 +5,8 @@
 typedef double Time;
 typedef double Frequency;
 typedef double Samplerate;
+typedef double Gain;
+typedef double Db;
 
 template<typename T>
 struct Range {

@@ -11,9 +11,15 @@
 
 #include "types.hpp"
 
+
+#define CONCAT(lhs, rhs) lhs # rhs
+#define CONCAT_WRAPPER(lhs, rhs) CONCAT(lhs, rhs)
+#define UNIQUE_ID CONCAT_WRAPPER(__FILE__, __LINE__)
+
 const char *sdl_audioformat_to_str(SDL_AudioFormat sdl_audioformat);
 SDL_AudioFormat sdl_audioformat_from_str(const char *s);
 SDL_AudioSpec sdl_audiospec_from_str(char *s);
+void sdl_audiospec_to_str(SDL_AudioSpec &spec, char *buf, size_t buf_len);
 void duration_to_str(Time duration, char *buf, size_t buf_len);
 
 double hirestime();
@@ -28,6 +34,9 @@ namespace ImGui {
     void TextShadow(const char* fmt, ...);
 }
 
+// map 0.0 .. 1.0 to -90 dB .. 0.0 dB
+Gain db_to_gain(Db db);
+Db gain_to_db(Gain gain);
 
 template<typename T>
 T tabread2(const std::vector<T>& vs, double pos, T v_oob = T{})

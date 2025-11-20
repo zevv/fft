@@ -52,6 +52,30 @@ SDL_AudioFormat sdl_audioformat_from_str(const char *s)
 }
 
 
+void sdl_audiospec_to_str(SDL_AudioSpec &spec, char *buf, size_t buf_len)
+{
+	snprintf(buf, buf_len, "%s:%d:%d",
+			sdl_audioformat_to_str(spec.format),
+			(int)spec.channels,
+			(int)spec.freq);
+}
+
+
+Gain db_to_gain(Db db)
+{
+	return pow(10.0, db / 20.0);
+}
+
+
+Db gain_to_db(Gain gain)
+{
+	if (gain <= 0.0) {
+		return -90.0;
+	}
+	return 20.0 * log10(gain);
+}
+
+
 SDL_AudioSpec sdl_audiospec_from_str(char *args)
 {
 	SDL_AudioSpec fmt;
