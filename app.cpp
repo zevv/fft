@@ -1,4 +1,7 @@
 
+// TODO:
+// - consolidate color types
+
 #include <assert.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
