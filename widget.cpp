@@ -100,122 +100,14 @@ void Widget::draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	}
 	
 
-	ImGui::SameLine();
-	
-	if(ImGui::IsWindowFocused()) {
-		
-		ImGuiIO& io = ImGui::GetIO();
-		auto pos = ImGui::GetIO().MousePos;
-		auto delta = ImGui::GetIO().MouseDelta;
-
-		// key '[': decrease window size
-		if(ImGui::IsKeyPressed(ImGuiKey_LeftBracket)) {
-			for(size_t i=30; i>1; i--) {
-				int s = 1<<i;
-				if(s < m_view.window.size) {
-					m_view.window.size = s;
-					break;
-				}
-			}
-		}
-		// key ']': increase window size
-		if(ImGui::IsKeyPressed(ImGuiKey_RightBracket)) {
-			for(size_t i=1; i<30; i++) {
-				int s = 1<<i;
-				if(s > m_view.window.size) {
-					m_view.window.size = s;
-					break;
-				}
-			}
-		}
-
-		// key 'left': pan time
-		bool panning = false;
-		if(ImGui::IsKeyDown(ImGuiKey_LeftArrow)) {
-			m_view.pan_t(+m_pan_speed);
-			panning = true;
-		}
-		// key 'right': pan time
-		if(ImGui::IsKeyDown(ImGuiKey_RightArrow)) {
-			m_view.pan_t(-m_pan_speed);
-			panning = true;
-		}
-
-		// key 'up': zoom in time
-		if(ImGui::IsKeyDown(ImGuiKey_UpArrow)) {
-			m_view.zoom_t(-m_pan_speed * 100);
-			panning = true;
-		}
-		// key 'down': zoom out time
-		if(ImGui::IsKeyDown(ImGuiKey_DownArrow)) {
-			m_view.zoom_t(+m_pan_speed * 100);
-			panning = true;
-		}
-		m_pan_speed = panning ? m_pan_speed + 0.002 : 0.0;
-	
-		// key 'A': reset view
-		if(ImGui::IsKeyPressed(ImGuiKey_A)) {
-			if(m_view_config.x == View::Axis::Time || m_view_config.y == View::Axis::Time) {
-				size_t stride = 0;
-				size_t frames_avail = 0;
-				Sample *data = stream.peek(&stride, &frames_avail);
-				m_view.time.from = 0.0;
-				m_view.time.to   = frames_avail / stream.sample_rate();
-			}
-			if(m_view_config.x == View::Axis::Amplitude || m_view_config.y == View::Axis::Amplitude) {
-				m_view.amplitude.from = -1.0;
-				m_view.amplitude.to   = +1.0f;
-			}
-			if(m_view_config.x == View::Axis::Aperture || m_view_config.y == View::Axis::Aperture) {
-				m_view.aperture.from = -120.0f;
-				m_view.aperture.to   = 0.0f;
-			}
-			if(m_view_config.x == View::Axis::Frequency || m_view_config.y == View::Axis::Frequency) {
-				m_view.freq.from = 0.0f;
-				m_view.freq.to = 1.0;
-			}
-		}
-
-		// mouse RMB: pan/zoom
-		if(ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
-			m_view.zoom_start();
-		}
-		if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-				m_view.zoom(m_view_config, r, delta);
-			} else {
-				m_view.pan(m_view_config, r, delta);
-			}
-		}
-
-		// mouse wheel: pan/zoom time
-		if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-			m_view.zoom_t(-io.MouseWheel * 40.0f);
-		} else {
-			m_view.pan_t(io.MouseWheel * 0.1f);
-		}
-	   
-		if(ImGui::IsMouseInRect(r)) {
-			if(ImGui::IsKeyDown(ImGuiKey_LeftShift) && !ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
-				m_view.move_cursor(m_view_config, r, delta);
-			} else {
-				m_view.set_cursor(m_view_config, r, pos);
-			}
-		  
-			// mouse LMB: seek to cursor
-			if(ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-				if(m_view_config.x == View::Axis::Time || m_view_config.y == View::Axis::Time) {
-					m_view.time.analysis = m_view.time.cursor;
-					stream.player.seek(m_view.time.cursor);
-				}
-			}
-		}
-	}
-
 	// draw widget
 	double t1 = hirestime();
 	do_draw(stream, rend, r);
 	double t2 = hirestime();
+	
+	if(ImGui::IsWindowFocused()) {
+		handle_input(stream, r);
+	}
 	
 	cursors(rend, r, m_view, m_view_config);
 	grids(rend, r, m_view, m_view_config);
@@ -229,6 +121,118 @@ void Widget::draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	if(m_view.lock) view = m_view;
 	view.time.cursor = m_view.time.cursor;
 	view.time.playpos = m_view.time.playpos;
+}
+
+
+void Widget::handle_input(Stream &stream, SDL_Rect &r)
+{
+	
+	ImGuiIO& io = ImGui::GetIO();
+	auto pos = ImGui::GetIO().MousePos;
+	auto delta = ImGui::GetIO().MouseDelta;
+
+	// key '[': decrease window size
+	if(ImGui::IsKeyPressed(ImGuiKey_LeftBracket)) {
+		for(size_t i=30; i>1; i--) {
+			int s = 1<<i;
+			if(s < m_view.window.size) {
+				m_view.window.size = s;
+				break;
+			}
+		}
+	}
+	// key ']': increase window size
+	if(ImGui::IsKeyPressed(ImGuiKey_RightBracket)) {
+		for(size_t i=1; i<30; i++) {
+			int s = 1<<i;
+			if(s > m_view.window.size) {
+				m_view.window.size = s;
+				break;
+			}
+		}
+	}
+
+	// key 'left': pan time
+	bool panning = false;
+	if(ImGui::IsKeyDown(ImGuiKey_LeftArrow)) {
+		m_view.pan_t(+m_pan_speed);
+		panning = true;
+	}
+	// key 'right': pan time
+	if(ImGui::IsKeyDown(ImGuiKey_RightArrow)) {
+		m_view.pan_t(-m_pan_speed);
+		panning = true;
+	}
+
+	// key 'up': zoom in time
+	if(ImGui::IsKeyDown(ImGuiKey_UpArrow)) {
+		m_view.zoom_t(-m_pan_speed * 100);
+		panning = true;
+	}
+	// key 'down': zoom out time
+	if(ImGui::IsKeyDown(ImGuiKey_DownArrow)) {
+		m_view.zoom_t(+m_pan_speed * 100);
+		panning = true;
+	}
+	m_pan_speed = panning ? m_pan_speed + 0.002 : 0.0;
+
+	// key 'A': reset view
+	if(ImGui::IsKeyPressed(ImGuiKey_A)) {
+		if(m_view_config.x == View::Axis::Time || m_view_config.y == View::Axis::Time) {
+			size_t stride = 0;
+			size_t frames_avail = 0;
+			Sample *data = stream.peek(&stride, &frames_avail);
+			m_view.time.from = 0.0;
+			m_view.time.to   = frames_avail / stream.sample_rate();
+		}
+		if(m_view_config.x == View::Axis::Amplitude || m_view_config.y == View::Axis::Amplitude) {
+			m_view.amplitude.from = -1.0;
+			m_view.amplitude.to   = +1.0f;
+		}
+		if(m_view_config.x == View::Axis::Aperture || m_view_config.y == View::Axis::Aperture) {
+			m_view.aperture.from = -120.0f;
+			m_view.aperture.to   = 0.0f;
+		}
+		if(m_view_config.x == View::Axis::Frequency || m_view_config.y == View::Axis::Frequency) {
+			m_view.freq.from = 0.0f;
+			m_view.freq.to = 1.0;
+		}
+	}
+
+	// mouse RMB: pan/zoom
+	if(ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+		m_view.zoom_start();
+	}
+	if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
+		if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+			m_view.zoom(m_view_config, r, delta);
+		} else {
+			m_view.pan(m_view_config, r, delta);
+		}
+	}
+
+	// mouse wheel: pan/zoom time
+	if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+		m_view.zoom_t(-io.MouseWheel * 40.0f);
+	} else {
+		m_view.pan_t(io.MouseWheel * 0.1f);
+	}
+   
+	if(ImGui::IsMouseInRect(r)) {
+		if(ImGui::IsKeyDown(ImGuiKey_LeftShift) && !ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
+			m_view.move_cursor(m_view_config, r, delta);
+		} else {
+			m_view.set_cursor(m_view_config, r, pos);
+		}
+	  
+		// mouse LMB: seek to cursor
+		if(ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+			if(m_view_config.x == View::Axis::Time || m_view_config.y == View::Axis::Time) {
+				m_view.time.analysis = m_view.time.cursor;
+				stream.player.seek(m_view.time.cursor);
+			}
+		}
+	}
 }
 
 

@@ -236,6 +236,7 @@ void Panel::draw(View &view, Stream &stream, SDL_Renderer *rend, int x, int y, i
 		flags |= ImGuiWindowFlags_NoTitleBar;
 		flags |= ImGuiWindowFlags_NoSavedSettings;
 		flags |= ImGuiWindowFlags_NoNavInputs;
+		flags |= ImGuiWindowFlags_NoScrollbar;
 
 		ImGui::SetNextWindowPos(ImVec2((float)x, (float)y));
 		ImGui::SetNextWindowSize(ImVec2((float)w, (float)h));

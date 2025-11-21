@@ -44,6 +44,7 @@ public:
 
 	const char *name() { return m_info.name; }
 	void draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r);
+	void handle_input(Stream &stream, SDL_Rect &r);
 
 protected:
 
