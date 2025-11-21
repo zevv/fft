@@ -38,6 +38,35 @@ static ColorDef colordef_list[Style::COUNT] = {
 };
 
 
+void Style::load(ConfigReader::Node *node)
+{
+	for(auto &cd : colordef_list) {
+		const char *hexcolor = node->read_str(cd.name);
+		if(hexcolor) {
+			unsigned int r, g, b, a;
+			if(sscanf(hexcolor, "#%02x%02x%02x%02x", &r, &g, &b, &a) == 4) {
+				cd.color = Color{ r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f };
+			}
+		}
+	}
+}
+
+
+void Style::save(ConfigWriter &cfg)
+{
+	for(auto &cd : colordef_list) {
+		const Color &c = cd.color;
+		unsigned int r = static_cast<unsigned int>(c.r * 255);
+		unsigned int g = static_cast<unsigned int>(c.g * 255);
+		unsigned int b = static_cast<unsigned int>(c.b * 255);
+		unsigned int a = static_cast<unsigned int>(c.a * 255);
+		char buf[10];
+		snprintf(buf, sizeof(buf), "#%02x%02x%02x%02x", r, g, b, a);
+		cfg.write(cd.name, buf);
+	}
+}
+
+
 Style::Color Style::color(int cid)
 {
 	assert(cid >= 0 && cid < Style::COUNT);

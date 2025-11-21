@@ -4,6 +4,7 @@
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
+#include "config.hpp"
 
 class Style {
 
@@ -31,6 +32,9 @@ public:
 		ChannelDisabled,
 		COUNT,
 	};
+
+	static void load(ConfigReader::Node *node);
+	static void save(ConfigWriter &cfg);
 
 	static Color color(int cid);
 	static Color channel_color(int ch);

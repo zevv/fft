@@ -65,6 +65,7 @@ void App::load()
 	if(auto n = cr.find("view")) m_view.load(n);
 	if(auto n = cr.find("panel")) m_root_panel->load(n);
 	if(auto n = cr.find("stream")) m_stream.load(n);
+	if(auto n = cr.find("style")) Style::load(n);
 }
 
 
@@ -87,6 +88,10 @@ void App::save()
 
 	cw.push("view");
 	m_view.save(cw);
+	cw.pop();
+
+	cw.push("style");
+	Style::save(cw);
 	cw.pop();
 
 	cw.push("panel");
