@@ -67,11 +67,18 @@ void WidgetWaveform::do_copy(Widget *w)
 static void draw_channel_handle(SDL_Renderer *rend, SDL_Rect &r, int y, SDL_FColor col)
 {
 	SDL_Vertex v[5];
-	v[0].position = { (float)r.x,         (float)(y - 5) };  /* 0---1      */
-	v[1].position = { (float)(r.x + 8),   (float)(y - 5) };  /* |     \    */
-	v[2].position = { (float)(r.x + 12),  (float)(y)     };  /* |      2   */
-	v[3].position = { (float)(r.x + 8),   (float)(y + 5) };  /* |     /    */
-	v[4].position = { (float)r.x,         (float)(y + 5) };  /* 4----3     */
+
+	// 0---1
+	// |     \
+	// |      2
+	// |     /
+	// 4----3
+
+	v[0].position = { (float)r.x,         (float)(y - 5) };
+	v[1].position = { (float)(r.x + 8),   (float)(y - 5) };
+	v[2].position = { (float)(r.x + 12),  (float)(y)     };
+	v[3].position = { (float)(r.x + 8),   (float)(y + 5) };
+	v[4].position = { (float)r.x,         (float)(y + 5) };
 	for(int i=0; i<5; i++) v[i].color = col;
 	int indices[] = { 0, 1, 2, 0, 2, 4, 4, 2, 3 };
 	SDL_RenderGeometry(rend, nullptr, v, 5, indices, 9);
