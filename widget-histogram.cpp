@@ -10,7 +10,7 @@
 #include "misc.hpp"
 #include "histogram.hpp"
 #include "widgetregistry.hpp"
-
+#include "style.hpp"
 
 
 class WidgetHistogram : public Widget {
@@ -110,8 +110,7 @@ void WidgetHistogram::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
 	for(int ch : m_channel_map.enabled_channels()) {
-		SDL_Color col = m_channel_map.ch_color(ch);
-		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
+		SDL_SetRenderDrawColor(rend, Style::channel_color(ch));
 		auto b = m_hists[ch].bins();
 		graph(rend, r,
 				b.data(), b.size(), 1,

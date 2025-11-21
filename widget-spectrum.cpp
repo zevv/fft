@@ -9,6 +9,7 @@
 
 #include "widgetregistry.hpp"
 #include "fft.hpp"
+#include "style.hpp"
 
 
 
@@ -68,8 +69,7 @@ void WidgetSpectrum::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		auto out_graph = m_fft.run(&data[idx], stride);
 
 		size_t npoints = m_view.window.size / 2 + 1;
-		SDL_Color col = m_channel_map.ch_color(ch);
-		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
+		SDL_SetRenderDrawColor(rend, Style::channel_color(ch));
 		graph(rend, r,
 				out_graph.data(), out_graph.size(), 1,
 				m_view.freq.from * npoints, m_view.freq.to * npoints,

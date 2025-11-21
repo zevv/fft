@@ -35,6 +35,7 @@ SRC += rb.cpp
 SRC += fft.cpp
 SRC += misc.cpp
 SRC += vumeter.cpp
+SRC += style.cpp
 SRC += $(IMGUI_DIR)/imgui.cpp 
 SRC += $(IMGUI_DIR)/imgui_demo.cpp
 SRC += $(IMGUI_DIR)/imgui_draw.cpp 
@@ -55,7 +56,7 @@ DEPS = $(OBJS:.o=.d)
 CXXFLAGS += -std=c++23
 CXXFLAGS += -g 
 CXXFLAGS += -Wall -Wformat -Werror
-CXXFLAGS += -Wno-unused-but-set-variable -Wno-unused-variable -Wno-format-truncation
+CXXFLAGS += -Wno-unused-but-set-variable -Wno-unused-variable -Wno-format-truncation -Wno-c99-designator
 CXXFLAGS += -O3 -ffast-math
 CXXFLAGS += -march=native
 CXXFLAGS += -MMD

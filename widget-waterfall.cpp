@@ -9,6 +9,7 @@
 #include "fft.hpp"
 #include "queue.hpp"
 #include "histogram.hpp"
+#include "style.hpp"
 
 
 class WidgetWaterfall : public Widget {
@@ -248,7 +249,7 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 	
 	for(size_t ch=0; ch<stream.channel_count(); ch++) {
 
-		SDL_Color col = m_channel_map.ch_color(ch);
+		SDL_Color col = Style::channel_color(ch);
 
 		uint32_t *pixels;
 		int pitch;

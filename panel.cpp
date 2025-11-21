@@ -5,6 +5,7 @@
 
 #include "widgetregistry.hpp"
 #include "panel.hpp"
+#include "style.hpp"
 	
 
 Panel::Panel(Widget *widget)
@@ -241,7 +242,7 @@ void Panel::draw(View &view, Stream &stream, SDL_Renderer *rend, int x, int y, i
 		ImGui::SetNextWindowBgAlpha(m_background_alpha);
 
 		if(m_has_focus) {
-			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.0f, 0.5f, 0.5f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Border, Style::color(Style::ColorId::PanelBorder));
 			ImGui::Begin(m_title, nullptr, flags);
 			ImGui::PopStyleColor();
 			m_background_alpha -= 0.03;

@@ -9,6 +9,7 @@
 
 #include "widgetregistry.hpp"
 #include "misc.hpp"
+#include "style.hpp"
 
 
 class WidgetXY : public Widget {
@@ -122,7 +123,6 @@ void WidgetXY::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	}
 
 	static bool n = false;
-	SDL_Color col = m_channel_map.ch_color(n ? ch_x : ch_y);
 	n = 1-n;
 	auto rt_prev = SDL_GetRenderTarget(rend);
 
@@ -133,7 +133,7 @@ void WidgetXY::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	SDL_RenderFillRect(rend, nullptr);
 
 	// draw new points
-	SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 128);
+	SDL_SetRenderDrawColor(rend, Style::channel_color(n ? ch_x : ch_y));
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 	SDL_RenderLines(rend, point.data(), npoints);
 	SDL_SetRenderTarget(rend, rt_prev);

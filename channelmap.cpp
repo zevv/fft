@@ -5,41 +5,8 @@
 #include <imgui.h>
 
 #include "channelmap.hpp"
+#include "style.hpp"
 
-
-// https://medialab.github.io/iwanthue/
-static SDL_Color color[] = {
-
-	{   0, 153, 204, 255 },
-	{ 255, 102,  51, 255 },
-
-	{  42, 166,   0, 255 },
-	{ 213,  89, 255, 255 },
-
-	{ 128, 140,   0, 255 },
-	{ 128, 115, 255, 255 },
-
-	{ 242,  62, 173, 255 },
-	{ 239, 157,  22, 255 },
-};
-
-
-SDL_Color ChannelMap::ch_color(int channel)
-{
-	if(channel >= 0 && channel < 8) {
-		return color[channel];
-	} else {
-		return SDL_Color{ 255, 255, 255, 255 };
-	}
-}
-
-
-void ChannelMap::ch_set_color(int channel, SDL_Color c)
-{
-	if(channel >= 0 && channel < 8) {
-		color[channel] = c;
-	}
-}
 
 void ChannelMap::load(ConfigReader::Node *node)
 {
@@ -83,10 +50,9 @@ void ChannelMap::draw()
 		if(i > 0) ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 
 		ImGui::SameLine();
-		SDL_Color c = ch_color(i);
 		ImVec4 col = m_map & (1 << i)
-			? ImVec4(c.r / 255.0f, c.g / 255.0f, c.b / 255.0f, 1.0f)
-			: ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
+			? Style::channel_color(i)
+			: Style::color(Style::ColorId::ChannelDisabled);
 
 		ImGui::PushStyleColor(ImGuiCol_Button, col);
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, col);

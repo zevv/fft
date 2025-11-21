@@ -5,11 +5,12 @@
 #include <unistd.h>
 #include <stdio.h>
 
-
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
 #include "misc.hpp"
+#include "style.hpp"
+
 
 static struct {
 	const char *name;
@@ -209,7 +210,7 @@ void duration_to_str(Time d, char *buf, size_t buf_len)
 namespace ImGui {
 bool ToggleButton(const char* str_id, bool* v)
 {
-	ImVec4 col = *v ? ImVec4(0.26f, 0.59f, 0.98f, 1.0f) : ImVec4(0.26f, 0.26f, 0.38f, 1.0f);
+	ImVec4 col = Style::color(*v ? Style::ColorId::ToggleButtonOn : Style::ColorId::ToggleButtonOff);
 	ImGui::PushStyleColor(ImGuiCol_Button, col);
 	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, col);
 	ImGui::PushStyleColor(ImGuiCol_ButtonActive, col);

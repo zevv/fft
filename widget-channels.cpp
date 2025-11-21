@@ -9,6 +9,7 @@
 #include <imgui.h>
 
 #include "widgetregistry.hpp"
+#include "style.hpp"
 
 
 class WidgetChannels : public Widget {
@@ -180,13 +181,12 @@ void WidgetChannels::do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SD
 
 				Player::ChannelConfig ccfg = player.channel_config(ch);
 
-				SDL_Color col = m_channel_map.ch_color(ch);
-				ImVec4 imcol = {col.r / 255.0f, col.g / 255.0f, col.b / 255.0f, 1.0f};
+				Style::Color col = Style::channel_color(ch);
 
-				ImGui::TextColored(imcol, "%zu", ch+1);
+				ImGui::TextColored(col, "%zu", ch+1);
 
 				ImGui::SameLine();
-				draw_vu(stream, ch, imcol);
+				draw_vu(stream, ch, col);
 
 				ImGui::PushID(ch);
 
@@ -220,17 +220,15 @@ void WidgetChannels::do_draw_colors_tab(Stream &stream, SDL_Renderer *rend, SDL_
 	ImGui::NewLine();
 
 	for(size_t ch=0; ch<stream.channel_count(); ch++) {
-		SDL_Color col = m_channel_map.ch_color(ch);
-		ImVec4 imcol = {col.r / 255.0f, col.g / 255.0f, col.b / 255.0f, 1.0f};
+		Style::Color col = Style::channel_color(ch);
 
 		ImGui::SameLine();
-		ImGui::TextColored(imcol, "ch %zu", ch+1);
+		ImGui::TextColored(col, "ch %zu", ch+1);
 
 		ImGui::SameLine();
 		ImGui::PushID(ch);
-		if(ImGui::ColorEdit3("##color", (float*)&imcol, ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoInputs)) {
-			SDL_Color newcol = { (uint8_t)(imcol.x * 255.0f), (uint8_t)(imcol.y * 255.0f), (uint8_t)(imcol.z * 255.0f), 255 };
-			m_channel_map.ch_set_color(ch, newcol);
+		if(ImGui::ColorEdit3("##color", (float*)&col, ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoInputs)) {
+			Style::set_channel_color(ch, col);
 		}
 		ImGui::PopID();
 	}
@@ -243,8 +241,8 @@ void WidgetChannels::do_draw_colors_tab(Stream &stream, SDL_Renderer *rend, SDL_
 	for(size_t x=0; x<stream.channel_count(); x++) {
 		for(size_t y=0; y<stream.channel_count(); y++) {
 			SDL_FRect rect;
-			SDL_Color colx = m_channel_map.ch_color(x);
-			SDL_Color coly = m_channel_map.ch_color(y);
+			SDL_Color colx = Style::channel_color(x);
+			SDL_Color coly = Style::channel_color(y);
 
 			for(size_t xx=0; xx<64; xx++) {
 				for(size_t yy=0; yy<64; yy++) {

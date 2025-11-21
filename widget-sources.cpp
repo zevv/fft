@@ -10,6 +10,7 @@
 
 #include "widgetregistry.hpp"
 #include "misc.hpp"
+#include "style.hpp"
 
 
 class WidgetSources : public Widget {
@@ -68,10 +69,7 @@ void WidgetSources::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 				ImGui::PushID(ch);
 				char chan_label[32];
 				snprintf(chan_label, sizeof(chan_label), "%zu", ch+i);
-
-				SDL_Color col = m_channel_map.ch_color(ch);
-				ImVec4 imcol = {col.r / 255.0f, col.g / 255.0f, col.b / 255.0f, 1.0f};
-				ImGui::TextColored(imcol, "%zu", ch);
+				ImGui::TextColored( Style::channel_color(ch), "%zu", ch);
 
 				ImGui::PopID();
 				ch ++;

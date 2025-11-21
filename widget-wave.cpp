@@ -9,6 +9,7 @@
 
 #include "misc.hpp"
 #include "widgetregistry.hpp"
+#include "style.hpp"
 
 
 class WidgetWaveform : public Widget {
@@ -64,7 +65,7 @@ void WidgetWaveform::do_copy(Widget *w)
 	ww->m_peak = m_peak;
 }
 
-static void draw_channel_handle(SDL_Renderer *rend, SDL_Rect &r, int y, SDL_FColor col)
+static void draw_channel_handle(SDL_Renderer *rend, SDL_Rect &r, int y, Style::Color col)
 {
 	SDL_Vertex v[5];
 
@@ -112,12 +113,11 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 
 	for(auto ch : m_channel_map.enabled_channels()) {
 
-		SDL_Color col = m_channel_map.ch_color(ch);
+		Style::Color col = Style::channel_color(ch);
 
 		int y = m_view.from_amplitude(m_view_config, r, 0.0);
-		draw_channel_handle(rend, r, y, { col.r / 255.0f, col.g / 255.0f, col.b / 255.0f, 1.0f });
-
-		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
+		draw_channel_handle(rend, r, y, col);
+		SDL_SetRenderDrawColor(rend, col);
 
 		Sample peak;
 
@@ -148,7 +148,7 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 
 	// window
 	Window w = Window(m_view.window.window_type, m_view.window.size, m_view.window.window_beta);
-	SDL_SetRenderDrawColor(rend, 128, 128, 128, 255);
+	SDL_SetRenderDrawColor(rend, Style::color(Style::ColorId::AnalysisWindow));
 	double w_idx_from = (m_view.time.from - m_view.time.analysis) * stream.sample_rate() + m_view.window.size * 0.5;
 	double w_idx_to   = (m_view.time.to   - m_view.time.analysis) * stream.sample_rate() + m_view.window.size * 0.5;
 	graph(rend, r, w.data().data(), w.size(), 1, w_idx_from, w_idx_to, 0.0f, +1.0f);

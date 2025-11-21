@@ -9,6 +9,7 @@
 #include "misc.hpp"
 #include "widget.hpp"
 #include "widgetregistry.hpp"
+#include "style.hpp"
 
 
 Widget::Widget(Widget::Info &info)
@@ -496,12 +497,8 @@ void Widget::cursor(SDL_Renderer *rend, SDL_Rect &r, int v, int flags)
 	}
 
 	SDL_FColor col = { 1.00, 1.00, 0.75, 1.0 };
-	if(flags & CursorFlags::PlayPosition) {
-		col = {0.0, 0.75, 1.0, 1.0};
-	}
-	if(flags & CursorFlags::HarmonicHelper) {
-		col = {1.0, 1.0, 1.0, 0.4};
-	}
+	if(flags & CursorFlags::PlayPosition) col = Style::color(Style::Playpos);
+	if(flags & CursorFlags::HarmonicHelper) col = Style::color(Style::HarmonicHelper);
 
     if (flags & CursorFlags::Horizontal) {
 		if (flags & CursorFlags::Shadow) {

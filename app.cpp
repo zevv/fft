@@ -21,6 +21,7 @@
 #include <imgui_impl_sdlrenderer3.h>
 
 #include "app.hpp"
+#include "style.hpp"
 
 
 App::App(SDL_Window *window, SDL_Renderer *renderer)
@@ -135,7 +136,7 @@ void App::draw_topbar()
 
 void App::draw()
 {
-	SDL_SetRenderDrawColor(m_rend, 0, 0, 0, 255);
+	SDL_SetRenderDrawColor(m_rend, Style::color(Style::ColorId::Background));
 	SDL_RenderClear(m_rend);
 	
 	ImGui_ImplSDLRenderer3_NewFrame();
