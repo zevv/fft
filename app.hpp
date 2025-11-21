@@ -30,7 +30,8 @@ public:
 	void req_redraw();
 
 	void draw();
-	void draw_topbar();
+	int draw_topbar();
+	void draw_bottombar();
 	void resize_window(int w, int h);
 
 private:

@@ -109,8 +109,12 @@ void App::resize_window(int w, int h)
 	m_resize = true;
 }
 
-void App::draw_topbar()
+int App::draw_topbar()
 {
+	ImGuiWindowFlags flags = 0;
+	flags |= ImGuiWindowFlags_NoDecoration;
+	ImGui::Begin("main", nullptr, flags);
+
 	bool cap = m_capturing;
 	ImGui::ToggleButton("C##capture", &cap);
 	if(cap != m_capturing) capture_toggle();
@@ -120,7 +124,7 @@ void App::draw_topbar()
 	bool play = m_playback;
 	ImGui::ToggleButton("P##playback", &play);
 	if(play != m_playback) play_toggle();
-	
+
 	ImGui::SameLine();
 	ImGui::Text("srate: %.0fHz", m_srate);
 
@@ -136,40 +140,53 @@ void App::draw_topbar()
 	ImGui::SameLine();
 	ImGui::Text("| %.1f fps", io.Framerate);
 
+	ImVec2 pos = ImGui::GetCursorScreenPos();
+	ImGui::End();
+
+	return pos.y;
 }
+
+
+void App::draw_bottombar()
+{
+	ImGuiWindowFlags flags = 0;
+	flags |= ImGuiWindowFlags_NoDecoration;
+	ImGui::Begin("bottombar", nullptr, flags);
+
+	if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+		ImGui::Text("LMB:           MMB:            RMB: zoom");
+	} else {
+		ImGui::Text("LMB: play pos  MMB:            RMB: pan");
+	}
+
+	ImGui::End();
+}
+
 
 
 void App::draw()
 {
 	SDL_SetRenderDrawColor(m_rend, Style::color(Style::ColorId::Background));
 	SDL_RenderClear(m_rend);
-	
+
 	ImGui_ImplSDLRenderer3_NewFrame();
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{4,4});
 	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 2.0f);
 
 	ImGui::SetNextWindowPos(ImVec2{0, 0});
 	ImGui::SetNextWindowSize(ImVec2(m_w, 16));
+	int bar_h = draw_topbar();
 
-	ImGuiWindowFlags flags = 0;
-	flags |= ImGuiWindowFlags_NoCollapse;
-	flags |= ImGuiWindowFlags_NoMove;
-	flags |= ImGuiWindowFlags_NoTitleBar;
-	flags |= ImGuiWindowFlags_NoSavedSettings;
-	flags |= ImGuiWindowFlags_NoNavInputs;
-	flags |= ImGuiWindowFlags_NoScrollbar;
-	ImGui::Begin("main", nullptr, flags);
+	m_root_panel->draw(m_view, m_stream, m_rend, 0, bar_h + 2, m_w, m_h - bar_h - bar_h);
 
-	draw_topbar();
+	ImGui::SetNextWindowPos(ImVec2{0, (float)(m_h - bar_h + 2)});
+	ImGui::SetNextWindowSize(ImVec2(m_w, (float)bar_h));
+	draw_bottombar();
 
-	ImVec2 pos = ImGui::GetCursorScreenPos();
-	ImGui::End();
-
-	pos.y += 2;
-	m_root_panel->draw(m_view, m_stream, m_rend, 0, pos.y, m_w, m_h - pos.y);
-		
+	ImGui::PopStyleVar();
 	ImGui::PopStyleVar();
 
 	ImGui::Render();
