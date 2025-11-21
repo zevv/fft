@@ -64,6 +64,19 @@ void WidgetWaveform::do_copy(Widget *w)
 	ww->m_peak = m_peak;
 }
 
+static void draw_channel_handle(SDL_Renderer *rend, SDL_Rect &r, int y, SDL_FColor col)
+{
+	SDL_Vertex v[5];
+	v[0].position = { (float)r.x,         (float)(y - 5) };  /* 0---1      */
+	v[1].position = { (float)(r.x + 8),   (float)(y - 5) };  /* |     \    */
+	v[2].position = { (float)(r.x + 12),  (float)(y)     };  /* |      2   */
+	v[3].position = { (float)(r.x + 8),   (float)(y + 5) };  /* |     /    */
+	v[4].position = { (float)r.x,         (float)(y + 5) };  /* 4----3     */
+	for(int i=0; i<5; i++) v[i].color = col;
+	int indices[] = { 0, 1, 2, 0, 2, 4, 4, 2, 3 };
+	SDL_RenderGeometry(rend, nullptr, v, 5, indices, 9);
+}
+
 
 void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 {
@@ -83,7 +96,6 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		ImGui::Text("t=%.4gs", m_view.time.cursor);
 	}
 
-
 	Sample scale = k_sample_max;
 	if(m_agc && m_peak > 0.0f) {
 		m_view.amplitude.from = -m_peak * 1.1f;
@@ -100,6 +112,10 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	for(auto ch : m_channel_map.enabled_channels()) {
 
 		SDL_Color col = m_channel_map.ch_color(ch);
+
+		int y = m_view.from_amplitude(m_view_config, r, 0.0);
+		draw_channel_handle(rend, r, y, { col.r / 255.0f, col.g / 255.0f, col.b / 255.0f, 1.0f });
+
 		SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, 255);
 
 		Sample peak;

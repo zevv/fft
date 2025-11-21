@@ -486,7 +486,7 @@ void Widget::cursor(SDL_Renderer *rend, SDL_Rect &r, int v, int flags)
 
         int indices[] = { 0, 1, 2, 1, 2, 3, 2, 3, 4, 3, 4, 5, 4, 5, 6, 5, 6, 7 };
         
-        SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, col.a);
+        //SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, col.a);
         SDL_RenderGeometry(rend, nullptr, vtx, 8, indices, 18);
     };
 

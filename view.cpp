@@ -114,6 +114,13 @@ float View::from_aperture(Config &cfg, SDL_Rect &r, double db)
 	return 0.0;
 }
 
+float View::from_amplitude(Config &cfg, SDL_Rect &r, double a)
+{
+	if(cfg.x == Axis::Amplitude) return r.x + r.w * (a - amplitude.from) / (amplitude.to - amplitude.from);
+	if(cfg.y == Axis::Amplitude) return r.y + r.h * (1.0 - (a - amplitude.from) / (amplitude.to - amplitude.from));
+	return 0.0;
+}
+
 void View::pan(Config &cfg, SDL_Rect &r, ImVec2 delta)
 {
 	double dx = delta.x / r.w;
