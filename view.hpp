@@ -29,11 +29,11 @@ public:
 	void set_cursor(Config &cfg, SDL_Rect &r, ImVec2 pos);
 	void move_cursor(Config &cfg, SDL_Rect &r, ImVec2 delta);
 	
-	float from_t(Config &cfg, SDL_Rect &r, Time t);
-	float from_freq(Config &cfg, SDL_Rect &r, Frequency f);
-	float from_aperture(Config &cfg, SDL_Rect &r, double db);
-	float from_amplitude(Config &cfg, SDL_Rect &r, double a);
-	
+	double from_t(Config &cfg, SDL_Rect &r, Time t);
+	double from_freq(Config &cfg, SDL_Rect &r, Frequency f);
+	double from_aperture(Config &cfg, SDL_Rect &r, double db);
+	double from_amplitude(Config &cfg, SDL_Rect &r, double a);
+
 	void pan(Config &cfg, SDL_Rect &r, ImVec2 delta);
 	void zoom_start();
 	void zoom(Config &cfg, SDL_Rect &r, ImVec2 delta);

@@ -23,9 +23,13 @@ private:
 	void do_save(ConfigWriter &cfg) override;
 	void do_copy(Widget *w) override;
 	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
+	bool do_handle_input(Stream &stream, SDL_Rect &r) override;
 
 	bool m_agc{true};
 	Sample m_peak{};
+
+	std::vector<int> m_channel_offset;
+	int m_handle_dragging{-1};
 };
 
 
@@ -82,6 +86,8 @@ static void draw_channel_handle(SDL_Renderer *rend, SDL_Rect &r, int y, Style::C
 
 void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 {
+	m_channel_offset.resize(stream.channel_count());
+
 	ImGui::SameLine();
 	ImGui::ToggleButton("AGC", &m_agc);
 	
@@ -111,27 +117,35 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
+	SDL_Rect rwave = r;
+	rwave.x += 16;
+	rwave.w -= 16;
+
 	for(auto ch : m_channel_map.enabled_channels()) {
 
 		Style::Color col = Style::channel_color(ch);
 
-		int y = m_view.from_amplitude(m_view_config, r, 0.0);
+		int y = m_view.from_amplitude(m_view_config, r, m_channel_offset[ch]);
 		draw_channel_handle(rend, r, y, col);
 		SDL_SetRenderDrawColor(rend, col);
 
 		Sample peak;
 
+		double offset = m_channel_offset[ch];
+
 		if(step < 256) {
-			peak = graph(rend, r,
+			peak = graph(rend, rwave,
 					data + ch, frames_avail, data_stride,
 					idx_from, idx_to,
-					(Sample)m_view.amplitude.from, (Sample)m_view.amplitude.to);
+					m_view.amplitude.from - offset,
+					m_view.amplitude.to - offset);
 		} else {
-			peak = graph(rend, r,
+			peak = graph(rend, rwave,
 					&wdata[ch].min, &wdata[ch].max, 
 					frames_avail / 256, wdata_stride * 2,
 					idx_from / 256, idx_to / 256,
-					(Sample)m_view.amplitude.from, (Sample)m_view.amplitude.to);
+					m_view.amplitude.from - offset,
+					m_view.amplitude.to - offset);
 		}
 
 		m_peak = std::max(m_peak, peak);
@@ -155,6 +169,45 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
+}
+
+
+bool WidgetWaveform::do_handle_input(Stream &stream, SDL_Rect &r)
+{
+    auto pos = ImGui::GetIO().MousePos;
+    auto delta = ImGui::GetIO().MouseDelta;
+
+	if(ImGui::IsKeyPressed(ImGuiKey_A)) {
+		m_channel_offset.clear();
+	}
+
+	if(m_handle_dragging == -1) {
+		for(auto ch : m_channel_map.enabled_channels()) {
+			int y = m_view.from_amplitude(m_view_config, r, m_channel_offset[ch]);
+			ImVec2 p1 = ImVec2((float)r.x,         (float)(y - 5));
+			ImVec2 p2 = ImVec2((float)(r.x + 12),  (float)(y + 5));
+			if(ImGui::IsMouseHoveringRect(p1, p2)) {
+				ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+				if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+					printf("start dragging channel %d handle\n", ch);
+					m_handle_dragging = ch;
+					return true;
+				}
+			}
+		}
+	} else {
+		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+		if(ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+			double delta_offset = delta.y * (m_view.amplitude.to - m_view.amplitude.from) / r.h;
+			m_channel_offset[m_handle_dragging] -= delta_offset;
+			return true;
+		} else {
+			printf("End dragging channel %d handle\n", m_handle_dragging);
+			m_handle_dragging = -1;
+		}
+	}
+
+	return false;
 }
 
 

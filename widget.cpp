@@ -106,7 +106,10 @@ void Widget::draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	double t2 = hirestime();
 	
 	if(ImGui::IsWindowFocused()) {
-		handle_input(stream, r);
+		bool handled = do_handle_input(stream, r);
+		if(!handled) {
+			handle_input(stream, r);
+		}
 	}
 	
 	cursors(rend, r, m_view, m_view_config);

@@ -93,33 +93,34 @@ void View::move_cursor(Config &cfg, SDL_Rect &r, ImVec2 delta)
 	if(cfg.y == Axis::Frequency) freq.cursor -= delta.y / r.h * (freq.to - freq.from) * 0.1;
 }
 
-float View::from_t(Config &cfg, SDL_Rect &r, Time t)
+double View::from_t(Config &cfg, SDL_Rect &r, Time t)
 {
 	if(cfg.x == Axis::Time) return r.x + r.w * (t - time.from) / (time.to - time.from);
 	if(cfg.y == Axis::Time) return r.y + r.h * (t - time.from) / (time.to - time.from);
 	return 0.0;
 }
 
-float View::from_freq(Config &cfg, SDL_Rect &r, Frequency f)
+double View::from_freq(Config &cfg, SDL_Rect &r, Frequency f)
 {
 	if(cfg.x == Axis::Frequency) return r.x + r.w * (f- freq.from) / (freq.to - freq.from);
 	if(cfg.y == Axis::Frequency) return r.y + r.h * (1.0 - (f - freq.from) / (freq.to - freq.from));
 	return 0.0;
 }
 
-float View::from_aperture(Config &cfg, SDL_Rect &r, double db)
+double View::from_aperture(Config &cfg, SDL_Rect &r, double db)
 {
 	if(cfg.x == Axis::Aperture) return r.x + r.w * (db - aperture.from) / (aperture.to - aperture.from);
 	if(cfg.y == Axis::Aperture) return r.y + r.h * (1.0 - (db - aperture.from) / (aperture.to - aperture.from));
 	return 0.0;
 }
 
-float View::from_amplitude(Config &cfg, SDL_Rect &r, double a)
+double View::from_amplitude(Config &cfg, SDL_Rect &r, double a)
 {
 	if(cfg.x == Axis::Amplitude) return r.x + r.w * (a - amplitude.from) / (amplitude.to - amplitude.from);
 	if(cfg.y == Axis::Amplitude) return r.y + r.h * (1.0 - (a - amplitude.from) / (amplitude.to - amplitude.from));
 	return 0.0;
 }
+
 
 void View::pan(Config &cfg, SDL_Rect &r, ImVec2 delta)
 {

@@ -50,6 +50,7 @@ protected:
 
 	virtual void do_copy(Widget *w) {};
 	virtual void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) {};
+	virtual bool do_handle_input(Stream &stream, SDL_Rect &r) { return false; };
 	virtual void do_load(ConfigReader::Node *node) {};
 	virtual void do_save(ConfigWriter &cfg) {};
 
