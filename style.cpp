@@ -26,14 +26,14 @@ static ColorDef colordef_list[Style::COUNT] = {
 	DEF_COLOR(ToggleButtonOn,    0.26, 0.59, 0.98, 1.00),
 
 	// https://medialab.github.io/iwanthue/
-	DEF_COLOR(Channel1 + 0,      0.00, 0.60, 0.80, 1.00),
-	DEF_COLOR(Channel1 + 1,      1.00, 0.40, 0.20, 1.00),
-	DEF_COLOR(Channel1 + 2,      0.16, 0.65, 0.00, 1.00),
-	DEF_COLOR(Channel1 + 3,      0.84, 0.35, 1.00, 1.00),
-	DEF_COLOR(Channel1 + 4,      0.50, 0.55, 0.00, 1.00),
-	DEF_COLOR(Channel1 + 5,      0.50, 0.45, 1.00, 1.00),
-	DEF_COLOR(Channel1 + 6,      0.95, 0.25, 0.68, 1.00),
-	DEF_COLOR(Channel1 + 7,      0.94, 0.62, 0.09, 1.00),
+	DEF_COLOR(Channel1,          0.00, 0.60, 0.80, 1.00),
+	DEF_COLOR(Channel2,          1.00, 0.40, 0.20, 1.00),
+	DEF_COLOR(Channel3,          0.16, 0.65, 0.00, 1.00),
+	DEF_COLOR(Channel4,          0.84, 0.35, 1.00, 1.00),
+	DEF_COLOR(Channel5,          0.50, 0.55, 0.00, 1.00),
+	DEF_COLOR(Channel6,          0.50, 0.45, 1.00, 1.00),
+	DEF_COLOR(Channel7,          0.95, 0.25, 0.68, 1.00),
+	DEF_COLOR(Channel8,          0.94, 0.62, 0.09, 1.00),
 	DEF_COLOR(ChannelDisabled,   0.20, 0.20, 0.20, 1.00),
 };
 

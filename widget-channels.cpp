@@ -244,8 +244,8 @@ void WidgetChannels::do_draw_colors_tab(Stream &stream, SDL_Renderer *rend, SDL_
 			SDL_Color colx = Style::channel_color(x);
 			SDL_Color coly = Style::channel_color(y);
 
-			for(size_t xx=0; xx<64; xx++) {
-				for(size_t yy=0; yy<64; yy++) {
+			for(size_t xx=0; xx<64; xx+=4) {
+				for(size_t yy=0; yy<64; yy+=4) {
 
 					SDL_Color mixcol = {
 						(uint8_t)std::clamp((colx.r * (xx / 63.0f) + coly.r * (yy / 63.0f)), 0.0f, 255.0f),
@@ -254,8 +254,8 @@ void WidgetChannels::do_draw_colors_tab(Stream &stream, SDL_Renderer *rend, SDL_
 						255
 					};
 					SDL_SetRenderDrawColor(rend, mixcol.r, mixcol.g, mixcol.b, mixcol.a);
-
-					SDL_RenderPoint(rend, px + (x * 70) + xx, py + (y * 70) + yy);
+					SDL_FRect r = { (float)(px + (x * 70) + xx), (float)(py + (y * 70) + yy), 4.0f, 4.0f };
+					SDL_RenderFillRect(rend, &r);
 				}
 			}
 		}
