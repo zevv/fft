@@ -473,13 +473,6 @@ void Widget::cursor(SDL_Renderer *rend, SDL_Rect &r, int v, int flags)
 			}
 		};
 
-		// 0\                   /6
-		// | \                 / |
-		// |  2---------------4  |
-		// |  3---------------5  |
-		// | /                 \ |
-		// 1/                   \7
-
 		set_pos(vtx[0].position, u0,           v0 - v_arrow);
 		set_pos(vtx[1].position, u0,           v1 + v_arrow);
 		set_pos(vtx[2].position, u0 + u_arrow, v0);

@@ -68,12 +68,6 @@ static void draw_channel_handle(SDL_Renderer *rend, SDL_Rect &r, int y, SDL_FCol
 {
 	SDL_Vertex v[5];
 
-	// 0---1
-	// |     \
-	// |      2
-	// |     /
-	// 4----3
-
 	v[0].position = { (float)r.x,         (float)(y - 5) };
 	v[1].position = { (float)(r.x + 8),   (float)(y - 5) };
 	v[2].position = { (float)(r.x + 12),  (float)(y)     };
