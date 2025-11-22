@@ -52,7 +52,7 @@ private:
 	};
 
 	struct Result {
-		Histogram<int8_t> hist{256, -128, 127};
+		Histogram<int8_t> hist{256, -126, 127};
 	};
 
 	void do_load(ConfigReader::Node *node) override;
