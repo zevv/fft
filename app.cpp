@@ -140,10 +140,10 @@ int App::draw_topbar()
 	ImGui::SameLine();
 	ImGui::Text("| %.1f fps", io.Framerate);
 
-	ImVec2 pos = ImGui::GetCursorScreenPos();
+	int y = ImGui::GetWindowHeight();
 	ImGui::End();
 
-	return pos.y;
+	return y;
 }
 
 
@@ -173,17 +173,17 @@ void App::draw()
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{4,4});
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{8, 8});
 	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 2.0f);
 
 	ImGui::SetNextWindowPos(ImVec2{0, 0});
-	ImGui::SetNextWindowSize(ImVec2(m_w, 16));
-	int bar_h = draw_topbar();
+	ImGui::SetNextWindowSizeConstraints(ImVec2(m_w, -1), ImVec2(m_w, -1));
+	float bar_h = draw_topbar();
 
-	m_root_panel->draw(m_view, m_stream, m_rend, 0, bar_h + 2, m_w, m_h - bar_h - bar_h);
+	m_root_panel->draw(m_view, m_stream, m_rend, 0, bar_h + 1, m_w, m_h - bar_h - bar_h + 1);
 
-	ImGui::SetNextWindowPos(ImVec2{0, (float)(m_h - bar_h + 2)});
-	ImGui::SetNextWindowSize(ImVec2(m_w, (float)bar_h));
+	ImGui::SetNextWindowPos(ImVec2{0, m_h - bar_h + 2});
+	ImGui::SetNextWindowSize(ImVec2(m_w, bar_h - 4));
 	draw_bottombar();
 
 	ImGui::PopStyleVar();
