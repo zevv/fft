@@ -50,6 +50,7 @@ private:
 
 	bool m_capturing{false};
 	bool m_playback{false};
+	bool m_transport{true};
 };
 
 

@@ -35,6 +35,7 @@ private:
 	void capture_thread();
 	Stream &m_stream;
 	SDL_AudioSpec m_spec{};
+	size_t m_frames_event{};
 };
 
 

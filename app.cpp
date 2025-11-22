@@ -61,6 +61,7 @@ void App::load()
 	if(auto n = cr.find("config")) {
 		n->read("samplerate", m_srate);
 		n->read("session", m_session_name, sizeof(m_session_name));
+		n->read("transport", m_transport);
 	}
 	if(auto n = cr.find("view")) m_view.load(n);
 	if(auto n = cr.find("panel")) m_root_panel->load(n);
@@ -80,6 +81,7 @@ void App::save()
 	cw.push("config");
 	cw.write("samplerate", m_srate);
 	cw.write("session", m_session_name);
+	cw.write("transport", m_transport);
 	cw.pop();
 	
 	cw.push("stream");
@@ -123,6 +125,9 @@ int App::draw_topbar()
 	ImGui::SameLine();
 	ImGui::ToggleButton("Play", &play);
 	if(play != m_playback) play_toggle();
+
+	ImGui::SameLine();
+	ImGui::ToggleButton("Transport", &m_transport);
 
 	ImGui::SameLine();
 	ImGui::Text("srate: %.0fHz", m_srate);
@@ -372,6 +377,11 @@ void App::run()
 	while (!done)
 	{
 
+		// Transport control
+		if(ImGui::IsKeyPressed(ImGuiKey_T)) {
+			m_transport ^= 1;
+		}
+
 		// Capture control
 		if(ImGui::IsKeyPressed(ImGuiKey_C)) {
 			capture_toggle();
@@ -424,8 +434,10 @@ void App::run()
 					Time t_to = frame_idx / m_srate;
 					Time dt = t_to - m_view.time.to;
 					if(!m_playback) {
-						m_view.time.from += dt;
-						m_view.time.to += dt;
+						if(m_transport) {
+							m_view.time.from += dt;
+							m_view.time.to += dt;
+						}
 						m_view.time.analysis = m_view.time.to - m_view.window.size / m_srate * 0.5;
 					}
 					size_t used = 0;
@@ -433,11 +445,13 @@ void App::run()
 				}
 				if(event.user.code == k_user_event_audio_playback) {
 					ssize_t frame_idx = (size_t)(uintptr_t)event.user.data1;
-					m_view.time.playpos = frame_idx / m_srate;
 					size_t frame_count = (size_t)(uintptr_t)event.user.data2;
-					Time dt = (frame_count / m_srate);
-					m_view.time.from += dt;
-					m_view.time.to += dt;
+					m_view.time.playpos = frame_idx / m_srate;
+					Time dt = frame_count / m_srate;
+					if(m_transport) {
+						m_view.time.from += dt;
+						m_view.time.to += dt;
+					}
 					m_view.time.analysis = m_view.time.playpos;
 				}
 			}
