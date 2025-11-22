@@ -204,6 +204,7 @@ void App::usage(void)
 		"usage: fft [options] <src> ...\n"
 		"\n"
 		"options:\n"
+		"  -c --capture         enable capture on start\n"
 		"  -d --buffer-depth N  set buffer depth to N bytes (default: 512MB)\n"
 		"  -h                   show help\n"
 		"  -r --sample-rate N   set sample rate to N (default: 48000)\n"
@@ -247,6 +248,7 @@ void App::init(int argc, char **argv)
 
 	static struct option long_options[] = {
 		{"help",          no_argument,       0, 'h'},
+		{"capture",       no_argument,       0, 'c'},
 		{"sample-rate",   required_argument, 0, 'r'},
 		{"buffer-depth",  required_argument, 0, 'd'},
 		{"session",       required_argument, 0, 's'},
@@ -254,10 +256,14 @@ void App::init(int argc, char **argv)
 	};
 
 	int opt_buffer_depth = 512 * 1024 * 1024;
+	bool opt_capture = false;
 
 	int opt;
-	while ((opt = getopt_long(argc, argv, "d:hr:", long_options, NULL)) != -1) {
+	while ((opt = getopt_long(argc, argv, "cd:hr:", long_options, NULL)) != -1) {
 		switch (opt) {
+			case 'c':
+				opt_capture = true;
+				break;
 			case 'd':
 				opt_buffer_depth = atof(optarg);
 				break;
@@ -293,6 +299,7 @@ void App::init(int argc, char **argv)
 	
 	m_stream.allocate(opt_buffer_depth);
 	m_stream.capture.start();
+	if(opt_capture) capture_toggle();
 	m_stream.player.seek(m_view.time.playpos);
 }
 
