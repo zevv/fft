@@ -438,7 +438,7 @@ void App::run()
 							m_view.time.from += dt;
 							m_view.time.to += dt;
 						}
-						m_view.time.analysis = m_view.time.to - m_view.window.size / m_srate * 0.5;
+						m_view.time.analysis = (frame_idx - m_view.window.size * 0.5) / m_srate;
 					}
 					size_t used = 0;
 					m_stream.peek(nullptr, &used);
