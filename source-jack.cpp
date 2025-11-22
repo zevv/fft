@@ -106,7 +106,6 @@ void SourceJack::open()
 	}
 
 	jack_set_process_callback(m_jack_client, process_callback_, this);
-	jack_activate(m_jack_client);
 }
 
 

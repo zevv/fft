@@ -292,7 +292,6 @@ void App::init(int argc, char **argv)
 	
 	m_stream.allocate(opt_buffer_depth);
 	m_stream.capture.start();
-	m_stream.capture.resume();
 	m_stream.player.seek(m_view.time.playpos);
 }
 

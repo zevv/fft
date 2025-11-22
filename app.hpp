@@ -48,7 +48,7 @@ private:
 	int m_redraw{1};
 	char m_session_name[64]{"default"};
 
-	bool m_capturing{true};
+	bool m_capturing{false};
 	bool m_playback{false};
 };
 

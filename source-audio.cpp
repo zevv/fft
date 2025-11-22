@@ -54,6 +54,7 @@ void SourceAudio::pause()
 void SourceAudio::resume()
 {
 	if(m_sdl_stream) {
+		SDL_ClearAudioStream(m_sdl_stream);
 		SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(m_sdl_stream));
 	}
 }
