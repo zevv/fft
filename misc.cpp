@@ -208,6 +208,8 @@ void duration_to_str(Time d, char *buf, size_t buf_len)
 
 
 namespace ImGui {
+
+
 bool ToggleButton(const char* str_id, bool* v)
 {
 	ImVec4 col = Style::color(*v ? Style::ColorId::ToggleButtonOn : Style::ColorId::ToggleButtonOff);
@@ -264,5 +266,20 @@ bool DragDouble(const char* label, double* v, double v_speed, double v_min, doub
 	return changed;
 }
 
+
+bool IsKeyChordDown(int key)
+{
+
+	auto &io = ImGui::GetIO();
+	if((key & ImGuiMod_Shift) && !io.KeyShift) return false;
+	if((key & ImGuiMod_Ctrl) && !io.KeyCtrl) return false;
+	if((key & ImGuiMod_Alt) && !io.KeyAlt) return false;
+
+	key &= ~ImGuiMod_Mask_;
+
+	return ImGui::IsKeyDown((ImGuiKey)key);
+}
+
+	
 }
 

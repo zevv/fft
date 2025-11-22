@@ -29,11 +29,16 @@ void bitline(const char *fmt, ...);
 void humanize(double val, char *buf, size_t buf_len);
 
 namespace ImGui {
+
+	using namespace ImGui;
+
+
 	bool ToggleButton(const char* str_id, bool* v);
 	bool IsMouseInRect(const SDL_Rect& r);
     void TextShadow(const char* fmt, ...);
     bool SliderDouble(const char* label, double* v, double v_min, double v_max, const char* format = "%.3f", int flags = 0);
     bool DragDouble(const char* label, double* v, double v_speed = 1.0f, double v_min = 0.0f, double v_max = 0.0f, const char* format = "%.3f", int flags = 0);
+	bool IsKeyChordDown(int key);
 }
 
 // map 0.0 .. 1.0 to -90 dB .. 0.0 dB

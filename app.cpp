@@ -21,7 +21,9 @@
 #include <imgui_impl_sdlrenderer3.h>
 
 #include "app.hpp"
+#include "hotkey.hpp"
 #include "style.hpp"
+#include "hotkey.hpp"
 
 
 App::App(SDL_Window *window, SDL_Renderer *renderer)
@@ -111,6 +113,49 @@ void App::resize_window(int w, int h)
 	m_resize = true;
 }
 
+
+void App::draw_help_overlay()
+{
+	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+	Hotkey::dump();
+
+	if(ImGui::BeginPopupContextItem("Help")) {
+		ImGui::Text("Hotkeys");
+		ImGui::Separator();
+
+		auto &hotkeys = Hotkey::hotkeys();
+		for(auto &it : hotkeys) {
+			int chord = it.first;
+			const char *label = it.second.action;
+
+			int mods = chord & ImGuiMod_Mask_;
+			int key = chord & ~ImGuiMod_Mask_;
+
+			char mods_name[32] = "";
+			if(mods& ImGuiMod_Ctrl) strcat(mods_name, "Ctrl+");
+			if(mods & ImGuiMod_Shift) strcat(mods_name, "Shift+");
+			if(mods & ImGuiMod_Alt) strcat(mods_name, "Alt+");
+			if(mods & ImGuiMod_Super) strcat(mods_name, "Super+");
+			
+			const char *key_name = ImGui::GetKeyName((ImGuiKey)key);
+			if(key == ImGuiKey_MouseLeft) key_name = "[LMB]";
+			if(key == ImGuiKey_MouseMiddle) key_name = "[MMB]";
+			if(key == ImGuiKey_MouseRight) key_name = "[RMB]";
+			if(key == ImGuiKey_MouseWheelY) key_name = "[WHEEL]";
+
+			ImGui::Text("%s%s: %s", mods_name, key_name, label);
+		}
+
+		if(ImGui::Button("Close")) {
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
+}
+
+
 int App::draw_topbar()
 {
 	ImGuiWindowFlags flags = 0;
@@ -153,14 +198,43 @@ int App::draw_topbar()
 
 void App::draw_bottombar()
 {
+	auto &io = ImGui::GetIO();
+
 	ImGuiWindowFlags flags = 0;
 	flags |= ImGuiWindowFlags_NoDecoration;
 	ImGui::Begin("bottombar", nullptr, flags);
 
-	if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-		ImGui::Text("LMB:           MMB:            RMB: zoom");
-	} else {
-		ImGui::Text("LMB: play pos  MMB:            RMB: pan");
+	auto &hotkeys = Hotkey::hotkeys();
+	for(auto &it : hotkeys) {
+		int chord = it.first;
+		const char *label = it.second.action;
+
+		if(ImGui::IsKeyChordDown((ImGuiKey)chord)) {
+			continue;
+		}
+		
+		int mods = chord & ImGuiMod_Mask_;
+		int key = chord & ~ImGuiMod_Mask_;
+
+		if(key != ImGuiKey_MouseLeft && key != ImGuiKey_MouseMiddle && key != ImGuiKey_MouseRight &&
+		   key != ImGuiKey_MouseX1 && key != ImGuiKey_MouseX2 && key != ImGuiKey_MouseWheelX && key != ImGuiKey_MouseWheelY) {
+			continue;
+		}
+
+		char mods_name[32];
+		if(mods& ImGuiMod_Ctrl) strcat(mods_name, "Ctrl+");
+		if(mods & ImGuiMod_Shift) strcat(mods_name, "Shift+");
+		if(mods & ImGuiMod_Alt) strcat(mods_name, "Alt+");
+		if(mods & ImGuiMod_Super) strcat(mods_name, "Super+");
+		
+		const char *key_name = ImGui::GetKeyName((ImGuiKey)key);
+		if(key == ImGuiKey_MouseLeft) key_name = "[LMB]";
+		if(key == ImGuiKey_MouseMiddle) key_name = "[MMB]";
+		if(key == ImGuiKey_MouseRight) key_name = "[RMB]";
+		if(key == ImGuiKey_MouseWheelY) key_name = "[WHEEL]";
+
+		ImGui::SameLine();
+		ImGui::Text("%s%s: %s  ", mods_name, key_name, label);
 	}
 
 	ImGui::End();
@@ -176,6 +250,8 @@ void App::draw()
 	ImGui_ImplSDLRenderer3_NewFrame();
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
+	
+	handle_keys();
 
 	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{0.8f, 0.8f, 0.8f, 1.0f});
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{8, 8});
@@ -186,10 +262,14 @@ void App::draw()
 	float bar_h = draw_topbar();
 
 	m_root_panel->draw(m_view, m_stream, m_rend, 0, bar_h + 1, m_w, m_h - bar_h - bar_h + 1);
+	
+	draw_help_overlay();
 
 	ImGui::SetNextWindowPos(ImVec2{0, m_h - bar_h + 2});
 	ImGui::SetNextWindowSize(ImVec2(m_w, bar_h - 4));
 	draw_bottombar();
+
+	//Hotkey::clear();
 
 	ImGui::PopStyleVar();
 	ImGui::PopStyleVar();
@@ -371,49 +451,56 @@ void App::capture_toggle()
 }
 
 
+void App::handle_keys()
+{
+	if(Hotkey::pressed(ImGuiKey_T, "toggle transport")) {
+		m_transport ^= 1;
+	}
+
+	// Capture control
+	if(Hotkey::pressed(ImGuiKey_C, "toggle capture")) {
+		capture_toggle();
+	}
+
+	// Player control
+	auto &player = m_stream.player;
+
+	if(Hotkey::pressed(ImGuiKey_Space, "toggle playback") ||
+	   Hotkey::pressed(ImGuiKey_P, "toggle playback")) {
+		play_toggle();
+	}
+		
+	auto cfg = player.config();
+
+	float factor = ImGui::IsKeyDown(ImGuiKey_LeftShift) ? 2.0 : 1.059463;
+	
+	if(Hotkey::pressed(ImGuiKey_Comma, "speed down")) {
+		cfg.pitch /= factor;
+		cfg.stretch /= factor;
+	}
+	if(Hotkey::pressed(ImGuiKey_Slash, "speed up")) {
+		cfg.pitch *= factor;
+		cfg.stretch *= factor;
+	}
+	if(Hotkey::pressed(ImGuiKey_Period, "speed reset")) {
+		cfg.shift = 0.0;
+		cfg.pitch = 1.0;
+		cfg.stretch = 1.0;
+	}
+	player.set_config(cfg);
+	
+	if(Hotkey::pressed(ImGuiKey_Z, "show help")) {
+		ImGui::OpenPopup("Help");
+	}
+
+}
+
+
 void App::run()
 {
 	bool done = false;
 	while (!done)
 	{
-
-		// Transport control
-		if(ImGui::IsKeyPressed(ImGuiKey_T)) {
-			m_transport ^= 1;
-		}
-
-		// Capture control
-		if(ImGui::IsKeyPressed(ImGuiKey_C)) {
-			capture_toggle();
-		}
-
-		// Player control
-		auto &player = m_stream.player;
-
-		if(ImGui::IsKeyPressed(ImGuiKey_Space) || ImGui::IsKeyPressed(ImGuiKey_P)) {
-			play_toggle();
-		}
-			
-		auto cfg = player.config();
-
-		float factor = ImGui::IsKeyDown(ImGuiKey_LeftShift) ? 2.0 : 1.059463;
-		
-		if(ImGui::IsKeyPressed(ImGuiKey_Comma)) {
-			cfg.pitch /= factor;
-			cfg.stretch /= factor;
-		}
-		if(ImGui::IsKeyPressed(ImGuiKey_Slash)) {
-			cfg.pitch *= factor;
-			cfg.stretch *= factor;
-		}
-		if(ImGui::IsKeyPressed(ImGuiKey_Period)) {
-			cfg.shift = 0.0;
-			cfg.pitch = 1.0;
-			cfg.stretch = 1.0;
-		}
-		player.set_config(cfg);
-
-
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
 		{

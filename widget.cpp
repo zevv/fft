@@ -10,6 +10,7 @@
 #include "widget.hpp"
 #include "widgetregistry.hpp"
 #include "style.hpp"
+#include "hotkey.hpp"
 
 
 Widget::Widget(Widget::Info &info)
@@ -70,10 +71,6 @@ void Widget::draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	if(m_info.flags & Widget::Info::Flags::ShowLock) {
 		ImGui::SameLine();
 		ImGui::ToggleButton("L##ock", &m_view.lock);
-		// key 'L': toggle lock
-		if(ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey_L)) {
-			m_view.lock = !m_view.lock;
-		}
 	}
 
 	if(m_info.flags & Widget::Info::Flags::ShowWindowSize) {
@@ -134,8 +131,13 @@ void Widget::handle_input(Stream &stream, SDL_Rect &r)
 	auto pos = ImGui::GetIO().MousePos;
 	auto delta = ImGui::GetIO().MouseDelta;
 
-	// key '[': decrease window size
-	if(ImGui::IsKeyPressed(ImGuiKey_LeftBracket)) {
+	if(m_info.flags & Widget::Info::Flags::ShowLock) {
+		if(Hotkey::pressed(ImGuiKey_L, "toggle lock")) {
+			m_view.lock = !m_view.lock;
+		}
+	}
+
+	if(Hotkey::pressed(ImGuiKey_LeftBracket, "decrease window size")) {
 		for(size_t i=30; i>1; i--) {
 			int s = 1<<i;
 			if(s < m_view.window.size) {
@@ -144,8 +146,7 @@ void Widget::handle_input(Stream &stream, SDL_Rect &r)
 			}
 		}
 	}
-	// key ']': increase window size
-	if(ImGui::IsKeyPressed(ImGuiKey_RightBracket)) {
+	if(Hotkey::pressed(ImGuiKey_RightBracket, "increased window size")) {
 		for(size_t i=1; i<30; i++) {
 			int s = 1<<i;
 			if(s > m_view.window.size) {
@@ -155,32 +156,28 @@ void Widget::handle_input(Stream &stream, SDL_Rect &r)
 		}
 	}
 
-	// key 'left': pan time
 	bool panning = false;
-	if(ImGui::IsKeyDown(ImGuiKey_LeftArrow)) {
+	if(Hotkey::pressed(ImGuiKey_LeftArrow, "pan time rewind")) {
 		m_view.pan_t(+m_pan_speed);
 		panning = true;
 	}
-	// key 'right': pan time
-	if(ImGui::IsKeyDown(ImGuiKey_RightArrow)) {
+	if(Hotkey::pressed(ImGuiKey_RightArrow, "pan time forward")) {
 		m_view.pan_t(-m_pan_speed);
 		panning = true;
 	}
 
-	// key 'up': zoom in time
-	if(ImGui::IsKeyDown(ImGuiKey_UpArrow)) {
+	if(Hotkey::pressed(ImGuiKey_UpArrow, "zoom in time")) {
 		m_view.zoom_t(-m_pan_speed * 100);
 		panning = true;
 	}
-	// key 'down': zoom out time
-	if(ImGui::IsKeyDown(ImGuiKey_DownArrow)) {
+	if(Hotkey::pressed(ImGuiKey_DownArrow, "zoom out time")) {
 		m_view.zoom_t(+m_pan_speed * 100);
 		panning = true;
 	}
 	m_pan_speed = panning ? m_pan_speed + 0.002 : 0.0;
 
 	// key 'A': reset view
-	if(ImGui::IsKeyPressed(ImGuiKey_A)) {
+	if(Hotkey::pressed(ImGuiKey_A, "reset view")) {
 		if(m_view_config.x == View::Axis::Time || m_view_config.y == View::Axis::Time) {
 			size_t stride = 0;
 			size_t frames_avail = 0;
@@ -203,11 +200,11 @@ void Widget::handle_input(Stream &stream, SDL_Rect &r)
 	}
 
 	// mouse RMB: pan/zoom
-	if(ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+	if(Hotkey::pressed(ImGuiKey_MouseRight, "pan/zoom")) {
 		m_view.zoom_start();
 	}
 	if(ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-		if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+		if(Hotkey::down(ImGuiKey_MouseRight | ImGuiMod_Shift, "zoom")) {
 			m_view.zoom(m_view_config, r, delta);
 		} else {
 			m_view.pan(m_view_config, r, delta);
@@ -215,21 +212,23 @@ void Widget::handle_input(Stream &stream, SDL_Rect &r)
 	}
 
 	// mouse wheel: pan/zoom time
-	if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+	if(Hotkey::pressed(ImGuiKey_MouseWheelY | ImGuiMod_Shift, "zoom time")) {
 		m_view.zoom_t(-io.MouseWheel * 40.0f);
-	} else {
+	}
+
+	if(Hotkey::pressed(ImGuiKey_MouseWheelY, "pan time")) {
 		m_view.pan_t(io.MouseWheel * 0.1f);
 	}
    
 	if(ImGui::IsMouseInRect(r)) {
-		if(ImGui::IsKeyDown(ImGuiKey_LeftShift) && !ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
+		if(Hotkey::down(ImGuiKey_LeftShift, "fine cursor")) {
 			m_view.move_cursor(m_view_config, r, delta);
 		} else {
 			m_view.set_cursor(m_view_config, r, pos);
 		}
 	  
 		// mouse LMB: seek to cursor
-		if(ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+		if(Hotkey::down(ImGuiKey_MouseLeft, "playback seek")) {
 			if(m_view_config.x == View::Axis::Time || m_view_config.y == View::Axis::Time) {
 				m_view.time.analysis = m_view.time.cursor;
 				stream.player.seek(m_view.time.cursor);

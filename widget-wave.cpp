@@ -10,6 +10,7 @@
 #include "misc.hpp"
 #include "widgetregistry.hpp"
 #include "style.hpp"
+#include "hotkey.hpp"
 
 
 class WidgetWaveform : public Widget {
@@ -190,7 +191,7 @@ bool WidgetWaveform::do_handle_input(Stream &stream, SDL_Rect &r)
     auto pos = ImGui::GetIO().MousePos;
     auto delta = ImGui::GetIO().MouseDelta;
 
-	if(ImGui::IsKeyPressed(ImGuiKey_A)) {
+	if(Hotkey::pressed(ImGuiKey_A, "clear offset")) {
 		m_channel_offset.clear();
 	}
 

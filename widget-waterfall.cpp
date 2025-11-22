@@ -10,6 +10,7 @@
 #include "queue.hpp"
 #include "histogram.hpp"
 #include "style.hpp"
+#include "hotkey.hpp"
 
 
 class WidgetWaterfall : public Widget {
@@ -343,7 +344,7 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		freq_to_note(f, note, sizeof(note));
 		ImGui::TextShadow("%sHz / %s / %+.0f..%+.0f dB", fbuf, note, m_view.aperture.from, m_view.aperture.to);
 
-		if(ImGui::IsKeyPressed(ImGuiKey_R)) {
+		if(Hotkey::pressed(ImGuiKey_R, "Rotate Waterfall")) {
 			m_rotate = !m_rotate;
 		}
 	}

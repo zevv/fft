@@ -36,6 +36,7 @@ SRC += fft.cpp
 SRC += misc.cpp
 SRC += vumeter.cpp
 SRC += style.cpp
+SRC += hotkey.cpp
 SRC += $(IMGUI_DIR)/imgui.cpp 
 SRC += $(IMGUI_DIR)/imgui_demo.cpp
 SRC += $(IMGUI_DIR)/imgui_draw.cpp 

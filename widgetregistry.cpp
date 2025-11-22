@@ -2,6 +2,7 @@
 #include <assert.h>
 
 #include "widgetregistry.hpp"
+#include "hotkey.hpp"
 
 static std::vector<Widget::Info> widget_reg_list;
 
@@ -31,7 +32,7 @@ Widget* Widgets::draw(const char *cur_name)
 		
 	if(ImGui::IsWindowFocused()) {
 		for(auto &wi : widget_reg_list) {
-			if(wi.hotkey != ImGuiKey_None && ImGui::IsKeyPressed(wi.hotkey)) {
+			if(Hotkey::pressed(wi.hotkey, wi.name)) {
 				if(strcmp(wi.name, cur_name) != 0) {
 					return wi.fn_new();
 				}

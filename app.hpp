@@ -25,12 +25,14 @@ public:
 	void usage();
 	void run();
 	void exit();
+	void handle_keys();
 
 	void init_video();
 	void req_redraw();
 
 	void draw();
 	int draw_topbar();
+	void draw_help_overlay();
 	void draw_bottombar();
 	void resize_window(int w, int h);
 
