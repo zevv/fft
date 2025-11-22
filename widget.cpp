@@ -189,8 +189,8 @@ void Widget::handle_input(Stream &stream, SDL_Rect &r)
 			m_view.time.to   = frames_avail / stream.sample_rate();
 		}
 		if(m_view_config.x == View::Axis::Amplitude || m_view_config.y == View::Axis::Amplitude) {
-			m_view.amplitude.from = -1.0;
-			m_view.amplitude.to   = +1.0f;
+			m_view.amplitude.from = -k_sample_max;
+			m_view.amplitude.to   = +k_sample_max;
 		}
 		if(m_view_config.x == View::Axis::Aperture || m_view_config.y == View::Axis::Aperture) {
 			m_view.aperture.from = -120.0f;

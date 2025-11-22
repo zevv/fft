@@ -116,13 +116,12 @@ int App::draw_topbar()
 	ImGui::Begin("main", nullptr, flags);
 
 	bool cap = m_capturing;
-	ImGui::ToggleButton("C##capture", &cap);
+	ImGui::ToggleButton("Capture", &cap);
 	if(cap != m_capturing) capture_toggle();
 
-	ImGui::SameLine();
-
 	bool play = m_playback;
-	ImGui::ToggleButton("P##playback", &play);
+	ImGui::SameLine();
+	ImGui::ToggleButton("Play", &play);
 	if(play != m_playback) play_toggle();
 
 	ImGui::SameLine();
@@ -173,6 +172,7 @@ void App::draw()
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{0.8f, 0.8f, 0.8f, 1.0f});
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{8, 8});
 	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 2.0f);
 
@@ -188,6 +188,7 @@ void App::draw()
 
 	ImGui::PopStyleVar();
 	ImGui::PopStyleVar();
+	ImGui::PopStyleColor();
 
 	ImGui::Render();
 	ImGuiIO& io = ImGui::GetIO();
