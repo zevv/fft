@@ -340,7 +340,10 @@ void App::init_video(void)
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
-	m_font = io.Fonts->AddFontFromFileTTF("Lato-Regular.ttf", 14.0);
+	struct stat st;
+	if(stat("Lato-Regular.ttf", &st) == 0) {
+		m_font = io.Fonts->AddFontFromFileTTF("Lato-Regular.ttf", 14.0);
+	}
 
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer3_Init(renderer);
