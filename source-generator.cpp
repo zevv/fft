@@ -4,6 +4,7 @@
 
 #include "source.hpp"
 #include "sourceregistry.hpp"
+#include "biquad.hpp"
 
 class SourceGenerator : public Source {
 public:
@@ -18,12 +19,14 @@ private:
 	void gen_sine(std::vector<Sample> &buf);
 	void gen_saw(std::vector<Sample> &buf);
 	void gen_sweep(std::vector<Sample> &buf);
+	void gen_noise(std::vector<Sample> &buf);
 
 	Samplerate m_srate{};
 	Time m_phase{};
 	double m_aux1{};
 	int m_type{};
 	std::vector<Sample> m_buf{};
+	Biquad m_bq[2]{};
 };
 
 
@@ -35,6 +38,8 @@ SourceGenerator::SourceGenerator(Source::Info &info, SDL_AudioSpec &dst_spec, ch
 	, m_type(atoi(args))
 {
 	m_buf.resize(1024);
+	m_bq[0].configure(Biquad::Type::LP, 0.5);
+	m_bq[1].configure(Biquad::Type::LP, 0.5);
 }
 
 
@@ -90,11 +95,23 @@ void SourceGenerator::gen_sweep(std::vector<Sample> &buf)
 	}
 }
 
+
+void SourceGenerator::gen_noise(std::vector<Sample> &buf)
+{
+	for(size_t i=0; i<buf.size(); i++) {
+		float v = (double)rand() / RAND_MAX * 2.0 - 1.0;
+		v = bq[0].run(v);
+		buf[i] = float_to_s16(v);
+	}
+}
+
+
 void SourceGenerator::poll()
 {
 	if(m_type == 0) gen_sine(m_buf);
 	if(m_type == 1) gen_saw(m_buf);
 	if(m_type == 2) gen_sweep(m_buf);
+	if(m_type == 3) gen_noise(m_buf);
 
 	SDL_PutAudioStreamData(m_sdl_stream, m_buf.data(), m_buf.size() * sizeof(Sample));
 }
