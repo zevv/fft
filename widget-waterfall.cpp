@@ -112,7 +112,6 @@ void WidgetWaterfall::do_load(ConfigReader::Node *node)
 {
 	auto *wnode = node->find("waterfall");
 	wnode->read("rotate", m_rotate);
-	wnode->read("agc", m_agc);
 }
 
 
@@ -120,7 +119,6 @@ void WidgetWaterfall::do_save(ConfigWriter &cw)
 {
 	cw.push("waterfall");
 	cw.write("rotate", m_rotate);
-	cw.write("agc", m_agc);
 	cw.pop();
 }
 
@@ -217,7 +215,7 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 		m_jobs_in_flight--;
 	}
 			
-	if(m_agc) {
+	if(m_view.agc) {
 		m_view.aperture.from = hist.find_percentile(0.01);
 		m_view.aperture.to = hist.find_percentile(1.00);
 		m_view.aperture.to = std::max(m_view.aperture.to, m_view.aperture.from + 10.0f);
@@ -324,11 +322,8 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	size_t stride = 0;
 	size_t frames_avail = 0;
 	Sample *data = stream.peek(&stride, &frames_avail);
-	
-	ImGui::SameLine();
-	ImGui::ToggleButton("AGC", &m_agc);
 
-	if(!m_agc) {
+	if(!m_view.agc) {
 		float aperture_center = (m_view.aperture.from + m_view.aperture.to) * 0.5;
 		float aperture_range = m_view.aperture.to - m_view.aperture.from;
 		ImGui::SameLine();

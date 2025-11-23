@@ -17,6 +17,10 @@ class WidgetSpectrum : public Widget {
 public:
 	WidgetSpectrum(Widget::Info &info);
 	~WidgetSpectrum() override;
+	
+	void do_load(ConfigReader::Node *node) override;
+	void do_save(ConfigWriter &cfg) override;
+	void do_copy(Widget *w) override;
 
 private:
 	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
@@ -39,6 +43,30 @@ WidgetSpectrum::WidgetSpectrum(Widget::Info &info)
 
 WidgetSpectrum::~WidgetSpectrum()
 {
+}
+
+
+void WidgetSpectrum::do_load(ConfigReader::Node *node)
+{
+	auto *wnode = node->find("spectrum");
+	int mode;
+	wnode->read("mode", mode);
+	m_mode = static_cast<Fft::Mode>(mode);
+}
+
+
+void WidgetSpectrum::do_save(ConfigWriter &cw)
+{
+	cw.push("spectrum");
+	cw.write("mode", (int)m_mode);
+	cw.pop();
+}
+
+
+void WidgetSpectrum::do_copy(Widget *w)
+{
+	auto *ws = dynamic_cast<WidgetSpectrum *>(w);
+	m_mode = ws->m_mode;
 }
 
 

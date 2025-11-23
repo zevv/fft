@@ -53,18 +53,18 @@ public:
 		Time sel_from{0.0}; // selection range start
 		Time sel_to{0.0}; // selection range end
 	};
+	
+	struct VWindow {
+		int size{256}; // analysis window size
+		Window::Type window_type{Window::Type::Hanning}; // analysis window type
+		double window_beta{0.5}; // analysis window beta (gaussian, kaiser)
+	};
 
 	struct VFreq {
 		Frequency from{0.0}; // frequency view range start
 		Frequency to{22000.0}; // frequency view range end
 		Frequency cursor{11000.0}; // user frequency cursor position
 		Frequency zoom_start{};
-	};
-
-	struct VWindow {
-		int size{256}; // analysis window size
-		Window::Type window_type{Window::Type::Hanning}; // analysis window type
-		double window_beta{0.5}; // analysis window beta (gaussian, kaiser)
 	};
 
 	struct VAmplitude {
@@ -81,6 +81,7 @@ public:
 		double zoom_start{};
 	};
 	
+	bool agc{true};
 	bool lock{true}; // view is locked to global view
 	VTime time{};
 	VFreq freq{};

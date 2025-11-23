@@ -7,6 +7,7 @@
 
 void View::load(ConfigReader::Node *n)
 {
+	n->read("agc", agc);
 	n->read("lock", lock);
 	if(auto *nc = n->find("time")) {
 		nc->read("cursor", time.cursor);
@@ -42,7 +43,9 @@ void View::load(ConfigReader::Node *n)
 
 void View::save(ConfigWriter &cfg)
 {
+	cfg.write("agc", agc);
 	cfg.write("lock", lock);
+
 	cfg.push("time");
 	cfg.write("cursor", time.cursor);
 	cfg.write("playpos", time.playpos);
@@ -51,21 +54,25 @@ void View::save(ConfigWriter &cfg)
 	cfg.write("sel_from", time.sel_from);
 	cfg.write("sel_to", time.sel_to);
 	cfg.pop();
+
 	cfg.push("frequency");
 	cfg.write("from", freq.from);
 	cfg.write("to", freq.to);
 	cfg.write("cursor", freq.cursor);
 	cfg.pop();
+
 	cfg.push("aperture");
 	cfg.write("from", aperture.from);
 	cfg.write("to", aperture.to);
 	cfg.write("cursor", aperture.cursor);
 	cfg.pop();
+
 	cfg.push("amplitude");
 	cfg.write("from", amplitude.from);
 	cfg.write("to", amplitude.to);
 	cfg.write("cursor", amplitude.cursor);
 	cfg.pop();
+
 	cfg.push("window");
 	cfg.write("size", window.size);
 	cfg.write("type", Window::type_to_str(window.window_type));
