@@ -35,12 +35,10 @@ private:
 		JobCmd cmd;
 		Sample *data;
 		size_t data_stride;
-		int id;
 		int cols;
 		Range<int> row;
 		Range<Frequency> f;
 		uint32_t *pixels;
-		size_t dp_col;
 		size_t dp_row;
 		uint32_t v;
 		Samplerate srate;
@@ -156,8 +154,8 @@ void WidgetWaterfall::work(Worker &w)
 
 void WidgetWaterfall::allocate_channels(SDL_Renderer *rend, size_t channels, int w, int h)
 {
+	if(m_rotate) std::swap(w, h);
 	m_ch_tex.resize(channels);
-
 	for(auto &tex : m_ch_tex) {
 		if(!tex || tex->w != w || tex->h != h) {
 			if(tex) SDL_DestroyTexture(tex);
@@ -199,7 +197,7 @@ void WidgetWaterfall::job_run_gen(Worker &worker, Job &job)
 					uint32_t alpha = std::clamp(255 * (db - job.aperture.min) / (job.aperture.max - job.aperture.min), 0.0, 255.0);
 					*p = v | (alpha << 24);
 				}
-				p += job.dp_col;
+				p ++;
 			}
 		}
 		t += job.dt_row;
@@ -234,8 +232,18 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 	SDL_RectToFRect(&r, &dst);
 	for(auto &tex : m_ch_tex) {
 		if(tex) {
+			SDL_FPoint tl, tr, bl;
+			if(m_rotate) {
+				tl = {dst.x, dst.y + dst.h};
+				tr = {dst.x, dst.y};
+				bl = {dst.x + dst.w, dst.y + dst.h};
+			} else {
+				tl = {dst.x, dst.y};
+				tr = {dst.x + dst.w, dst.y};
+				bl = {dst.x, dst.y + dst.h};
+			}
 			SDL_UnlockTexture(tex);
-			SDL_RenderTexture(rend, tex, nullptr, &dst);
+			SDL_RenderTextureAffine(rend, tex, nullptr, &tl, &tr, &bl);
 		}
 	}
 
@@ -265,7 +273,7 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 		int pitch;
 		SDL_LockTexture(m_ch_tex[ch], nullptr, (void **)&pixels, &pitch);
 
-		memset(pixels, 0, pitch * r.h);
+		memset(pixels, 0, r.w * r.h * 4);
 
 		if(m_channel_map.is_channel_enabled(ch)) {
 
@@ -286,7 +294,6 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 				job.f.min = m_view.freq.from;
 				job.f.max = m_view.freq.to;
 				job.pixels = pixels;
-				job.dp_col = 1;
 				job.dp_row = pitch / 4;
 				job.srate = stream.sample_rate();
 				job.t_start = m_view.time.from + dt_row * row;
@@ -297,12 +304,6 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 				job.aperture.min = m_view.aperture.from;
 				job.aperture.max = m_view.aperture.to;
 				job.idx_stepsize = idx_stepsize;
-
-				if(m_rotate) {
-					job.pixels = pixels + (r.h - 1) * (pitch / 4);
-					job.dp_col = -pitch / 4;
-					job.dp_row = 1;
-				}
 
 				m_job_queue.push(job);
 				m_jobs_in_flight++;
