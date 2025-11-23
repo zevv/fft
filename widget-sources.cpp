@@ -57,11 +57,12 @@ void WidgetSources::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		snprintf(label, sizeof(label), "%s / %s", source->info().description, specstr);
 
 		if(ImGui::CollapsingHeader(label, ImGuiTreeNodeFlags_DefaultOpen)) {
+
 				
 			ImGui::SetNextItemWidth(150);
 			float gain_db = gain_to_db(source->gain());
 			ImGui::PushID(ch);
-			ImGui::SliderFloat("##gain", &gain_db, -60.0f, 30.0f, "%+.1f dB");
+			ImGui::SliderFloat("##gain", &gain_db, -60.0f, 30.0f, "Gain %+.1f dB");
 			source->set_gain(db_to_gain(gain_db));
 			ImGui::PopID();
 		
