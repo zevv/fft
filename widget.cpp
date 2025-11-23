@@ -27,7 +27,7 @@ void Widget::load(ConfigReader::Node *node)
 {
 	m_channel_map.load(node);
 	m_view.load(node);
-	do_load(node);
+	do_load(node->find("config"));
 }
 
 
@@ -36,7 +36,9 @@ void Widget::save(ConfigWriter &cw)
 	cw.write("widget", m_info.name);
 	m_view.save(cw);
 	m_channel_map.save(cw);
+	cw.push("config");
 	do_save(cw);
+	cw.pop();
 }
 
 

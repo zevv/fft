@@ -47,18 +47,15 @@ WidgetXY::~WidgetXY()
 
 void WidgetXY::do_load(ConfigReader::Node *node)
 {
-	auto *wnode = node->find("xy");
-	wnode->read("decay", m_decay);
-	wnode->read("agc", m_agc);
+	node->read("decay", m_decay);
+	node->read("agc", m_agc);
 }
 
 
 void WidgetXY::do_save(ConfigWriter &cw)
 {
-	cw.push("xy");
 	cw.write("decay", m_decay);
 	cw.write("agc", m_agc);
-	cw.pop();
 }
 
 

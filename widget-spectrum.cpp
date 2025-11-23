@@ -48,18 +48,15 @@ WidgetSpectrum::~WidgetSpectrum()
 
 void WidgetSpectrum::do_load(ConfigReader::Node *node)
 {
-	auto *wnode = node->find("spectrum");
 	int mode;
-	wnode->read("mode", mode);
+	node->read("mode", mode);
 	m_mode = static_cast<Fft::Mode>(mode);
 }
 
 
 void WidgetSpectrum::do_save(ConfigWriter &cw)
 {
-	cw.push("spectrum");
 	cw.write("mode", (int)m_mode);
-	cw.pop();
 }
 
 

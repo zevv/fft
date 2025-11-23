@@ -46,18 +46,15 @@ WidgetHistogram::~WidgetHistogram()
 
 void WidgetHistogram::do_load(ConfigReader::Node *node)
 {
-	auto *wnode = node->find("waveform");
-	wnode->read("agc", m_agc);
-	wnode->read("nbins", m_nbins);
+	node->read("agc", m_agc);
+	node->read("nbins", m_nbins);
 }
 
 
 void WidgetHistogram::do_save(ConfigWriter &cw)
 {
-	cw.push("waveform");
 	cw.write("agc", m_agc);
 	cw.write("nbins", m_nbins);
-	cw.pop();
 }
 
 
