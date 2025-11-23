@@ -28,7 +28,7 @@ private:
 	bool m_agc{true};
 	double m_peak{};
 
-	std::vector<int> m_channel_offset;
+	std::vector<double> m_channel_offset;
 	int m_handle_dragging{-1};
 };
 
@@ -208,7 +208,7 @@ bool WidgetWaveform::do_handle_input(Stream &stream, SDL_Rect &r)
 	} else {
 		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
 		if(ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-			double delta_offset = delta.y * (m_view.amplitude.to - m_view.amplitude.from) / r.h;
+			double delta_offset = (double)delta.y * (m_view.amplitude.to - m_view.amplitude.from) / r.h;
 			m_channel_offset[m_handle_dragging] -= delta_offset;
 			return true;
 		} else {

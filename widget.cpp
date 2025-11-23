@@ -502,7 +502,6 @@ void Widget::cursor(SDL_Renderer *rend, SDL_Rect &r, int v, int flags)
 
 		int indices[] = { 0, 1, 2, 1, 2, 3, 2, 3, 4, 3, 4, 5, 4, 5, 6, 5, 6, 7 };
 
-		//SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, col.a);
 		SDL_RenderGeometry(rend, nullptr, vtx, 8, indices, 18);
 	};
 
@@ -511,7 +510,7 @@ void Widget::cursor(SDL_Renderer *rend, SDL_Rect &r, int v, int flags)
 		arrow_size = 4.0f;
 	}
 
-	SDL_FColor col = { 1.00, 1.00, 0.75, 1.0 };
+	SDL_FColor col = Style::color(Style::Cursor);
 	if(flags & CursorFlags::PlayPosition) col = Style::color(Style::Playpos);
 	if(flags & CursorFlags::HarmonicHelper) col = Style::color(Style::HarmonicHelper);
 
