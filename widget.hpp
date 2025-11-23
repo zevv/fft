@@ -25,10 +25,10 @@ public:
 			ShowWindowType     = 1 << 3,
 		};
 
-		const char *name;
-		const char *description;
-		enum ImGuiKey hotkey;
-		int flags;
+		const char *name{};
+		const char *description{};
+		enum ImGuiKey hotkey{};
+		int flags{};
 		Widget *(*fn_new)();
 	};
 
