@@ -29,6 +29,7 @@ SRC += source-audio.cpp
 SRC += source-jack.cpp
 SRC += source-file.cpp
 SRC += source-generator.cpp
+SRC += source-debug.cpp
 SRC += config.cpp
 SRC += biquad.cpp
 SRC += rb.cpp
