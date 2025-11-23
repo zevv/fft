@@ -134,8 +134,8 @@ void Player::set_config(Config &cfg)
 			m_freqshift[lr].set_frequency(cfg.shift / m_srate);
 
 			for(size_t j=0; j<2; j++) {
-				m_filter.bq_hp[lr][j].configure(Biquad::Type::HP, cfg.freq_hp / m_srate);
-				m_filter.bq_lp[lr][j].configure(Biquad::Type::LP, cfg.freq_lp / m_srate);
+				m_filter[lr].fir_hp.configure(Fir::Type::HP, cfg.freq_hp / m_srate);
+				m_filter[lr].fir_lp.configure(Fir::Type::LP, cfg.freq_lp / m_srate);
 			}
 		}
 		m_config = cfg;
@@ -253,10 +253,8 @@ void Player::audio_callback(SDL_AudioStream *stream, int additional_amount, int 
 				v[lr] = m_freqshift[lr].run(v[lr]);
 			}
 
-			for(size_t j=0; j<2; j++) {
-				if(cfg.freq_hp >     0.0) v[lr] = m_filter.bq_hp[lr][j].run(v[lr]);
-				if(cfg.freq_lp < m_srate) v[lr] = m_filter.bq_lp[lr][j].run(v[lr]);
-			}
+			if(cfg.freq_hp >     0.0) v[lr] = m_filter[lr].fir_hp.run(v[lr]);
+			if(cfg.freq_lp < m_srate) v[lr] = m_filter[lr].fir_lp.run(v[lr]);
 		
 			m_buf[i*2 + lr] = v[lr];
 		}

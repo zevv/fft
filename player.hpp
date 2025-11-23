@@ -8,6 +8,7 @@
 
 #include "config.hpp"
 #include "biquad.hpp"
+#include "fir.hpp"
 #include "hilbert.hpp"
 #include "freqshift.hpp"
 
@@ -68,8 +69,8 @@ private:
 	size_t m_buf_frames;
 	std::vector<float> m_buf{};
 	struct {
-		Biquad bq_hp[2][2];
-		Biquad bq_lp[2][2];
-	} m_filter;
+		Fir fir_lp{127};
+		Fir fir_hp{127};
+	} m_filter[2];
 	FreqShift m_freqshift[2];
 };
