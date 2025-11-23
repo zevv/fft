@@ -17,7 +17,7 @@ Fft::~Fft()
 }
 
 
-void Fft::configure(size_t size, Window::Type window_type, float window_beta)
+void Fft::configure(size_t size, Window::Type window_type, float window_beta, Mode mode)
 {
 	if(m_window.size() != size || m_window.type() != window_type || m_window.beta() != window_beta) {
 		m_window.configure(window_type, size, window_beta);
@@ -28,10 +28,12 @@ void Fft::configure(size_t size, Window::Type window_type, float window_beta)
 		if(m_in) free(m_in);
 		m_in = (float*)fftwf_malloc(sizeof(float) * size);
 		m_out.resize(size / 2 + 1);
-		m_outf.resize(size / 2 + 1);
+		m_out.resize(size / 2 + 1);
 		if(m_plan) fftwf_destroy_plan(m_plan);
 		m_plan = fftwf_plan_r2r_1d(size, m_in, m_in, FFTW_R2HC, FFTW_ESTIMATE);
 	}
+
+	m_mode = mode;
 }
 
 
@@ -64,7 +66,7 @@ static inline float fast_hypot(float x, float y)
 }
 
 
-std::vector<int8_t> Fft::run(Sample *input, size_t stride)
+std::vector<float> Fft::run(Sample *input, size_t stride)
 {
 	// window input data
 	auto window = m_window.data();
@@ -75,25 +77,35 @@ std::vector<int8_t> Fft::run(Sample *input, size_t stride)
 	// run fft
 	fftwf_execute(m_plan);
 
-	// convert half complex to magnitude dB, fast or proper
+	// convert half complex to magnitude
 	float scale = m_window.gain() * 2.0f / m_size;
+	m_out[0] = fabs(m_in[0]) * scale * 0.5;
 	if(m_approximate) {
-		m_outf[0] = fast_20log10(fabs(m_in[0]) * scale * 0.5);
 		for(size_t i=1; i<m_size/2; i++) {
-			m_outf[i] = fast_20log10(fast_hypot(m_in[i], m_in[m_size - i]) * scale);
+			m_out[i] = fast_hypot(m_in[i], m_in[m_size - i]) * scale;
 		}
-		m_outf[m_size / 2] = fast_20log10(fabs(m_in[m_size / 2]) * scale * 0.5);
 	} else {
-		m_outf[0] = real_20log10(fabs(m_in[0]) * scale *0.5);
 		for(size_t i=1; i<m_size/2; i++) {
-			m_outf[i] = real_20log10(hypot(m_in[i], m_in[m_size - i]) * scale);
+			m_out[i] = hypotf(m_in[i], m_in[m_size - i]) * scale;
 		}
-		m_outf[m_size / 2] = real_20log10(fabs(m_in[m_size / 2]) * scale * 0.5);
 	}
+	m_out[m_size / 2] = fabs(m_in[m_size / 2]) * scale * 0.5;
 
-	// separate pass to convert to int8_t, allows for better vecorization
-	for(size_t i=0; i<m_out.size(); i++) {
-		m_out[i] = (int8_t)(m_outf[i]);
+	// convert to desired mode
+	if(m_mode == Mode::Lin) {
+		for(size_t i=0; i<m_out.size(); i++) {
+			m_out[i] = m_out[i] * k_sample_max;
+		}
+	} else {
+		if(m_approximate) {
+			for(size_t i=0; i<m_out.size(); i++) {
+				m_out[i] = fast_20log10(m_out[i]);
+			}
+		} else {
+			for(size_t i=0; i<m_out.size(); i++) {
+				m_out[i] = real_20log10(m_out[i]);
+			}
+		}
 	}
 
 	return m_out;

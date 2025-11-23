@@ -56,6 +56,7 @@ public:
 	virtual void poll(void) {};
 	virtual void pause(void) {};
 	virtual void resume(void) {};
+	virtual void draw(void) {};
 
 protected:
 	Source::Info m_info;

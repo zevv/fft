@@ -22,6 +22,7 @@ private:
 	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
 
 	Fft m_fft{};
+	Fft::Mode m_mode{Fft::Mode::Log};
 
 	std::vector<Sample> m_out_graph;
 };
@@ -43,12 +44,19 @@ WidgetSpectrum::~WidgetSpectrum()
 
 void WidgetSpectrum::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 {
+	bool log = m_mode == Fft::Mode::Log;
+	ImGui::SameLine();
+	ImGui::ToggleButton("LOG", &log);
+	m_mode = log ? Fft::Mode::Log : Fft::Mode::Lin;
+
+	m_view_config.y = (m_mode == Fft::Mode::Log) ? View::Axis::Aperture : View::Axis::Amplitude;
+
 	if(ImGui::IsWindowFocused()) {
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
 		ImGui::Text("f=%.6gHz amp=%.2fdB", m_view.freq.cursor * stream.sample_rate() * 0.5, m_view.aperture.cursor);
 	}
 
-	m_fft.configure(m_view.window.size, m_view.window.window_type, m_view.window.window_beta);
+	m_fft.configure(m_view.window.size, m_view.window.window_type, m_view.window.window_beta, m_mode);
 
 	if(ImGui::IsKeyPressed(ImGuiKey_A)) {
 		m_view.amplitude.from = -100.0;
@@ -68,12 +76,15 @@ void WidgetSpectrum::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 
 		auto out_graph = m_fft.run(&data[idx], stride);
 
+		double graph_min = (m_mode == Fft::Mode::Log) ? m_view.aperture.from : m_view.amplitude.from;
+		double graph_max = (m_mode == Fft::Mode::Log) ? m_view.aperture.to : m_view.amplitude.to;
+
 		size_t npoints = m_view.window.size / 2 + 1;
 		SDL_SetRenderDrawColor(rend, Style::channel_color(ch));
 		graph(rend, r,
 				out_graph.data(), out_graph.size(), 1,
 				m_view.freq.from * npoints, m_view.freq.to * npoints,
-				m_view.aperture.from, m_view.aperture.to);
+				graph_min, graph_max);
 	}
 	
 	

@@ -64,6 +64,8 @@ void WidgetSources::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 			ImGui::SliderFloat("##gain", &gain_db, -60.0f, 30.0f, "%+.1f dB");
 			source->set_gain(db_to_gain(gain_db));
 			ImGui::PopID();
+		
+			source->draw();
 
 			for(size_t i=0; i<source->channel_count(); i++) {
 				ImGui::PushID(ch);
@@ -76,6 +78,7 @@ void WidgetSources::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 			}
 
 		}
+
 	}
 }
 

@@ -11,12 +11,14 @@ class Fft {
 
 public:
 
+	enum Mode { Lin, Log };
+
 	Fft(bool approximate=false);
 	~Fft();
 
-	void configure(size_t size, Window::Type type, float beta=5.0f);
+	void configure(size_t size, Window::Type type, float beta=5.0f, Mode mode=Mode::Log);
 	int out_size();
-	std::vector<int8_t> run(Sample *input, size_t stride=1);
+	std::vector<float> run(Sample *input, size_t stride=1);
 	void set_approximate(bool v) { m_approximate = v; }
 
 private:
@@ -25,6 +27,6 @@ private:
 	Window m_window{};
 	size_t m_size{};
 	float *m_in{};
-	std::vector<float> m_outf{};
-	std::vector<int8_t> m_out{};
+	std::vector<float> m_out{};
+	Mode m_mode{Mode::Log};
 };

@@ -187,7 +187,7 @@ void WidgetWaterfall::job_run_gen(Worker &worker, Job &job)
 			for(int col=0; col<job.col_count; col++) {
 				Frequency f = job.f.min + (job.f.max - job.f.min) * col / job.col_count;
 				if(f >= 0 && f <= 1.0) {
-					double db = tabread2(fft_out, f, (int8_t)-127);
+					double db = tabread2(fft_out, f, -127.0f);
 					res.hist.add(db);
 					uint32_t alpha = std::clamp(255 * (db - job.aperture.min) / (job.aperture.max - job.aperture.min), 0.0, 255.0);
 					*p = color | (alpha << 24);

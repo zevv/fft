@@ -24,7 +24,7 @@ private:
 
 	void do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SDL_Rect &r);
 	void do_draw_colors_tab(Stream &stream, SDL_Renderer *rend, SDL_Rect &r);
-	void draw_vu(Stream &stream, size_t channel, ImVec4 col);
+	void draw_vu(Stream &stream, size_t channel, Style::Color col);
 
 	ssize_t m_vu_idx_prev{0};
 	std::vector<Sample> m_vu_peak{};
@@ -69,7 +69,7 @@ void WidgetChannels::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 }
 
 
-void WidgetChannels::draw_vu(Stream &stream, size_t ch, ImVec4 col)
+void WidgetChannels::draw_vu(Stream &stream, size_t ch, Style::Color col)
 {
 	ImGui::PushID((int)ch);
 
@@ -95,8 +95,8 @@ void WidgetChannels::draw_vu(Stream &stream, size_t ch, ImVec4 col)
 			IM_COL32(64, 64, 64, 255));
 	}
 	//draw_list->AddRectFilled(pos, ImVec2(pos.x + x - 8, pos.y + height - 8),  IM_COL32(100, 100, 100, 255));
-	draw_list->AddRectFilled(ImVec2(pos.x + x - 8, pos.y), ImVec2(pos.x + x - 4, pos.y + height - 8),
-		IM_COL32((uint8_t)(col.x * 255.0f), (uint8_t)(col.y * 255.0f), (uint8_t)(col.z * 255.0f), 255));
+	draw_list->AddRectFilled( ImVec2(pos.x + x - 8, pos.y),
+			ImVec2(pos.x + x - 4, pos.y + height - 8), col);
 
 	ImGui::PopID();
 }
