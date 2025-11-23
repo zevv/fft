@@ -26,7 +26,7 @@ private:
 	bool do_handle_input(Stream &stream, SDL_Rect &r) override;
 
 	bool m_agc{true};
-	Sample m_peak{};
+	double m_peak{};
 
 	std::vector<int> m_channel_offset;
 	int m_handle_dragging{-1};
@@ -117,7 +117,7 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		ImGui::Text("t=%.4gs", m_view.time.cursor);
 	}
 
-	Sample scale = k_sample_max;
+	double scale = 1.0;
 	if(m_agc && m_peak > 0.0f) {
 		m_view.amplitude.from = -m_peak * 1.1f;
 		m_view.amplitude.to   = +m_peak * 1.1f;
@@ -142,13 +142,14 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		draw_channel_handle(rend, r, y, col);
 		SDL_SetRenderDrawColor(rend, col);
 
-		Sample peak;
+		double peak;
 
 		double offset = m_channel_offset[ch];
 
 		if(step < 256) {
 			peak = graph(rend, rwave,
 					data + ch, frames_avail, data_stride,
+					1.0 / k_sample_max,
 					idx_from, idx_to,
 					m_view.amplitude.from - offset,
 					m_view.amplitude.to - offset);
@@ -156,6 +157,7 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 			peak = graph(rend, rwave,
 					&wdata[ch].min, &wdata[ch].max, 
 					frames_avail / 256, wdata_stride * 2,
+					1.0 / k_sample_max,
 					idx_from / 256, idx_to / 256,
 					m_view.amplitude.from - offset,
 					m_view.amplitude.to - offset);
@@ -178,7 +180,7 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	SDL_SetRenderDrawColor(rend, Style::color(Style::ColorId::AnalysisWindow));
 	double w_idx_from = (m_view.time.from - m_view.time.analysis) * stream.sample_rate() + m_view.window.size * 0.5;
 	double w_idx_to   = (m_view.time.to   - m_view.time.analysis) * stream.sample_rate() + m_view.window.size * 0.5;
-	graph(rend, r, w.data().data(), w.size(), 1, w_idx_from, w_idx_to, 0.0f, +1.0f);
+	graph(rend, r, w.data().data(), w.size(), 1, 1.0, w_idx_from, w_idx_to, 0.0f, +1.0f);
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 

@@ -55,14 +55,16 @@ protected:
 	virtual void do_save(ConfigWriter &cfg) {};
 
 	template<typename T>
-	T graph(SDL_Renderer *rend, SDL_Rect &r,
+	double graph(SDL_Renderer *rend, SDL_Rect &r,
 						 T data[], size_t data_count, size_t stride,
+						 double scale,
 						 double idx_from, double idx_to,
 						 double y_min, double y_max);
 	
 	template<typename T>
-	T graph(SDL_Renderer *rend, SDL_Rect &r,
+	double graph(SDL_Renderer *rend, SDL_Rect &r,
 						 T data_min[], T data_max[], size_t data_count, size_t stride,
+						 double scale,
 						 double idx_from, double idx_to,
 						 double y_min, double y_max);
 

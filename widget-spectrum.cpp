@@ -49,19 +49,16 @@ void WidgetSpectrum::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	ImGui::ToggleButton("LOG", &log);
 	m_mode = log ? Fft::Mode::Log : Fft::Mode::Lin;
 
-	m_view_config.y = (m_mode == Fft::Mode::Log) ? View::Axis::Aperture : View::Axis::Amplitude;
-
 	if(ImGui::IsWindowFocused()) {
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
 		ImGui::Text("f=%.6gHz amp=%.2fdB", m_view.freq.cursor * stream.sample_rate() * 0.5, m_view.aperture.cursor);
 	}
 
-	m_fft.configure(m_view.window.size, m_view.window.window_type, m_view.window.window_beta, m_mode);
+	m_view_config.y = (m_mode == Fft::Mode::Log) ? View::Axis::Aperture : View::Axis::Amplitude;
+	double graph_min = (m_mode == Fft::Mode::Log) ? m_view.aperture.from : m_view.amplitude.from;
+	double graph_max = (m_mode == Fft::Mode::Log) ? m_view.aperture.to : m_view.amplitude.to;
 
-	if(ImGui::IsKeyPressed(ImGuiKey_A)) {
-		m_view.amplitude.from = -100.0;
-		m_view.amplitude.to = 0.0;
-	}
+	m_fft.configure(m_view.window.size, m_view.window.window_type, m_view.window.window_beta, m_mode);
 
 	SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_ADD);
 
@@ -76,13 +73,11 @@ void WidgetSpectrum::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 
 		auto out_graph = m_fft.run(&data[idx], stride);
 
-		double graph_min = (m_mode == Fft::Mode::Log) ? m_view.aperture.from : m_view.amplitude.from;
-		double graph_max = (m_mode == Fft::Mode::Log) ? m_view.aperture.to : m_view.amplitude.to;
-
 		size_t npoints = m_view.window.size / 2 + 1;
 		SDL_SetRenderDrawColor(rend, Style::channel_color(ch));
 		graph(rend, r,
 				out_graph.data(), out_graph.size(), 1,
+				1.00,
 				m_view.freq.from * npoints, m_view.freq.to * npoints,
 				graph_min, graph_max);
 	}

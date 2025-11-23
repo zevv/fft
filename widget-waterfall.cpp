@@ -50,7 +50,7 @@ private:
 	};
 
 	struct Result {
-		Histogram<int8_t> hist{256, -126, 127};
+		Histogram<float> hist{256, -126, 127};
 	};
 
 	void do_load(ConfigReader::Node *node) override;
@@ -208,7 +208,7 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 {
 	// wait for workers
 
-	Histogram<int8_t> hist(256, -128, 127);
+	Histogram<float> hist(256, -128, 127);
 
 	while(m_jobs_in_flight > 0) {
 		Result res;

@@ -114,6 +114,7 @@ void WidgetHistogram::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		auto b = m_hists[ch].bins();
 		graph(rend, r,
 				b.data(), b.size(), 1,
+				1.00,
 				0, m_nbins-1,
 				(size_t)0, (size_t)m_hists[ch].peak());
 	}

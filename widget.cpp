@@ -189,11 +189,11 @@ void Widget::handle_input(Stream &stream, SDL_Rect &r)
 			m_view.time.to   = frames_avail / stream.sample_rate();
 		}
 		if(m_view_config.x == View::Axis::Amplitude || m_view_config.y == View::Axis::Amplitude) {
-			m_view.amplitude.from = -k_sample_max;
-			m_view.amplitude.to   = +k_sample_max;
+			m_view.amplitude.from = -1.0;
+			m_view.amplitude.to   = +1.0;
 		}
 		if(m_view_config.x == View::Axis::Aperture || m_view_config.y == View::Axis::Aperture) {
-			m_view.aperture.from = -120.0f;
+			m_view.aperture.from = -127.0f;
 			m_view.aperture.to   = 0.0f;
 		}
 		if(m_view_config.x == View::Axis::Frequency || m_view_config.y == View::Axis::Frequency) {
@@ -239,40 +239,41 @@ void Widget::handle_input(Stream &stream, SDL_Rect &r)
 }
 
 
-template Sample Widget::graph<Sample>(SDL_Renderer*, SDL_Rect&, Sample[],           size_t, size_t, double, double, double, double);
-template Sample Widget::graph<Sample>(SDL_Renderer*, SDL_Rect&, Sample[], Sample[], size_t, size_t, double, double, double, double);
+template double Widget::graph<Sample>(SDL_Renderer*, SDL_Rect&, Sample[],           size_t, size_t, double, double, double, double, double);
+template double Widget::graph<Sample>(SDL_Renderer*, SDL_Rect&, Sample[], Sample[], size_t, size_t, double, double, double, double, double);
 
-template int8_t Widget::graph<int8_t>(SDL_Renderer*, SDL_Rect&, int8_t[],           size_t, size_t, double, double, double, double);
-template int8_t Widget::graph<int8_t>(SDL_Renderer*, SDL_Rect&, int8_t[], int8_t[], size_t, size_t, double, double, double, double);
+template double Widget::graph<int8_t>(SDL_Renderer*, SDL_Rect&, int8_t[],           size_t, size_t, double, double, double, double, double);
+template double Widget::graph<int8_t>(SDL_Renderer*, SDL_Rect&, int8_t[], int8_t[], size_t, size_t, double, double, double, double, double);
 
-template size_t Widget::graph<size_t>(SDL_Renderer*, SDL_Rect&, size_t[],           size_t, size_t, double, double, double, double);
-template size_t Widget::graph<size_t>(SDL_Renderer*, SDL_Rect&, size_t[], size_t[], size_t, size_t, double, double, double, double);
+template double Widget::graph<size_t>(SDL_Renderer*, SDL_Rect&, size_t[],           size_t, size_t, double, double, double, double, double);
+template double Widget::graph<size_t>(SDL_Renderer*, SDL_Rect&, size_t[], size_t[], size_t, size_t, double, double, double, double, double);
 
-template float  Widget::graph<float >(SDL_Renderer*, SDL_Rect&, float [],           size_t, size_t, double, double, double, double);
-template float  Widget::graph<float >(SDL_Renderer*, SDL_Rect&, float [], float [], size_t, size_t, double, double, double, double);
+template double Widget::graph<float >(SDL_Renderer*, SDL_Rect&, float [],           size_t, size_t, double, double, double, double, double);
+template double Widget::graph<float >(SDL_Renderer*, SDL_Rect&, float [], float [], size_t, size_t, double, double, double, double, double);
 
 
 
 template<typename T>
-T Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
+double Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
 					 T data[], size_t data_count, size_t stride,
+					 double scale,
 					 double idx_from, double idx_to,
 					 double y_min, double y_max)
 {
 	return graph(rend, r, data, data, data_count, stride,
-		  idx_from, idx_to,
-		  y_min, y_max);
+			scale, idx_from, idx_to, y_min, y_max);
 }
 
 template<typename T>
-T Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
+double Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
 					 T data_min[], T data_max[], size_t data_count, size_t stride,
+					 double scale,
 					 double idx_from, double idx_to,
 					 double y_min, double y_max)
 {
-	float y_scale = (r.h - 2) / ((double)y_min - (float)y_max);
-	float y_off = r.y - (float)y_max * (float)y_scale;
-	T v_peak = 0;
+	double y_scale = scale * (r.h - 2) / (y_min - y_max);
+	double y_off = r.y -y_max * y_scale / scale;
+	double v_peak = 0;
 
 	int npoints = 0;
 	int nrects = 0;
@@ -337,7 +338,7 @@ T Widget::graph(SDL_Renderer *rend, SDL_Rect &r,
 	SDL_SetRenderDrawColor(rend, cr/5, cg/5, cb/5, ca);
 	SDL_RenderFillRects(rend, rects.data(), nrects);
 
-	return v_peak;
+	return v_peak * scale;
 }
 
 
@@ -604,7 +605,7 @@ void Widget::grids(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &cf
 	}
 
 	if(cfg.y == View::Axis::Amplitude) {
-		grid_vertical(rend, r, m_view.amplitude.from / k_sample_max, m_view.amplitude.to / k_sample_max);
+		grid_vertical(rend, r, m_view.amplitude.from, m_view.amplitude.to);
 	}
 
 	if(cfg.y == View::Axis::Aperture) {

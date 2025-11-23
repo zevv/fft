@@ -45,8 +45,7 @@ int Fft::out_size()
 
 static inline float real_20log10(float v)
 {
-	float vout = 20.0f * log10f(v + 1e-10f);
-	return std::clamp(vout, -127.0f, 0.0f);
+	return 20.0f * log10f(v + 1e-10f);
 }
 
 
@@ -54,7 +53,7 @@ static inline float fast_20log10(float v)
 {
 	int32_t i_v = std::bit_cast<int32_t>(v + 1e-10f);
 	float vout = (float)i_v * 7.17897e-7f - 764.616f;
-	return std::clamp(vout, -127.0f, 0.0f);
+	return vout;
 }
 
 
@@ -94,7 +93,7 @@ std::vector<float> Fft::run(Sample *input, size_t stride)
 	// convert to desired mode
 	if(m_mode == Mode::Lin) {
 		for(size_t i=0; i<m_out.size(); i++) {
-			m_out[i] = m_out[i] * k_sample_max;
+			m_out[i] = m_out[i];
 		}
 	} else {
 		if(m_approximate) {
