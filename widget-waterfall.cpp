@@ -35,19 +35,18 @@ private:
 		JobCmd cmd;
 		Sample *data;
 		size_t data_stride;
-		int cols;
+		int col_count;
 		Range<int> row;
 		Range<Frequency> f;
 		uint32_t *pixels;
-		size_t dp_row;
-		uint32_t v;
+		uint32_t color;
 		Samplerate srate;
 		Time t_start;
 		Time dt_row;
 		size_t ch;
 		ssize_t idx_max;
-		Aperture aperture;
 		ssize_t idx_stepsize;
+		Aperture aperture;
 	};
 
 	struct Result {
@@ -173,32 +172,30 @@ void WidgetWaterfall::allocate_channels(SDL_Renderer *rend, size_t channels, int
 
 void WidgetWaterfall::job_run_gen(Worker &worker, Job &job)
 {
-	uint32_t v = job.v;
+	uint32_t color = job.color;
 	int fft_w = worker.fft.out_size();
 
-	if(job.aperture.max == job.aperture.min) {
-		job.aperture.max++;
-	}
-	
 	Result res;
 
 	Time t = job.t_start;
+	uint32_t *p = job.pixels;
 	for(int row=job.row.min; row<job.row.max; row++) {
-		ssize_t idx = ceil(job.srate * t - m_view.window.size / 2) * job.data_stride;
+		ssize_t idx = (job.srate * t - m_view.window.size / 2) * job.data_stride;
 		idx = (idx / job.idx_stepsize) * job.idx_stepsize;
-		if(idx >=0 && idx < job.idx_max) {
+		if(idx >= 0 && idx < job.idx_max) {
 			auto fft_out = worker.fft.run(&job.data[idx + job.ch], job.data_stride);
-			uint32_t *p = job.pixels + row * job.dp_row;
-			for(int col=0; col<job.cols; col++) {
-				Frequency f = job.f.min + (job.f.max - job.f.min) * col / job.cols;
-				if(f >=0 && f <= 1.0) {
+			for(int col=0; col<job.col_count; col++) {
+				Frequency f = job.f.min + (job.f.max - job.f.min) * col / job.col_count;
+				if(f >= 0 && f <= 1.0) {
 					double db = tabread2(fft_out, f, (int8_t)-127);
 					res.hist.add(db);
 					uint32_t alpha = std::clamp(255 * (db - job.aperture.min) / (job.aperture.max - job.aperture.min), 0.0, 255.0);
-					*p = v | (alpha << 24);
+					*p = color | (alpha << 24);
 				}
 				p ++;
 			}
+		} else {
+			p += job.col_count;
 		}
 		t += job.dt_row;
 	}
@@ -288,19 +285,18 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 				job.cmd = JobCmd::Gen;
 				job.data = data;
 				job.data_stride = stride;
-				job.cols = col_count;
+				job.col_count = col_count;
 				job.row.min = row;
 				job.row.max = std::min(row + 128, row_count);
 				job.f.min = m_view.freq.from;
 				job.f.max = m_view.freq.to;
-				job.pixels = pixels;
-				job.dp_row = pitch / 4;
+				job.pixels = pixels + job.row.min * (pitch / 4);
 				job.srate = stream.sample_rate();
 				job.t_start = m_view.time.from + dt_row * row;
 				job.dt_row = dt_row;
 				job.ch = ch;
 				job.idx_max = frames_avail * stride;
-				job.v = *(uint32_t *)&col & 0x00FFFFFF;
+				job.color = *(uint32_t *)&col & 0x00FFFFFF;
 				job.aperture.min = m_view.aperture.from;
 				job.aperture.max = m_view.aperture.to;
 				job.idx_stepsize = idx_stepsize;
