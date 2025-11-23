@@ -177,7 +177,10 @@ void App::draw()
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
-	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{0.8f, 0.8f, 0.8f, 1.0f});
+	if(m_font) ImGui::PushFont(m_font);
+
+	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4{0.2, 0.2, 0.2, 1.0f});
+	//ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{0.8f, 0.8f, 0.8f, 1.0f});
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{8, 8});
 	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 2.0f);
 
@@ -193,7 +196,10 @@ void App::draw()
 
 	ImGui::PopStyleVar();
 	ImGui::PopStyleVar();
+	//ImGui::PopStyleColor();
 	ImGui::PopStyleColor();
+
+	if(m_font) ImGui::PopFont();
 
 	ImGui::Render();
 	ImGuiIO& io = ImGui::GetIO();
@@ -334,6 +340,8 @@ void App::init_video(void)
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
+	m_font = io.Fonts->AddFontFromFileTTF("Lato-Regular.ttf", 14.0);
+
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer3_Init(renderer);
 
@@ -410,6 +418,8 @@ void App::run()
 			cfg.shift = 0.0;
 			cfg.pitch = 1.0;
 			cfg.stretch = 1.0;
+			cfg.freq_hp = 0.0;
+			cfg.freq_lp = m_srate * 0.5;
 		}
 		player.set_config(cfg);
 

@@ -47,6 +47,7 @@ private:
 	View m_view{};
 	int m_redraw{1};
 	char m_session_name[64]{"default"};
+	ImFont *m_font{nullptr};
 
 	bool m_capturing{false};
 	bool m_playback{false};
