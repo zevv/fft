@@ -120,21 +120,14 @@ int App::draw_topbar()
 	bool cap = m_capturing;
 	ImGui::ToggleButton("Capture", &cap);
 	if(cap != m_capturing) capture_toggle();
+
 	bool play = m_playback;
 	ImGui::SameLine();
 	ImGui::ToggleButton("Play", &play);
 	if(play != m_playback) play_toggle();
+
 	ImGui::SameLine();
 	ImGui::ToggleButton("Transport", &m_transport);
-
-	ImGui::SameLine();
-	ImGui::Dummy(ImVec2{30, 0});
-
-	ImGui::SameLine();
-	ImGui::ToggleButton("AGC", &m_view.agc);
-
-	ImGui::SameLine();
-	ImGui::Dummy(ImVec2{30, 0});
 
 	ImGui::SameLine();
 	ImGui::Text("srate: %.0fHz", m_srate);

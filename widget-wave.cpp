@@ -25,6 +25,7 @@ private:
 	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
 	bool do_handle_input(Stream &stream, SDL_Rect &r) override;
 
+	bool m_agc{true};
 	double m_peak{};
 
 	std::vector<int> m_channel_offset;
@@ -72,6 +73,7 @@ void WidgetWaveform::do_save(ConfigWriter &cw)
 void WidgetWaveform::do_copy(Widget *w)
 {
 	WidgetWaveform *ww = dynamic_cast<WidgetWaveform*>(w);
+	ww->m_agc = m_agc;
 	ww->m_peak = m_peak;
 }
 
@@ -95,6 +97,7 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	m_channel_offset.resize(stream.channel_count());
 
 	ImGui::SameLine();
+	ImGui::ToggleButton("AGC", &m_agc);
 	
 	size_t frames_avail;
 	size_t data_stride;
@@ -110,7 +113,7 @@ void WidgetWaveform::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	}
 
 	double scale = 1.0;
-	if(m_view.agc && m_peak > 0.0f) {
+	if(m_agc && m_peak > 0.0f) {
 		m_view.amplitude.from = -m_peak * 1.1f;
 		m_view.amplitude.to   = +m_peak * 1.1f;
 	}

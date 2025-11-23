@@ -183,28 +183,24 @@ void Widget::handle_input(Stream &stream, SDL_Rect &r)
 
 	// key 'A': reset view
 	if(ImGui::IsKeyPressed(ImGuiKey_A)) {
-		if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
-			m_view.agc = !m_view.agc;
-		} else {
-			if(m_view_config.x == View::Axis::Time || m_view_config.y == View::Axis::Time) {
-				size_t stride = 0;
-				size_t frames_avail = 0;
-				Sample *data = stream.peek(&stride, &frames_avail);
-				m_view.time.from = 0.0;
-				m_view.time.to   = frames_avail / stream.sample_rate();
-			}
-			if(m_view_config.x == View::Axis::Amplitude || m_view_config.y == View::Axis::Amplitude) {
-				m_view.amplitude.from = -1.0;
-				m_view.amplitude.to   = +1.0;
-			}
-			if(m_view_config.x == View::Axis::Aperture || m_view_config.y == View::Axis::Aperture) {
-				m_view.aperture.from = -127.0f;
-				m_view.aperture.to   = 0.0f;
-			}
-			if(m_view_config.x == View::Axis::Frequency || m_view_config.y == View::Axis::Frequency) {
-				m_view.freq.from = 0.0f;
-				m_view.freq.to = 1.0;
-			}
+		if(m_view_config.x == View::Axis::Time || m_view_config.y == View::Axis::Time) {
+			size_t stride = 0;
+			size_t frames_avail = 0;
+			Sample *data = stream.peek(&stride, &frames_avail);
+			m_view.time.from = 0.0;
+			m_view.time.to   = frames_avail / stream.sample_rate();
+		}
+		if(m_view_config.x == View::Axis::Amplitude || m_view_config.y == View::Axis::Amplitude) {
+			m_view.amplitude.from = -1.0;
+			m_view.amplitude.to   = +1.0;
+		}
+		if(m_view_config.x == View::Axis::Aperture || m_view_config.y == View::Axis::Aperture) {
+			m_view.aperture.from = -127.0f;
+			m_view.aperture.to   = 0.0f;
+		}
+		if(m_view_config.x == View::Axis::Frequency || m_view_config.y == View::Axis::Frequency) {
+			m_view.freq.from = 0.0f;
+			m_view.freq.to = 1.0;
 		}
 	}
 

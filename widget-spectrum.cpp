@@ -17,13 +17,13 @@ class WidgetSpectrum : public Widget {
 public:
 	WidgetSpectrum(Widget::Info &info);
 	~WidgetSpectrum() override;
+
+private:
+	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
 	
 	void do_load(ConfigReader::Node *node) override;
 	void do_save(ConfigWriter &cfg) override;
 	void do_copy(Widget *w) override;
-
-private:
-	void do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r) override;
 
 	Fft m_fft{};
 	Fft::Mode m_mode{Fft::Mode::Log};
