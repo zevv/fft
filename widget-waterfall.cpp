@@ -49,6 +49,7 @@ private:
 		size_t ch;
 		ssize_t idx_max;
 		Aperture aperture;
+		ssize_t idx_stepsize;
 	};
 
 	struct Result {
@@ -185,9 +186,10 @@ void WidgetWaterfall::job_run_gen(Worker &worker, Job &job)
 
 	Time t = job.t_start;
 	for(int row=job.row.min; row<job.row.max; row++) {
-		ssize_t idx = ceil(job.srate * t - m_view.window.size / 2) * job.data_stride + job.ch;
+		ssize_t idx = ceil(job.srate * t - m_view.window.size / 2) * job.data_stride;
+		idx = (idx / job.idx_stepsize) * job.idx_stepsize;
 		if(idx >=0 && idx < job.idx_max) {
-			auto fft_out = worker.fft.run(&job.data[idx], job.data_stride);
+			auto fft_out = worker.fft.run(&job.data[idx + job.ch], job.data_stride);
 			uint32_t *p = job.pixels + row * job.dp_row;
 			for(int col=0; col<job.cols; col++) {
 				Frequency f = job.f.min + (job.f.max - job.f.min) * col / job.cols;
@@ -241,6 +243,14 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 
 	allocate_channels(rend, stream.channel_count(), r.w, r.h);
 
+	// constriant idx to always be a muiltiple of indices-per-pixel to
+	// avoid aliasing artifacts when panning
+
+	double idx_from = m_view.time.from * stream.sample_rate();
+	double idx_to = m_view.time.to * stream.sample_rate();
+	ssize_t idx_stepsize = ceil((idx_to - idx_from) / (m_rotate ? r.w : r.h)) * stream.channel_count();
+
+
 	// queue jobs
 
 	size_t stride = 0;
@@ -286,6 +296,7 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 				job.v = *(uint32_t *)&col & 0x00FFFFFF;
 				job.aperture.min = m_view.aperture.from;
 				job.aperture.max = m_view.aperture.to;
+				job.idx_stepsize = idx_stepsize;
 
 				if(m_rotate) {
 					job.pixels = pixels + (r.h - 1) * (pitch / 4);
