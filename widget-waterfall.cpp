@@ -225,12 +225,18 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 		new_frame = true;
 	}
 
-	// auto gain control for aperture depending on jobs histograms
 
 	if(m_agc && new_frame) {
+		// auto gain control for aperture depending on jobs histograms
 		m_view.aperture.from = hist.find_percentile(0.01);
 		m_view.aperture.to = hist.find_percentile(1.00);
 		m_view.aperture.to = std::max(m_view.aperture.to, m_view.aperture.from + 10.0f);
+		// optimal window size to balance time/frequency resolution
+		double sr = stream.sample_rate();
+		double ar = (double)r.w  / (double)r.h;
+		double dtdf = (m_view.time.to - m_view.time.from) / (m_view.freq.to - m_view.freq.from);
+		double optimal_window_size = 4 * sqrt(sr * dtdf * ar); 
+		m_view.window.size = pow(2.0, std::round(log2(optimal_window_size)));
 	}
 
 	// render previous results
