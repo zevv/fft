@@ -136,6 +136,18 @@ void WidgetChannels::do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SD
 	ImGui::SliderDouble("##Gain", &cfg.master, -30.0, +30.0, "master %+.0fdB");
 
 	ImGui::SetNextItemWidth(150);
+	ImGui::SliderDouble("##shift", &cfg.shift, -srate * 0.5, +srate * 0.5, "Shift %+.0fHz");
+	ImGui::SameLine();
+	if(ImGui::Button("0##shift")) cfg.shift = 0.0f;
+
+	Samplerate fs = stream.sample_rate() * 0.5;
+	ImGui::SetNextItemWidth(150);
+	ImGui::SliderDouble("##Highpass", &cfg.freq_hp, 0.0f, fs, "Highpass %.0fHz");
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(150);
+	ImGui::SliderDouble("##Lowpass", &cfg.freq_lp, 0.0f, fs, "Lowpass %.0fHz");
+
+	ImGui::SetNextItemWidth(150);
 	ImGui::SliderDouble("##stretch", &cfg.stretch, 0.25, 4.0, "Stretch %.2fx", ImGuiSliderFlags_Logarithmic);
 	ImGui::SameLine();
 	if(ImGui::Button("-##stretch")) cfg.stretch = cfg.stretch / powf(2.0f, 1.0f / 12.0f);
@@ -154,18 +166,6 @@ void WidgetChannels::do_draw_playback_tab(Stream &stream, SDL_Renderer *rend, SD
 	if(ImGui::Button("+##pitch")) cfg.pitch = cfg.pitch * powf(2.0f, 1.0f / 12.0f);
 	ImGui::SameLine();
 	ImGui::Text("%+.2f semitones", 12.0f * log2f(cfg.pitch));
-
-	ImGui::SetNextItemWidth(150);
-	ImGui::SliderDouble("##shift", &cfg.shift, -srate * 0.5, +srate * 0.5, "Shift %+.0fHz");
-	ImGui::SameLine();
-	if(ImGui::Button("0##shift")) cfg.shift = 0.0f;
-
-	Samplerate fs = stream.sample_rate() * 0.5;
-	ImGui::SetNextItemWidth(150);
-	ImGui::SliderDouble("##Highpass", &cfg.freq_hp, 0.0f, fs, "Highpass %.0fHz");
-	ImGui::SameLine();
-	ImGui::SetNextItemWidth(150);
-	ImGui::SliderDouble("##Lowpass", &cfg.freq_lp, 0.0f, fs, "Lowpass %.0fHz");
 	
 	player.set_config(cfg);
 

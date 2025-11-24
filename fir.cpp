@@ -1,6 +1,16 @@
 
 #include "fir.hpp"
 
+
+Fir::Fir(size_t size)
+	: m_size(size)
+{
+	m_buf.resize(size);
+	m_kernel.resize(size);
+	m_window.configure(Window::Type::Hanning, size);
+}
+
+
 void Fir::configure(Fir::Type type, Frequency f_cut)
 {
 	// sin(x)/x kernel

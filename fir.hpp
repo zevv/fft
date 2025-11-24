@@ -10,14 +10,7 @@ class Fir {
 public:
 	enum class Type { HP, LP };
 
-	Fir(size_t size)
-		: m_size(size)
-	{
-		m_buf.resize(size);
-		m_kernel.resize(size);
-		m_window.configure(Window::Type::Hanning, size);
-	}
-
+	Fir(size_t size);
 	void configure(Type type, Frequency f_cut);
 	
     double run(double v)
