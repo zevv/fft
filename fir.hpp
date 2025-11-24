@@ -6,7 +6,6 @@
 
 #include "window.hpp"
 
-
 class Fir {
 public:
 	enum class Type { HP, LP };
@@ -72,7 +71,7 @@ public:
 
 private:
 	size_t m_size{};
-	std::vector<double> m_kernel{};
+	std::vector<float> m_kernel{};
 	std::vector<double> m_buf{};
 	size_t m_buf_head{};
 	Window m_window{};

@@ -55,6 +55,7 @@ void WidgetWaveform::do_load(ConfigReader::Node *node)
 		snprintf(buf, sizeof(buf), "channel_offset_%zu", ch);
 		node->read(buf, m_channel_offset[ch]);
 	}
+	node->read("agc", m_agc);
 }
 
 
@@ -67,6 +68,7 @@ void WidgetWaveform::do_save(ConfigWriter &cw)
 		snprintf(buf, sizeof(buf), "channel_offset_%zu", ch);
 		cw.write(buf, m_channel_offset[ch]);
 	}
+	cw.write("agc", m_agc);
 }
 
 
