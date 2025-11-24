@@ -32,6 +32,7 @@ SRC += source-generator.cpp
 SRC += source-debug.cpp
 SRC += config.cpp
 SRC += biquad.cpp
+SRC += fir.cpp
 SRC += rb.cpp
 SRC += fft.cpp
 SRC += misc.cpp

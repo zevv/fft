@@ -421,8 +421,10 @@ void App::run()
 			cfg.shift = 0.0;
 			cfg.pitch = 1.0;
 			cfg.stretch = 1.0;
-			cfg.freq_hp = 0.0;
-			cfg.freq_lp = m_srate * 0.5;
+			if(ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+				cfg.freq_hp = 0.0;
+				cfg.freq_lp = m_srate * 0.5;
+			}
 		}
 		player.set_config(cfg);
 
