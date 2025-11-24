@@ -18,6 +18,7 @@ public:
 	
 	std::generator<int> enabled_channels();
 	bool is_channel_enabled(int channel);
+	int get_map() { return m_map; }
 	
 private:
 	size_t m_channel_count{0};

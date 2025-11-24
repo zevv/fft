@@ -52,6 +52,7 @@ private:
 
 	struct State {
 		int w, h;
+		int channel_map;
 		size_t window_size;
 		ssize_t frame_from;
 		ssize_t frame_to;
@@ -234,8 +235,10 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 		// optimal window size to balance time/frequency resolution
 		double sr = stream.sample_rate();
 		double ar = (double)r.w  / (double)r.h;
-		double dtdf = (m_view.time.to - m_view.time.from) / (m_view.freq.to - m_view.freq.from);
-		double optimal_window_size = 4 * sqrt(sr * dtdf * ar); 
+		double dt = m_view.time.to - m_view.time.from;
+		double df = sr * (m_view.freq.to - m_view.freq.from);
+		double dtdf = dt / df;
+		double optimal_window_size = 4 * sr * sqrt(dtdf * ar); 
 		m_view.window.size = pow(2.0, std::round(log2(optimal_window_size)));
 	}
 
@@ -280,6 +283,7 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 	// Check if redraw needed
 
 	State state;
+	state.channel_map = m_channel_map.get_map();
 	state.w = r.w;
 	state.h = r.h;
 	state.window_size = m_view.window.size;
