@@ -187,8 +187,29 @@ void Panel::update_kid(Panel *pk, int dx1, int dy1, int dx2, int dy2)
 			}
 		}
 	}
+
 	if (m_parent) {
-		m_parent->update_kid(this, dx1, dy1, dx2, dy2);
+		int my_dx1 = 0;
+		int my_dy1 = 0;
+		int my_dx2 = 0;
+		int my_dy2 = 0;
+		if (m_type == Type::SplitH) {
+			my_dy1 = dy1;
+			my_dy2 = dy2;
+			if(pk == m_kids.front()) my_dx1 = dx1;
+			if(pk == m_kids.back())  my_dx2 = dx2;
+		} else if (m_type == Type::SplitV) {
+			my_dx1 = dx1;
+			my_dx2 = dx2;
+			if(pk == m_kids.front()) my_dy1 = dy1;
+			if(pk == m_kids.back())  my_dy2 = dy2;
+		} else {
+			my_dx1 = dx1; my_dy1 = dy1;
+			my_dx2 = dx2; my_dy2 = dy2;
+		}
+		if (my_dx1 != 0 || my_dy1 != 0 || my_dx2 != 0 || my_dy2 != 0) {
+			m_parent->update_kid(this, my_dx1, my_dy1, my_dx2, my_dy2);
+		}
 	}
 }
 
