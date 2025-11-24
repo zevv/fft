@@ -47,9 +47,6 @@ private:
 		ssize_t idx_max;
 		ssize_t idx_stepsize;
 		Aperture aperture;
-	};
-
-	struct Result {
 		Histogram<float> hist{256, -126, 127};
 	};
 
@@ -67,7 +64,7 @@ private:
 
 	std::vector<Worker *> m_workers;
 	Queue<Job> m_job_queue{32};
-	Queue<Result> m_result_queue{32};
+	Queue<Job> m_result_queue{32};
 	size_t m_jobs_in_flight{0};
 	bool m_rotate{false};
 };
@@ -175,8 +172,6 @@ void WidgetWaterfall::job_run_gen(Worker &worker, Job &job)
 	uint32_t color = job.color;
 	int fft_w = worker.fft.out_size();
 
-	Result res;
-
 	Time t = job.t_start;
 	uint32_t *p = job.pixels;
 	for(int row=job.row.min; row<job.row.max; row++) {
@@ -188,7 +183,7 @@ void WidgetWaterfall::job_run_gen(Worker &worker, Job &job)
 				Frequency f = job.f.min + (job.f.max - job.f.min) * col / job.col_count;
 				if(f >= 0 && f <= 1.0) {
 					double db = tabread2(fft_out, f, -127.0f);
-					res.hist.add(db);
+					job.hist.add(db);
 					uint32_t alpha = std::clamp(255 * (db - job.aperture.min) / (job.aperture.max - job.aperture.min), 0.0, 255.0);
 					*p = color | (alpha << 24);
 				}
@@ -200,7 +195,7 @@ void WidgetWaterfall::job_run_gen(Worker &worker, Job &job)
 		t += job.dt_row;
 	}
 
-	m_result_queue.push(res);
+	m_result_queue.push(job);
 }
 
 
@@ -211,9 +206,9 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 	Histogram<float> hist(256, -128, 127);
 
 	while(m_jobs_in_flight > 0) {
-		Result res;
-		m_result_queue.pop(res, true);
-		hist.add(res.hist);
+		Job job;
+		m_result_queue.pop(job, true);
+		hist.add(job.hist);
 		m_jobs_in_flight--;
 	}
 			
