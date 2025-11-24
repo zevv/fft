@@ -44,10 +44,21 @@ private:
 		Time t_start;
 		Time dt_row;
 		size_t ch;
-		ssize_t idx_max;
-		ssize_t idx_stepsize;
+		ssize_t frame_max;
+		ssize_t frames_per_row;
 		Aperture aperture;
 		Histogram<float> hist{256, -126, 127};
+	};
+
+	struct State {
+		int w, h;
+		size_t window_size;
+		ssize_t frame_from;
+		ssize_t frame_to;
+		ssize_t frame_new;
+		Frequency freq_from;
+		Frequency freq_to;
+		bool operator==(const State&) const = default;
 	};
 
 	void do_load(ConfigReader::Node *node) override;
@@ -67,6 +78,7 @@ private:
 	Queue<Job> m_result_queue{32};
 	size_t m_jobs_in_flight{0};
 	bool m_rotate{false};
+	State m_state_prev{};
 };
 
 
@@ -175,10 +187,10 @@ void WidgetWaterfall::job_run_gen(Worker &worker, Job &job)
 	Time t = job.t_start;
 	uint32_t *p = job.pixels;
 	for(int row=job.row.min; row<job.row.max; row++) {
-		ssize_t idx = (job.srate * t - m_view.window.size / 2) * job.data_stride;
-		idx = (idx / job.idx_stepsize) * job.idx_stepsize;
-		if(idx >= 0 && idx < job.idx_max) {
-			auto fft_out = worker.fft.run(&job.data[idx + job.ch], job.data_stride);
+		ssize_t frame = (job.srate * t - m_view.window.size / 2);
+		frame = (frame / job.frames_per_row) * job.frames_per_row;
+		if(frame >= 0 && frame < job.frame_max) {
+			auto fft_out = worker.fft.run(&job.data[frame * job.data_stride + job.ch], job.data_stride);
 			for(int col=0; col<job.col_count; col++) {
 				Frequency f = job.f.min + (job.f.max - job.f.min) * col / job.col_count;
 				if(f >= 0 && f <= 1.0) {
@@ -204,22 +216,25 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 	// wait for workers
 
 	Histogram<float> hist(256, -128, 127);
-
+	bool new_frame = false;
 	while(m_jobs_in_flight > 0) {
 		Job job;
 		m_result_queue.pop(job, true);
 		hist.add(job.hist);
 		m_jobs_in_flight--;
+		new_frame = true;
 	}
-			
-	if(m_agc) {
+
+	// auto gain control for aperture depending on jobs histograms
+
+	if(m_agc && new_frame) {
 		m_view.aperture.from = hist.find_percentile(0.01);
 		m_view.aperture.to = hist.find_percentile(1.00);
 		m_view.aperture.to = std::max(m_view.aperture.to, m_view.aperture.from + 10.0f);
 	}
 
 	// render previous results
-	
+
 	SDL_FRect dst;
 	SDL_RectToFRect(&r, &dst);
 	for(auto &tex : m_ch_tex) {
@@ -243,20 +258,35 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 
 	allocate_channels(rend, stream.channel_count(), r.w, r.h);
 
-	// constriant idx to always be a muiltiple of indices-per-pixel to
-	// avoid aliasing artifacts when panning
-
-	double idx_from = m_view.time.from * stream.sample_rate();
-	double idx_to = m_view.time.to * stream.sample_rate();
-	ssize_t idx_stepsize = ceil((idx_to - idx_from) / (m_rotate ? r.w : r.h)) * stream.channel_count();
-
-
-	// queue jobs
+	// Get stream data
 
 	size_t stride = 0;
 	size_t frames_avail = 0;
 	Sample *data = stream.peek(&stride, &frames_avail);
-	
+
+	// constriant frame number to always be a muiltiple of indices-per-pixel to
+	// avoid aliasing artifacts when panning
+
+	ssize_t frame_from = m_view.time.from * stream.sample_rate();
+	ssize_t frame_to   = m_view.time.to * stream.sample_rate();
+	ssize_t frames_per_row = (frame_to - frame_from) / (m_rotate ? r.w : r.h);
+
+	// Check if redraw needed
+
+	State state;
+	state.w = r.w;
+	state.h = r.h;
+	state.window_size = m_view.window.size;
+	state.frame_from = (frame_from / frames_per_row) * frames_per_row;
+	state.frame_to = (frame_to / frames_per_row) * frames_per_row;
+	state.frame_new = std::clamp((ssize_t)frames_avail, state.frame_from, state.frame_to);
+	state.freq_from = m_view.freq.from;
+	state.freq_to = m_view.freq.to;
+	if(state == m_state_prev) return;
+	m_state_prev = state;
+
+	// queue jobs
+
 	for(size_t ch=0; ch<stream.channel_count(); ch++) {
 
 		SDL_Color col = Style::channel_color(ch);
@@ -290,11 +320,11 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 				job.t_start = m_view.time.from + dt_row * row;
 				job.dt_row = dt_row;
 				job.ch = ch;
-				job.idx_max = frames_avail * stride;
+				job.frame_max = frames_avail;
 				job.color = *(uint32_t *)&col & 0x00FFFFFF;
 				job.aperture.min = m_view.aperture.from;
 				job.aperture.max = m_view.aperture.to;
-				job.idx_stepsize = idx_stepsize;
+				job.frames_per_row = frames_per_row;
 
 				m_job_queue.push(job);
 				m_jobs_in_flight++;
@@ -315,11 +345,11 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 		m_view_config.y = View::Axis::Time;
 	}
 
-	
+
 	size_t stride = 0;
 	size_t frames_avail = 0;
 	Sample *data = stream.peek(&stride, &frames_avail);
-	
+
 	ImGui::SameLine();
 	ImGui::ToggleButton("AGC", &m_agc);
 
@@ -337,7 +367,7 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	}
 
 	if(ImGui::IsWindowFocused()) {
-			
+
 		ImGui::SetCursorPosY(r.h + ImGui::GetTextLineHeightWithSpacing());
 		char fbuf[64];
 		float f = m_view.freq.cursor * stream.sample_rate() * 0.5f;
@@ -350,6 +380,7 @@ void WidgetWaterfall::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 			m_rotate = !m_rotate;
 		}
 	}
+
 	gen_waterfall(stream, rend, r);
 }
 
