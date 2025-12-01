@@ -143,6 +143,12 @@ int App::draw_topbar()
 	auto io = ImGui::GetIO();
 	ImGui::SameLine();
 	ImGui::Text("| %.1f fps", io.Framerate);
+	
+	static int n = 0;
+	ImGui::SameLine();
+	ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 20);
+	
+	ImGui::ProgressBar((float)(n++ % 100) / 100.0f, ImVec2(14, 20), "");
 
 	int y = ImGui::GetWindowHeight();
 	ImGui::End();
@@ -428,10 +434,9 @@ void App::run()
 		}
 		player.set_config(cfg);
 
-
 		SDL_Event event;
-		while (SDL_PollEvent(&event))
-		{
+		SDL_WaitEvent(&event);
+		do {
 			ImGui_ImplSDL3_ProcessEvent(&event);
 			if (event.type == SDL_EVENT_QUIT)
 				done = true;
@@ -473,6 +478,7 @@ void App::run()
 
 			req_redraw();
 		}
+		while (SDL_PollEvent(&event));
 
 		if(m_redraw > 0) {
 			draw();
