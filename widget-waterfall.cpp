@@ -104,7 +104,7 @@ WidgetWaterfall::WidgetWaterfall(Widget::Info &info)
 WidgetWaterfall::~WidgetWaterfall()
 {
 	for(size_t i=0; i<m_workers.size(); i++) {
-		Job job;
+		Job job{};
 		job.cmd = JobCmd::Stop;
 		m_job_queue.push(job);
 	}
@@ -279,6 +279,7 @@ void WidgetWaterfall::gen_waterfall(Stream &stream, SDL_Renderer *rend, SDL_Rect
 	ssize_t frame_from = m_view.time.from * stream.sample_rate();
 	ssize_t frame_to   = m_view.time.to * stream.sample_rate();
 	ssize_t frames_per_row = (frame_to - frame_from) / (m_rotate ? r.w : r.h);
+	if(frames_per_row == 0) frames_per_row = 1;
 
 	// Check if redraw needed
 
