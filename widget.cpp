@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <algorithm>
+#include <chrono>
 #include <SDL3/SDL.h>
 #include <imgui.h>
 #include <generator>
@@ -350,64 +351,98 @@ struct Unit {
 	double scale;
 	const char *fmt;
 } units[] = {
-	{ 1e5,   "k", 1e-3, "%.0fk" },
-	{ 1e4,   "k", 1e-3, "%.0fk" },
-	{ 1e3,   "k", 1e-3, "%.0fk" },
-	{ 1e2,   "",  1e0,  "%.0f"  },
-	{ 1e1,   "",  1e0,  "%.0f"  },
-	{ 1e0,   "",  1e0,  "%.0f"  },
-	{ 1e-1,  "",  1e0,  "%.1f" },
-	{ 1e-2,  "",  1e3,  "%.0fm" },
-	{ 1e-3,  "",  1e3,  "%.0fm" },
-	{ 1e-4,  "",  1e3,  "%.1fm" },
+	{ 365.25*24*3600,   "y",  1.0/(365.25*24*3600), "%.0fy"  },
+	{ 30.0*24*3600,     "mo", 1.0/(30*24*3600),     "%.0fmo" },
+	{ 7*24*3600,        "w",  1.0/(7*24*3600),      "%.0fw"  },
+	{ 24*3600,          "d",  1.0/(24*3600),        "%.0fd"  },
+	{ 12*3600,          "h",  1.0/3600,             "%.0fh"  },
+	{ 6*3600,           "h",  1.0/3600,             "%.0fh"  },
+	{ 3600,             "h",  1.0/3600,             "%.0fh"  },
+	{ 1800,             "m",  1.0/60,               "%.0fm"  },
+	{ 600,              "m",  1.0/60,               "%.0fm"  },
+	{ 60,               "m",  1.0/60,               "%.0fm"  },
+	{ 30,               "s",  1.0,                  "%.0fs"  },
+	{ 10,               "s",  1.0,                  "%.0fs"  },
+	{ 1,     "s",  1.0,  "%.0fs"  },
+	{ 1e-1,  "s",  1e0,  "%.1fs"  },
+	{ 1e-2,  "ms", 1e3,  "%.0fms" },
+	{ 1e-3,  "ms", 1e3,  "%.0fms" },
+	{ 1e-4,  "us", 1e6,  "%.0fus" },
+	{ 1e-5,  "us", 1e6,  "%.0fus" },
+	{ 1e-6,  "us", 1e6,  "%.0fus" },
+	{ 1e-7,  "us", 1e6,  "%.1fus" },
 };
+
+static void format_time_label(Time t, const Unit& u, char* buf, size_t bufsize)
+{
+	constexpr Time Y2000 = 946684800.0;
+
+	if (t >= Y2000 && u.base >= 24*3600) {
+		using namespace std::chrono;
+		auto tp = system_clock::from_time_t((time_t)t);
+		auto dp = floor<days>(tp);
+		year_month_day ymd{dp};
+
+		if (u.base >= 365.25*24*3600) {
+			snprintf(buf, bufsize, "%d", (int)ymd.year());
+		} else if (u.base >= 30*24*3600) {
+			snprintf(buf, bufsize, "%d-%02u", (int)ymd.year(), (unsigned)ymd.month());
+		} else {
+			snprintf(buf, bufsize, "%02u-%02u", (unsigned)ymd.month(), (unsigned)ymd.day());
+		}
+	} else {
+		snprintf(buf, bufsize, u.fmt, fabs(t * u.scale));
+	}
+}
+
+static void grid_time_impl(SDL_Renderer *rend, SDL_Rect &r, Time t_min, Time t_max, bool vertical)
+{
+	ImDrawList* dl = ImGui::GetWindowDrawList();
+	int dim = vertical ? r.h : r.w;
+	int base_pos = vertical ? r.y : r.x;
+
+	int scales_drawn = 0;
+	for(auto &u : units) {
+		double d = dim * u.base / (t_max - t_min);
+		if(d < 50) break;
+		if(d > 500) continue;
+
+		int alpha = std::clamp((int)((d - 50) * 64 / 50.0), 0, 64);
+		SDL_SetRenderDrawColor(rend, alpha, alpha, alpha, 255);
+
+		Time t_start = ceilf(t_min / u.base) * u.base;
+		Time t_end = floorf(t_max / u.base) * u.base;
+		bool show_labels = d > 100;
+
+		for(Time t = t_start; t <= t_end && t < t_end + u.base; t += u.base) {
+			int pos = base_pos + (int)((t - t_min) / (t_max - t_min) * dim);
+
+			if (vertical) {
+				SDL_RenderLine(rend, r.x, pos, r.x + r.w, pos);
+			} else {
+				SDL_RenderLine(rend, pos, r.y, pos, r.y + r.h);
+			}
+
+			if(show_labels) {
+				char buf[32];
+				format_time_label(t, u, buf, sizeof(buf));
+				ImVec2 text_pos = vertical ? ImVec2(r.x + 2, pos - 3) : ImVec2(pos + 2, r.y - 3);
+				dl->AddText(text_pos, 0xFF808080, buf);
+			}
+		}
+
+		if(show_labels && ++scales_drawn >= 3) break;
+	}
+}
 
 void Widget::grid_time(SDL_Renderer *rend, SDL_Rect &r, Time t_min, Time t_max)
 {
-	ImDrawList* dl = ImGui::GetWindowDrawList();
-	for(auto &u : units) {
-		double dx = r.w * u.base / (t_max - t_min);
-		if(dx < 10) break;
-		int col = std::clamp((int)(dx-10) * 4, 0, 64);
-		SDL_SetRenderDrawColor(rend, col, col, col, 255);
-		Time t_start = ceilf(t_min / u.base) * u.base;
-		Time t_end   = floorf(t_max / u.base) * u.base;
-		Time t = t_start;
-		while(t <= t_end) {
-			int x = r.x + (int)((t - t_min) / (t_max - t_min) * r.w);
-			SDL_RenderLine(rend, x, r.y, x, r.y + r.h);
-			if(dx > 50) {
-				char buf[32];
-				snprintf(buf, sizeof(buf), u.fmt, fabs(t * u.scale));
-				dl->AddText(ImVec2(x + 2, r.y - 3), 0xFF808080, buf);
-			}
-			t += u.base;
-		}
-	}
+	grid_time_impl(rend, r, t_min, t_max, false);
 }
 
 void Widget::grid_time_v(SDL_Renderer *rend, SDL_Rect &r, Time t_min, Time t_max)
 {
-	ImDrawList* dl = ImGui::GetWindowDrawList();
-	for(auto &u : units) {
-		double dy = r.h * u.base / (t_max - t_min);
-		if(dy < 10) break;
-		int col = std::clamp((int)(dy-10) * 4, 0, 64);
-		SDL_SetRenderDrawColor(rend, col, col, col, 255);
-		Time t_start = ceilf(t_min / u.base) * u.base;
-		Time t_end   = floorf(t_max / u.base) * u.base;
-		Time t = t_start;
-		while(t <= t_end) {
-			int y = r.y + (int)((t - t_min) / (t_max - t_min) * r.h);
-			SDL_RenderLine(rend, r.x, y, r.x + r.w, y);
-			if(dy > 20) {
-				char buf[32];
-				snprintf(buf, sizeof(buf), u.fmt, fabs(t * u.scale));
-				dl->AddText(ImVec2(r.x + 2, y - 3), 0xFF808080, buf);
-			}
-			t += u.base;
-		}
-	}
+	grid_time_impl(rend, r, t_min, t_max, true);
 }
 
 
