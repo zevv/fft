@@ -31,6 +31,7 @@ public:
 	void allocate(size_t depth);
 	Samplerate sample_rate() { return m_srate; }
 	Sample *peek(size_t *stride, size_t *frames_avail = nullptr);
+	size_t head_frame() { return m_frame_size ? m_rb.bytes_head() / m_frame_size : 0; }
 	Wavecache::Range *peek_wavecache(size_t *stride, size_t *used = nullptr);
 	Rb &rb() { return m_rb; }
 	Wavecache &wavecache() { return m_wavecache; }

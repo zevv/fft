@@ -16,6 +16,7 @@ SRC += widget-spectrum.cpp
 SRC += widget-waterfall.cpp
 SRC += widget-histogram.cpp
 SRC += widget-xy.cpp
+SRC += widget-scope.cpp
 SRC += widget-channels.cpp
 SRC += widget-sources.cpp
 SRC += stream.cpp

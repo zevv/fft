@@ -54,16 +54,28 @@ Widget *Widget::copy()
 
 void Widget::copy_to(Widget *w)
 {
+	// a widget with a local time axis keeps its own timebase and never locks
+	// to the global view: the time of the source widget means nothing there
+	View::VTime time = w->m_view.time;
+	bool lock = w->m_view.lock;
+
 	w->m_view = m_view;
 	w->m_channel_map = m_channel_map;
+
+	if(w->m_time_local) {
+		w->m_view.time = time;
+		w->m_view.lock = lock;
+	}
 }
 
 
 void Widget::draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 {
 	if(m_view.lock) m_view = view;
-	m_view.time.cursor = view.time.cursor;
-	m_view.time.playpos = view.time.playpos;
+	if(!m_time_local) {
+		m_view.time.cursor = view.time.cursor;
+		m_view.time.playpos = view.time.playpos;
+	}
 
 	if(m_info.flags & Widget::Info::Flags::ShowChannelMap) {
 		m_channel_map.set_channel_count(stream.channel_count());
@@ -125,8 +137,10 @@ void Widget::draw(View &view, Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	}
 	
 	if(m_view.lock) view = m_view;
-	view.time.cursor = m_view.time.cursor;
-	view.time.playpos = m_view.time.playpos;
+	if(!m_time_local) {
+		view.time.cursor = m_view.time.cursor;
+		view.time.playpos = m_view.time.playpos;
+	}
 }
 
 
@@ -391,7 +405,7 @@ static void format_time_label(Time t, const Unit& u, char* buf, size_t bufsize)
 			snprintf(buf, bufsize, "%02u-%02u", (unsigned)ymd.month(), (unsigned)ymd.day());
 		}
 	} else {
-		snprintf(buf, bufsize, u.fmt, fabs(t * u.scale));
+		snprintf(buf, bufsize, u.fmt, t * u.scale);
 	}
 }
 
@@ -610,11 +624,13 @@ void Widget::cursors(SDL_Renderer *rend, SDL_Rect &r, View &view, View::Config &
 				Widget::CursorFlags::Shadow);
 
 		// play position cursor
-		cursor(rend, r, m_view.from_t(m_view_config, r, m_view.time.playpos),
-				dir | 
-				Widget::CursorFlags::Arrows |
-				Widget::CursorFlags::Shadow |
-				Widget::CursorFlags::PlayPosition);
+		if(!m_time_local) {
+			cursor(rend, r, m_view.from_t(m_view_config, r, m_view.time.playpos),
+					dir | 
+					Widget::CursorFlags::Arrows |
+					Widget::CursorFlags::Shadow |
+					Widget::CursorFlags::PlayPosition);
+		}
 	}
 
 	if(cfg.x == View::Axis::Aperture || cfg.y == View::Axis::Aperture) {

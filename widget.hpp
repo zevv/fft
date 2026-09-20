@@ -91,5 +91,6 @@ protected:
 	View m_view{};
 	ChannelMap m_channel_map{};
 	double m_pan_speed{};
+	bool m_time_local{}; // time axis is widget-local, not the global stream time
 	View::Config m_view_config{};
 };
