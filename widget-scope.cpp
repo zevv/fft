@@ -66,7 +66,7 @@ private:
 	bool m_running{true};
 	bool m_rising{true};
 	double m_level{0.0};      // trigger level, in view amplitude units
-	double m_hyst{0.01};      // trigger hysteresis, in view amplitude units
+	double m_hyst{0.1};       // trigger hysteresis, in vertical divisions
 	double m_holdoff{0.0};    // s
 	double m_persist{0.25};   // phosphor time constant, s, 0 = infinite
 	double m_intensity{1.0};
@@ -118,7 +118,7 @@ void WidgetScope::do_load(ConfigReader::Node *node)
 	node->read("running", m_running);
 	node->read("rising", m_rising);
 	node->read("level", m_level);
-	node->read("hysteresis", m_hyst);
+	node->read("hysteresis_div", m_hyst);
 	node->read("holdoff", m_holdoff);
 	node->read("persist", m_persist);
 	node->read("intensity", m_intensity);
@@ -132,7 +132,7 @@ void WidgetScope::do_save(ConfigWriter &cw)
 	cw.write("running", m_running);
 	cw.write("rising", m_rising);
 	cw.write("level", m_level);
-	cw.write("hysteresis", m_hyst);
+	cw.write("hysteresis_div", m_hyst);
 	cw.write("holdoff", m_holdoff);
 	cw.write("persist", m_persist);
 	cw.write("intensity", m_intensity);
@@ -470,7 +470,7 @@ void WidgetScope::do_draw(Stream &stream, SDL_Renderer *rend, SDL_Rect &r)
 	if(m_running && f_hi > m_next_scan) {
 
 		double lvl = m_level * k_sample_max;
-		double hyst = fabs(m_hyst) * k_sample_max;
+		double hyst = fabs(m_hyst) * volt_div() * k_sample_max;
 		double v_hi = lvl + hyst;
 		double v_lo = lvl - hyst;
 		ssize_t hold = std::max<ssize_t>(1, m_holdoff * m_srate);
@@ -560,7 +560,6 @@ void WidgetScope::level_50pct(Stream &stream)
 		v_max = std::max(v_max, v);
 	}
 	m_level = 0.5 * (v_min + v_max) / (double)k_sample_max;
-	m_hyst = std::max(0.002, 0.05 * (v_max - v_min) / (double)k_sample_max);
 }
 
 
@@ -584,7 +583,6 @@ void WidgetScope::autoscale(Stream &stream)
 	double mid = 0.5 * (v_min + v_max);
 	double pp = v_max - v_min;
 	m_level = mid / k_sample_max;
-	m_hyst = 0.05 * pp / k_sample_max;
 	m_view.amplitude.from = (mid - pp * 0.8) / k_sample_max;
 	m_view.amplitude.to   = (mid + pp * 0.8) / k_sample_max;
 
